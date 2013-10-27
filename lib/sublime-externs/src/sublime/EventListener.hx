@@ -1,9 +1,16 @@
 
 package sublime;
 
+import python.lib.Types;
+
 private typedef TODO = Dynamic;
 
-class EventListener {
+extern class EventListener {
+
+	static function __init__ ():Void 
+	{
+		python.Macros.importFromAs("sublime_plugin","EventListener", "sublime.EventListener");
+	}
 
 	// Called when a new buffer is created.
 	public function on_new(view:View):Void;
@@ -67,20 +74,31 @@ class EventListener {
 	
 	// Called when a text command is issued. The listener may return a (command, arguments) tuple to rewrite the command, or None to run the command unmodified.
 	// returns 	(new_command_name, new_args)
-	public function on_text_command(view, command_name, args):Tup2<String, TODO>
+	public function on_text_command(view:View, command_name:String, args:KwArgs):Tup2<String, Array<Dynamic>>
 	
 	// Called when a window command is issued. The listener may return a (command, arguments) tuple to rewrite the command, or None to run the command unmodified.
 	// returns 	(new_command_name, new_args)	
-	public function on_window_command(window, command_name, args):Tup2<String, TODO>
+	public function on_window_command(window:Window, command_name:String, args:KwArgs):Tup2<String, Array<Dynamic>>
 	
 	// Called after a text command has been executed.
-	public function post_text_command(view, command_name, args):Void;
+	public function post_text_command(view:View, command_name:String, args:KwArgs):Void;
 	
 	// Called after a window command has been executed.
-	public function post_window_command(window, command_name, args):Void;
+	public function post_window_command(window:Window, command_name:String, args:KwArgs):Void;
 
-	
-	public function on_query_context(view, key, operator, operand, match_all):Void;
+	/*
+		Called when determining to trigger a key binding with the given context key. If the plugin knows how to respond to the context, it should return either True of False. If the context is unknown, it should return None.
+		operator is one of:
+
+		sublime.OP_EQUAL. Is the value of the context equal to the operand?
+		sublime.OP_NOT_EQUAL. Is the value of the context not equal to the operand?
+		sublime.OP_REGEX_MATCH. Does the value of the context match the regex given in operand?
+		sublime.OP_NOT_REGEX_MATCH. Does the value of the context not match the regex given in operand?
+		sublime.OP_REGEX_CONTAINS. Does the value of the context contain a substring matching the regex given in operand?
+		sublime.OP_NOT_REGEX_CONTAINS. Does the value of the context not contain a substring matching the regex given in operand?
+		match_all should be used if the context relates to the selections: does every selection have to match (match_all = True), or is at least one matching enough (match_all = Fals)?
+	*/
+	public function on_query_context(view:View, key:String, operator:Int, operand:Pattern, match_all:Bool):Void;
 
 
 }
