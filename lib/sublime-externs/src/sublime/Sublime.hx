@@ -9,6 +9,30 @@ private typedef TODO = Dynamic;
 extern 
 class Sublime {
 
+	public static var ENCODED_POSITION:Int; // Indicates the file_name should be searched for a :row or :row:col suffix
+	public static var TRANSIENT:Int; // Open the file as a preview only: it wont have a tab assigned it until modified
+
+	public static var DRAW_EMPTY:Int; // Draw empty regions with a vertical bar. By default, they arent drawn at all.
+	public static var HIDE_ON_MINIMAP:Int; // Dont show the regions on the minimap.
+	public static var DRAW_EMPTY_AS_OVERWRITE:Int; // Draw empty regions with a horizontal bar instead of a vertical one.
+	public static var DRAW_NO_FILL:Int; // Disable filling the regions, leaving only the outline.
+	public static var DRAW_NO_OUTLINE:Int; // Disable drawing the outline of the regions.
+	public static var DRAW_SOLID_UNDERLINE:Int; // Draw a solid underline below the regions.
+	public static var DRAW_STIPPLED_UNDERLINE:Int; // Draw a stippled underline below the regions.
+	public static var DRAW_SQUIGGLY_UNDERLINE:Int; // Draw a squiggly underline below the regions.
+	public static var PERSISTENT:Int; // Save the regions in the session.
+	public static var HIDDEN:Int; // Dont draw the regions.
+
+	public static var CLASS_WORD_START:Int;
+	public static var CLASS_WORD_END:Int;
+	public static var CLASS_PUNCTUATION_START:Int;
+	public static var CLASS_PUNCTUATION_END:Int;
+	public static var CLASS_SUB_WORD_START:Int;
+	public static var CLASS_SUB_WORD_END:Int;
+	public static var CLASS_LINE_START:Int;
+	public static var CLASS_LINE_END:Int;
+	public static var CLASS_EMPTY_LINE:Int;
+
 	public static var OP_EQUAL : Int;
 	public static var OP_NOT_EQUAL : Int;
 	public static var OP_REGEX_MATCH : Int;

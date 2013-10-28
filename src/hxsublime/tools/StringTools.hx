@@ -1,126 +1,110 @@
-import re
-import sys
-from haxe.plugin import is_st3, is_st2
+package hxsublime.tools;
 
-def startswith_any (s, list_str):
-	for s1 in list_str:
-		if s.startswith(s1):
-			return True
-	return False
+import python.lib.Re;
+import python.lib.Sys;
+import python.lib.Types.Bytes;
 
-def reverse (s):
-	return s[::-1]
+import StringTools in ST;
 
+class StringTools {
 
+	static var _whitespace = Re.compile("^\\s*$");
 
-_whitespace = re.compile("^\s*$")
+	public static function startsWithAny (s:String, l:Array<String>) 
+	{
+		for (s1 in l) {
+			if (ST.startsWith(s, s1)) {
+				return true;
+			}
+		}
+		return false;
+	}
 
-def is_whitespace_or_empty(s):
-	return re.match(_whitespace, s) is not None
-
-
-def unicode_to_str(s, encoding, add = ""):
-	if is_st3:
-		return s.decode(encoding, add)
-	else:
-		return s.encode(encoding, add)
-
-def str_to_unicode_to_str (s, encoding1, encoding2):
-	return unicode_to_str(str_to_unicode(s, encoding1), encoding2)
-
-def str_to_unicode(s, encoding, add = ""):
-	if is_st3:
-		return s.encode(encoding, add)
-	else:
-		return s.decode(encoding, add)
+	public static function reverse (s:String) {
+		return untyped __python__("s[::-1]");
+	}
 
 
-def to_unicode (s):
-	if s is None:
-		return s
-	if is_st3 and isinstance(s, bytes):
-		res = s
-	elif is_st2 and isinstance(s, unicode):
-		res = s
-	elif isinstance(s, str):
-		try:
-			res = str_to_unicode(s, "utf-8", "ignore")
-		except:
-			try:
-				res = str_to_unicode(s,"ascii")
-			except:
-				try:
-					res = str_to_unicode(s,"iso-8859-1")
-				except:
-					try:
-						res = str_to_unicode(s,"ascii")
-					except:
-						raise DecodeException("cannot decode str")
-	else:
-		s = s
-	return res
-
-class DecodeException(BaseException):
-	def __init__(self, m):
-		self.message = m
-	def __str__(self):
-		return self.message
-
-class EncodeException(BaseException):
-	def __init__(self, m):
-		self.message = m
-	def __str__(self):
-		return self.message
-
-def st3_encode_utf8 (s):
-	if is_st3:
-		return encode_utf8(s)
-	else:
-		return s
-
-def st2_encode_utf8 (s):
-	if is_st3:
-		return s
-	else:
-		return encode_utf8(s)
+	public static function isWhitespaceOrEmpty(s:String) {
+		return Re.match(_whitespace, s) != null;
+	}
 
 
-def st2_to_unicode(s):
-	if is_st2:
-		return to_unicode(s)
-	else:
-		return s
+	public static function unicodeToStr(s:Bytes, encoding:String, errors:String = "") {
+		return s.decode(encoding, errors);
+	}
 
-def encode_utf8 (s):
-	if s is None:
-		return s
-	if is_st3 and isinstance(s, bytes):
-		res = s.decode("utf-8", "ignore")
-	else:
-		if is_st2 and isinstance(s, unicode):
-			#print("it's unicode")
-			res = unicode_to_str(s, "utf-8", "ignore")
-		elif isinstance(s, str):
-			try:
-				#print("try utf8 decode")
-				res = s.decode("utf-8")
-				#res = s
-			except:
-				try:
-					#print("try ascii decode")
-					res = str_to_unicode_to_str(s, "ascii", "utf-8")
-				except:
-					try:
-						#print("try iso8859-1 decode")
-						res = str_to_unicode_to_str(s, "iso-8859-1", "utf-8")
-					except: 
-						#print("cannot decode")
-						raise EncodeException("cannot decode str")
-		else:
-			#print("it's not a str or unicode, it's" + str(type(s)))
-			raise EncodeException("it's not a str or unicode, it's" + str(type(s)))
-			res = s
-	#print("result type: " + str(type(res)))
-	return res
+	public static function strToUnicodeToStr (s:String, encoding1:String, encoding2:String) 
+	{
+		return unicodeToStr(python.lib.StringTools.encode(s, encoding1), encoding2);
+	}
 
-			
+	public static function strToUnicode (s:String, encoding:String, ?errors:String = "") 
+	{
+		return python.lib.StringTools.encode(s, encoding, errors);
+	}
+
+	public static function toUnicode (s:String):Bytes 
+	{
+		var res:Bytes = null;
+		if (s == null) 
+		{
+			return null;
+		} 
+		else 
+		{
+			try
+				res = strToUnicode(s, "utf-8", "ignore")
+			catch (e:Dynamic)
+				try 
+					res = strToUnicode(s,"ascii")
+				catch (e:Dynamic)
+					try
+						res = strToUnicode(s,"iso-8859-1")
+					catch (e:Dynamic)
+						try
+							res = strToUnicode(s,"ascii")
+						catch (e:Dynamic)
+							throw "cannot decode str";
+		}
+
+		return res;
+	}
+
+	public static function st3EncodeUtf8 (s:String):String {
+		return encodeUtf8(s);
+	}
+	
+	public static function st2EncodeUtf8 (s:String):String
+	{
+		return s;
+	}
+
+
+	public static function st2ToUnicode(s:Bytes):Bytes {
+		return s;
+	}
+
+	public static function encodeUtf8Bytes (s:Bytes):String {
+		return s.decode("utf-8", "ignore");
+	}
+
+	public static function encodeUtf8 (s:String):String {
+		if (s == null)
+			return null;
+
+		var res = null;
+		
+		try
+			res = strToUnicodeToStr(s, "ascii", "utf-8")
+		catch (e:Dynamic)
+			try
+				res = strToUnicodeToStr(s, "iso-8859-1", "utf-8")
+			catch (e:Dynamic)
+				throw "cannot decode str";
+		
+
+		return res;
+	}
+	
+}

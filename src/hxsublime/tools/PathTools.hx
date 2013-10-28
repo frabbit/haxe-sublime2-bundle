@@ -1,12 +1,19 @@
-import os
-import shutil
+package hxsublime.tools;
 
-def remove_dir(path):
-	if os.path.isdir(path):
-		shutil.rmtree(path)
+import python.lib.os.Path;
+import python.lib.Shutil.ShUtil;
 
-def join_norm(path1, path2):
-	return os.path.normpath(os.path.join(path1, path2))
+class PathTools {
+	public static function removeDir (path:String) 
+	{
+		if (Path.isdir(path)) {
+			ShUtil.rmtree(path);
+		}
+	}
+	
+	public static function joinNorm(path1:String, path2:String) 
+	{
+		return Path.normpath(Path.join(path1, path2));	
+	}
 
-def is_abs_path(path):
-	return os.path.normpath(path) == os.path.abspath(path)
+}

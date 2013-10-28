@@ -1,8 +1,15 @@
-def contains_any (scopes, scopes_test):
-	for s in scopes : 
-		if s.split(".")[0] in scopes_test : 
-			return True
-	return False
+package hxsublime.tools;
 
-def contains_string_or_comment (scopes):
-	return contains_any(scopes, ["string", "comments"])
+class ScopeTools {
+	public static function containsAny (scopes:Array<String>, scopes_test:Array<String>) {
+		for (s in scopes) {
+			if (python.lib.ArrayTools.contains( scopes_test, s.split(".")[0])) {
+				return true;
+			}
+		}
+		return false;
+	}
+	public static function containsStringOrComment (scopes:Array<String>) {
+		return containsAny(scopes, ["string", "comments"]);
+	}
+}

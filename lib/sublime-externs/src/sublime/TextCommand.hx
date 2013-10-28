@@ -1,7 +1,12 @@
 
 package sublime;
 
+import python.lib.Types;
+import sublime.View;
+
 extern class TextCommand {
+
+	var view:View;
 
 	static function __init__ ():Void 
 	{

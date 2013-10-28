@@ -1,125 +1,174 @@
-import sublime, sublime_plugin
-import os
+package hxsublime.tools;
+import python.lib.os.Path;
+import StringTools in ST;
+import sublime.Region;
+import sublime.Sublime;
 
-from haxe.plugin import is_st3
+import hxsublime.Config;
 
-from haxe import config as hxconfig
+import sublime.TextCommand;
 
-class HaxeTextEditCommand (sublime_plugin.TextCommand):
-    def run (self, edit, id):
-        global _async_edit_dict
-        if id in _async_edit_dict:
-            fun = _async_edit_dict[id]
-            del _async_edit_dict[id]
-            fun(self.view, edit)
+import python.lib.Os;
 
-# convert edit operation into a async operation with a callback, use global map (cannot pass function to command)
-
-_async_edit_id = 0
-_async_edit_dict = dict()
+import python.lib.Types;
 
 
+import sublime.View;
+import sublime.Edit;
 
-def insert_snippet(view, snippet):
-	view.run_command("insert_snippet", {
-		'contents' : snippet
-	})
+class AsyncEdit {
+	public static var dict : Dict<Int, View->Edit->Void> = new Dict();
+	public static var id:Int;
+}
+
+//from haxe import config as hxconfig
+
+class HaxeTextEditCommand extends TextCommand {
+	static var _async_edit_dict;
 	
+	override public function run (args:KwArgs) 
+	{
+		var d:Dict<String, Dynamic> = args;
+        var edit:Edit = d.get("edit", null);
+        var id:Int = d.get("id", null);
+        
+        if (AsyncEdit.dict.hasKey(id)) {
+        	var fun = AsyncEdit.dict.get(id, null);
+            AsyncEdit.dict.remove(id);
+            fun(view, edit);
+        }
+    }
+}
 
-def insert_at_cursor(view, txt):
-	def do_edit(v, e):
-		v.insert(e, get_first_cursor_pos(v), txt)
-	async_edit(view, do_edit)
 
-def async_edit(view, do_edit):
-	if is_st3:
-	    def start():
-	        global _async_edit_id
-	        global _async_edit_dict
-	        id = str(_async_edit_id)
-	        if _async_edit_id > 1000000:
+class ViewTools {
+	
+	
+	public static function insertSnippet (view:View, snippet:String) {
+		view.run_command("insert_snippet", { 'contents' : snippet } );
+	}
 
-	        	_async_edit_id = 0
-	        else:
-	        	_async_edit_id += 1
-	        _async_edit_dict[id] = do_edit
-	        view.run_command("haxe_text_edit", { "id" : id })
+	public static function insertAtCursor(view:View, txt:String) {
+		function  doEdit(v:View, e:Edit) {
+			v.insert(e, getFirstCursorPos(v), txt);
+		}
+		asyncEdit(view, doEdit);
+	}
+
+
+	public static function getFirstCursorPos (view:View) {
+		return view.sel()[0].begin();
+	}
+
+
+	public static function asyncEdit(view:View, doEdit:View->Edit->Void) {
+		
+	    function start() 
+	    {
+	        var id = AsyncEdit.id;
+	        if (AsyncEdit.id > 1000000)
+	        	AsyncEdit.id = 0
+	        else
+	        	AsyncEdit.id += 1;
 	        
-	    sublime.set_timeout(start, 10)
-	else:
-		# no need for text command in st2
-		def on_run():
-			edit = view.begin_edit()
-			do_edit(view, edit)
-			view.end_edit(edit)	
-		sublime.set_timeout(on_run, 10)
+	        AsyncEdit.dict.set(id, doEdit);
+	        view.run_command("hxsublime_tools_haxe_text_edit", { "id" : id });
+	    }
+	        
+	    Sublime.set_timeout(start, 10);
+	}
+
+
+	public static function find_view_by_name (name:String):Null<View> {
+		var windows = Sublime.windows();
+		for (w in windows) {
+			var views = w.views();
+
+			for (v in views) {
+				if (v.name() == name) return v;
+			}
+		}
+		return null;
+	}
+
+
+	public static function createMissingFolders(view:View) {
+		var fn = view.file_name();
+		var path = Path.dirname( fn );
+		if (!Path.isdir( path )) {
+			Os.makedirs( path );
+		}
+	}
 		
 
-def find_view_by_name (name):
-	windows = sublime.windows()
-	for w in windows:
-		views = w.views()
-		for v in views:
-			if (v.name() == name):
-				return v
-	return None
-
-def create_missing_folders(view):
-	fn = view.file_name()
-	path = os.path.dirname( fn )
-	if not os.path.isdir( path ) :
-		os.makedirs( path )
-
-def get_first_cursor_pos (view):
-	return view.sel()[0].begin()
-
-def get_content_until_first_cursor (view):
-	end = get_first_cursor_pos(view)
-	return get_content_until(view, end)
-
-def get_content_until (view, end_pos):
-	return view.substr(sublime.Region(0, end_pos))
-
-def get_content (view):
-	return view.substr(sublime.Region(0, view.size()))
-
-def is_hxsl (view):
-	return view.file_name().endswith(hxconfig.HXSL_SUFFIX)
-
-def is_supported (view):
-	return view.score_selector(0,hxconfig.SOURCE_HAXE+','+hxconfig.SOURCE_HXML+','+hxconfig.SOURCE_ERAZOR+','+hxconfig.SOURCE_NMML) > 0
-
-def is_unsupported (view):
-	return not is_supported(view)
-
-def get_scopes_at (view, pos):
-	return view.scope_name(pos).split()
-
-def is_haxe(view):
-	return view.score_selector(0,hxconfig.SOURCE_HAXE) > 0
-
-def is_hxml(view):
-	return view.score_selector(0,hxconfig.SOURCE_HXML) > 0
-
-def is_erazor(view):
-	return view.score_selector(0,hxconfig.SOURCE_ERAZOR) > 0
-
-def is_nmml(view):
-	return view.score_selector(0,hxconfig.SOURCE_NMML) > 0
-
-def replace_content (view, new_content):
-	def do_edit(view, edit):
-		view.replace(edit, sublime.Region(0, view.size()), new_content)
-		view.end_edit(edit)	
-
-	view.set_read_only(False)
-	async_edit(view, do_edit)
+	public static function getContentUntilFirstCursor (view:View) 
+	{
+		var end = getFirstCursorPos(view);
+		return getContentUntil(view, end);
+	}
 	
-def in_haxe_code (view, caret):
-	return view.score_selector(caret,"source.haxe") > 0 and view.score_selector(caret,"string") == 0 and view.score_selector(caret,"comment") == 0
+	public static function getContentUntil (view:View, endPos:Int) 
+	{
+		return view.substr(new Region(0, endPos));
+	}
 
-def in_haxe_string (view, caret):
-	return view.score_selector(caret,"source.haxe") > 0 and view.score_selector(caret,"string") > 0
+	public static function getContent (view:View) {
+		return view.substr(new Region(0, view.size()));
+	}
 
-def in_haxe_comments (view, caret):
-	return view.score_selector(caret,"source.haxe") > 0 and view.score_selector(caret,"comment") > 0		
+	public static function isHxsl (view:View) {
+		return ST.endsWith(view.file_name(), Config.HXSL_SUFFIX);
+	}
+
+	public static function isSupported (view:View) {
+		return view.score_selector(0,Config.SOURCE_HAXE+','+Config.SOURCE_HXML+','+Config.SOURCE_ERAZOR+','+Config.SOURCE_NMML) > 0;
+	}
+
+	public static function isUnsupported (view:View) {
+		return !isSupported(view);
+	}
+
+	public static function getScopesAt (view:View, pos:Int) {
+		return view.scope_name(pos).split(" ");
+	}
+
+
+	public static function isHaxe(view:View) {
+		return view.score_selector(0,Config.SOURCE_HAXE) > 0;
+	}
+	public static function isHxml(view:View) {
+		return view.score_selector(0,Config.SOURCE_HXML) > 0;
+	}
+
+	public static function isErazor(view:View) {
+		return view.score_selector(0,Config.SOURCE_ERAZOR) > 0;
+	}
+
+	public static function isNmml(view:View) {
+		return view.score_selector(0,Config.SOURCE_NMML) > 0;
+	}
+
+
+	public static function replaceContent (view:View, newContent:String) {
+		function doEdit(view:View, edit:Edit) {
+			view.replace(edit, new Region(0, view.size()), newContent);
+			//view.end_edit(edit);
+		}
+
+		view.set_read_only(false);
+		asyncEdit(view, doEdit);
+	}
+		
+	public static function inHaxeCode (view:View, caret:Int) {
+		return view.score_selector(caret,"source.haxe") > 0 && view.score_selector(caret,"string") == 0 && view.score_selector(caret,"comment") == 0;
+	}
+
+	public static function inHaxeString (view:View, caret:Int) {
+		return view.score_selector(caret,"source.haxe") > 0 && view.score_selector(caret,"string") > 0;
+	}
+
+	public static function inHaxeComments (view:View, caret) {
+		return view.score_selector(caret,"source.haxe") > 0 && view.score_selector(caret,"comment") > 0;
+	}
+
+}

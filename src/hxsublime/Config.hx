@@ -1,87 +1,124 @@
-target_packages = ["flash","flash8","neko","js","php","cpp","cs","java", "sys"]
+package hxsublime;
 
-targets = ["js","cpp","swf8","swf","neko","php","java","cs", "as3"]
+import python.lib.Types;
 
-target_std_packages = {
-	"js" : ["js"],
-	"cpp" : ["cpp", "sys"],
-	"neko" : ["neko", "sys"],
-	"php" : ["php", "sys"],
-	"java" : ["java", "sys"],
-	"cs" : ["cs", "sys"],
-	"swf" : ["flash"],
-    "as3" : ["flash"],
-	"swf8" : ["flash8"]
+class Config {
+    public static var target_packages = ["flash","flash8","neko","js","php","cpp","cs","java", "sys"];
+    public static var targets = ["js","cpp","swf8","swf","neko","php","java","cs", "as3"];
+    public static var target_std_packages = {
+        js : ["js"],
+        cpp : ["cpp", "sys"],
+        neko : ["neko", "sys"],
+        php : ["php", "sys"],
+        java : ["java", "sys"],
+        cs : ["cs", "sys"],
+        swf : ["flash"],
+        as3 : ["flash"],
+        swf8 : ["flash8"]
+    };
+    public static var ignored_folders_list =  [".git", ".svn"];
+
+    public static var ignored_folders = mk_ignored_folders();
+
+    public static function mk_ignored_folders () return {
+        var x = new Dict();
+        for (p in ignored_folders_list) {
+            x.set(p, true);
+        }
+        x;
+    }
+
+    public static var ignored_packages_list = ["neko._std", "cpp._std", "php._std", "js._std", "flash._std"];
+
+    public static var ignored_packages = mk_ignored_packages();
+    
+    public static function mk_ignored_packages () return {
+        var x = new Dict();
+        for (p in ignored_folders_list) {
+            x.set(p,true);
+        }
+        x;
+    }    
+
+    public static var ignored_types = ["haxe.io.BytesData.Unsigned_char__"];
+
+    public static var nme_targets = [
+        new NmeTarget("Flash",                "flash",      ["-debug"]),
+        new NmeTarget("HTML5",                "html5",      ["-debug"]),
+        new NmeTarget("C++",                  "cpp",        ["-debug"]),
+        new NmeTarget("Windows",              "windows",    ["-debug"]),
+        new NmeTarget("Mac",                  "mac",        ["-debug"]),
+        new NmeTarget("Linux",                "linux",      ["-debug"]),
+        new NmeTarget("Linux 64",             "linux",      ["-64 -debug"]),
+        new NmeTarget("iOs - iPhone simulator",    "ios",        ["-simulator -debug"]),
+        new NmeTarget("iOs - iPad simulator",      "ios",        ["-simulator -ipad -debug"]),
+        new NmeTarget("iOs - update XCode project",        "ios",        ["-ipad -debug"]),
+        new NmeTarget("Neko",                "neko",   ["-debug"]),
+        new NmeTarget("Neko 64",             "neko",    ["-64 -debug"]),
+        new NmeTarget("WebOs",             "webos",     ["-debug"]),
+        new NmeTarget("BlackBerry",             "blackberry",   ["-debug"]),
+        new NmeTarget("Android",             "android",   ["-debug"])
+    ];
+
+    public static var openfl_targets = [
+        new OpenFlTarget("Flash",                "flash",          ["-debug"]),
+        new OpenFlTarget("HTML5",                "html5",          ["-debug"]),
+        new OpenFlTarget("C++",                  "cpp",           ["-debug"]),
+        new OpenFlTarget("Windows",              "windows",       ["-debug"]),
+        new OpenFlTarget("Mac",                  "mac",       ["-debug"]),
+        new OpenFlTarget("Linux",                "linux",       ["-debug"]),
+        new OpenFlTarget("Linux 64",             "linux",        ["-64 -debug"]),
+        new OpenFlTarget("iOs - iPhone simulator",    "ios",         ["-simulator -debug"]),
+        new OpenFlTarget("iOs - iPad simulator",      "ios",         ["-simulator -ipad -debug"]),
+        new OpenFlTarget("iOs - update XCode project",        "ios",        ["-ipad -debug"]),
+        new OpenFlTarget("Neko",                "neko",        ["-debug"]),
+        new OpenFlTarget("Neko 64",             "neko",         ["-64 -debug"]),
+        new OpenFlTarget("Emscripten",             "emscripten",   ["-debug"]),    
+        new OpenFlTarget("WebOs",             "webos",     ["-debug"]),
+        new OpenFlTarget("BlackBerry",             "blackberry",    ["-debug"]),
+        new OpenFlTarget("Android",             "android",     ["-debug"])
+    ];
+
+
+    public static var SOURCE_HAXE = 'source.haxe.2';
+    public static var SOURCE_HXML = 'source.hxml';
+    public static var SOURCE_NMML = 'source.nmml';
+    public static var SOURCE_ERAZOR = 'source.erazor';
+    public static var HXSL_SUFFIX = '.hxsl';
+
 }
 
-ignored_folders_list =  [".git", ".svn"]
-ignored_folders = {}
-for p in ignored_folders_list:
-	ignored_folders[p] = True
 
-ignored_packages_list = ["neko._std", "cpp._std", "php._std", "js._std", "flash._std"]
+class NmeTarget 
+{
+    var name:String;
+    var plattform:String;
+    var args:Array<String>;
 
-ignored_packages = {}
-for p in ignored_packages_list:
-	ignored_packages[p] = True
+    public function new (name:String, plattform:String, args:Array<String>)
+    {
+        this.name = name;
+        this.plattform = plattform;
+        this.args = args;
+    }
+}
+ 
+class OpenFlTarget 
+{
+    var name:String;
+    var plattform:String;
+    var args:Array<String>;
 
-ignored_types = ["haxe.io.BytesData.Unsigned_char__"]
+    public function new (name:String, plattform:String, args:Array<String>)
+    {
+        this.name = name;
+        this.plattform = plattform;
+        this.args = args;
+    }
+}       
 
-class NmeTarget:
-    def __init__(self, name, plattform, args):
-        self.name = name
-        self.plattform = plattform
-        self.args = args
         
-class OpenFlTarget:
-    def __init__(self, name, plattform, args):
-        self.name = name
-        self.plattform = plattform
-        self.args = args
-        
-nme_targets = [
-    
-    NmeTarget("Flash",                "flash",      ["-debug"]),
-    NmeTarget("HTML5",                "html5",      ["-debug"]),
-    NmeTarget("C++",                  "cpp",        ["-debug"]),
-    NmeTarget("Windows",              "windows",    ["-debug"]),
-    NmeTarget("Mac",                  "mac",        ["-debug"]),
-    NmeTarget("Linux",                "linux",      ["-debug"]),
-    NmeTarget("Linux 64",             "linux",      ["-64 -debug"]),
-    NmeTarget("iOs - iPhone simulator",    "ios",        ["-simulator -debug"]),
-    NmeTarget("iOs - iPad simulator",      "ios",        ["-simulator -ipad -debug"]),
-    NmeTarget("iOs - update XCode project",        "ios",        ["-ipad -debug"]),
-    NmeTarget("Neko",                "neko",   ["-debug"]),
-    NmeTarget("Neko 64",             "neko",    ["-64 -debug"]),
-    NmeTarget("WebOs",             "webos",     ["-debug"]),
-    NmeTarget("BlackBerry",             "blackberry",   ["-debug"]),
-    NmeTarget("Android",             "android",   ["-debug"])
-]   
-
-openfl_targets = [
-    
-    OpenFlTarget("Flash",                "flash",          ["-debug"]),
-    OpenFlTarget("HTML5",                "html5",          ["-debug"]),
-    OpenFlTarget("C++",                  "cpp",           ["-debug"]),
-    OpenFlTarget("Windows",              "windows",       ["-debug"]),
-    OpenFlTarget("Mac",                  "mac",       ["-debug"]),
-    OpenFlTarget("Linux",                "linux",       ["-debug"]),
-    OpenFlTarget("Linux 64",             "linux",        ["-64 -debug"]),
-    OpenFlTarget("iOs - iPhone simulator",    "ios",         ["-simulator -debug"]),
-    OpenFlTarget("iOs - iPad simulator",      "ios",         ["-simulator -ipad -debug"]),
-    OpenFlTarget("iOs - update XCode project",        "ios",        ["-ipad -debug"]),
-    OpenFlTarget("Neko",                "neko",        ["-debug"]),
-    OpenFlTarget("Neko 64",             "neko",         ["-64 -debug"]),
-    OpenFlTarget("Emscripten",             "emscripten",   ["-debug"]),    
-    OpenFlTarget("WebOs",             "webos",     ["-debug"]),
-    OpenFlTarget("BlackBerry",             "blackberry",    ["-debug"]),
-    OpenFlTarget("Android",             "android",     ["-debug"])
-]   
+ 
 
 
 
-SOURCE_HAXE = 'source.haxe.2'
-SOURCE_HXML = 'source.hxml'
-SOURCE_NMML = 'source.nmml'
-SOURCE_ERAZOR = 'source.erazor'
-HXSL_SUFFIX = '.hxsl'
