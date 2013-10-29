@@ -1,393 +1,638 @@
-import re
-import os
+//import re
+//import os
+//
+//from haxe.tools.decorator import lazyprop
+//from haxe.log import log
+//import pprint
+//
+//pp = pprint.PrettyPrinter(indent=4, depth=3)
 
-from haxe.tools.decorator import lazyprop
-from haxe.log import log
-import pprint
+package hxsublime.tools;
 
-pp = pprint.PrettyPrinter(indent=4, depth=3)
+import python.lib.ArrayTools;
+import python.lib.Re;
+import python.lib.Types.Tup2;
+import python.lib.Types.Tup3;
 
+class Regex {
+	public static var compact_func = Re.compile("\\(.*\\)");
+	public static var compact_prop = Re.compile(":.*\\.([a-z_0-9]+)", Re.I);
+	public static var space_chars = Re.compile("\\s");
+	public static var word_chars = Re.compile("[a-z0-9._]", Re.I);
+	public static var import_line = Re.compile("^([ \t]*)import\\s+([a-z0-9._]+);", Re.I | Re.M);
+	public static var using_line = Re.compile("^([ \t]*)using\\s+([a-z0-9._]+);", Re.I | Re.M);
+	public static var package_line = Re.compile("\\s*package\\s*([a-z0-9.]*)\\s*;", Re.I);
+	public static var type_decl_with_scope = Re.compile("(private\\s+)?(?:extern\\s+)?(class|typedef|enum|interface|abstract)\\s+([A-Z][a-zA-Z0-9_]*)\\s*(<[a-zA-Z0-9_,]+>)?" , Re.M );
+	public static var type_decl = Re.compile("(class|typedef|enum|interface|abstract)\\s+([A-Z][a-zA-Z0-9_]*)\\s*(<[a-zA-Z0-9_,]+>)?" , Re.M );
+	public static var enum_start_decl = Re.compile("enum\\s+([A-Z][a-zA-Z0-9_]*)\\s*(<[a-zA-Z0-9_,]+>)?" , Re.M );
+	public static var skippable = Re.compile("^[a-zA-Z0-9_\\s]*$");
+	public static var in_anonymous = Re.compile("[{,]\\s*([a-zA-Z0-9_\"\']+)\\s*:\\s*$" , Re.M | Re.U );
+	public static var variables = Re.compile("var\\s+([^:;\\s]*)", Re.I);
+	public static var functions = Re.compile("function\\s+([^;\\.\\(\\)\\s]*)", Re.I);
+	public static var named_functions = Re.compile("function\\s+([a-zA-Z0-9_]+)\\s*", Re.I);
+	public static var function_params = Re.compile("function\\s+[a-zA-Z0-9_]+\\s*\\(([^\\)]*)", Re.M);
+	public static var param_default = Re.compile("(=\\s*\"*[^\"]*\")", Re.M);
+	public static var is_type = Re.compile("^[A-Z][a-zA-Z0-9_]*$");
+	public static var comments = Re.compile("(//[^\n\r]*?[\n\r]|/\\*(.*?)\\*/)", Re.MULTILINE | Re.DOTALL );
+	public static var _field = Re.compile("((?:(?:public|static|inline|private)\\s+)*)(var|function)\\s+([a-zA-Z_][a-zA-Z0-9_]*)", Re.MULTILINE);
 
-compact_func = re.compile("\(.*\)")
-compact_prop = re.compile(":.*\.([a-z_0-9]+)", re.I)
-space_chars = re.compile("\s")
-word_chars = re.compile("[a-z0-9._]", re.I)
-import_line = re.compile("^([ \t]*)import\s+([a-z0-9._]+);", re.I | re.M)
-using_line = re.compile("^([ \t]*)using\s+([a-z0-9._]+);", re.I | re.M)
-package_line = re.compile("\s*package\s*([a-z0-9.]*)\s*;", re.I)
+}
 
-type_decl_with_scope = re.compile("(private\s+)?(?:extern\s+)?(class|typedef|enum|interface|abstract)\s+([A-Z][a-zA-Z0-9_]*)\s*(<[a-zA-Z0-9_,]+>)?" , re.M )
+class HxSrcTools {
+	public static function skip_whitespace_or_comments(hx_src_section:String, start_pos:Int) {
+		var in_single_comment = false;
+		var in_multi_comment = false;
 
-type_decl = re.compile("(class|typedef|enum|interface|abstract)\s+([A-Z][a-zA-Z0-9_]*)\s*(<[a-zA-Z0-9_,]+>)?" , re.M )
+		var count = hx_src_section.length;
+		var pos = start_pos;
 
-enum_start_decl = re.compile("enum\s+([A-Z][a-zA-Z0-9_]*)\s*(<[a-zA-Z0-9_,]+>)?" , re.M )
+		while (true) {
 
-skippable = re.compile("^[a-zA-Z0-9_\s]*$")
-in_anonymous = re.compile("[{,]\s*([a-zA-Z0-9_\"\']+)\s*:\s*$" , re.M | re.U )
+			if (pos > count-1)
+				break;
+			var c = hx_src_section.charAt(pos);
+			var next = if (pos < count-1) hx_src_section.charAt(pos+1) else null;
 
-variables = re.compile("var\s+([^:;\s]*)", re.I)
-functions = re.compile("function\s+([^;\.\(\)\s]*)", re.I)
-named_functions = re.compile("function\s+([a-zA-Z0-9_]+)\s*", re.I)
-function_params = re.compile("function\s+[a-zA-Z0-9_]+\s*\(([^\)]*)", re.M)
-param_default = re.compile("(=\s*\"*[^\"]*\")", re.M)
-is_type = re.compile("^[A-Z][a-zA-Z0-9_]*$")
-comments = re.compile("(//[^\n\r]*?[\n\r]|/\*(.*?)\*/)", re.MULTILINE | re.DOTALL )
+			if (in_single_comment && c == "\n") 
+			{
+				pos += 1;
+				in_single_comment = false;
+			}
+			else if (in_multi_comment && c == "*" && next == "/") 
+			{
+				in_multi_comment = false;
+				pos += 2;
+			}
+			else if (in_single_comment || in_multi_comment) 
+			{
+				pos += 1;
+			}
+			else if (c == "/" && next == "/") 
+			{
+				pos += 2;
+				in_single_comment = true;
+			}
+			else if (c == "/" && next == "*") 
+			{
+				pos += 2;
+				in_multi_comment = true;
+			}
+			else if (c == " " || c == "\t" || c == "\n") 
+			{
+				pos += 1;
+			}
+			else {
+				// we are done
+				return Tup2.create(pos, hx_src_section.substring(start_pos,pos));
+			}
+		}
+		return null;
+	}
 
+	public static function is_same_nesting_level_at_pos (hx_src_section:String, end_pos:Int, start_pos:Int) 
+	{
 
+		if (end_pos < start_pos)
+		{
+			return false;
+		}
+		var open_pars = 0;
+		var open_braces = 0;
+		var open_brackets = 0;
+		var open_angle_brackets = 0;
+		var in_string = false;
+		var string_char = null;
+		var in_regexp = false;
 
-_field = re.compile("((?:(?:public|static|inline|private)\s+)*)(var|function)\s+([a-zA-Z_][a-zA-Z0-9_]*)", re.MULTILINE)
+		var count = hx_src_section.length;
+		var cur = "";
+		var pos = start_pos;
 
+		while (true) {
 
-def skip_whitespace_or_comments(hx_src_section, start_pos):
-	in_single_comment = False
-	in_multi_comment = False
-
-	count = len(hx_src_section)
-	pos = start_pos
-
-	while True:
-
-		if pos > count-1:
-			break
-		c = hx_src_section[pos]
-		next = hx_src_section[pos+1] if pos < count-1 else None
-
-		if in_single_comment and c == "\n":
-			pos += 1
-			in_single_comment = False
-		elif in_multi_comment and c == "*" and next == "/":
-			in_multi_comment = False
-			pos += 2
-		elif in_single_comment or in_multi_comment:
-			pos += 1
-		elif c == "/" and next == "/":
-			pos += 2
-			in_single_comment = True
-		elif c == "/" and next == "*":
-			pos += 2
-			in_multi_comment = True
-		elif c == " " or c == "\t" or c == "\n":
-			pos += 1
-		else:
-			# we are done
-			return (pos, hx_src_section[start_pos:pos])
-
-	return None
-
-
-def is_same_nexting_level_at_pos (hx_src_section, end_pos, start_pos):
-
-	if (end_pos < start_pos):
-		return False
-	open_pars = 0
-	open_braces = 0
-	open_brackets = 0
-	open_angle_brackets = 0
-	in_string = False
-	string_char = None
-	in_regexp = False
-
-	count = len(hx_src_section)
-	cur = ""
-	pos = start_pos
-	while (True):
-
-		if pos == end_pos or pos > count-1:
-			return open_pars == 0 and open_braces == 0 and open_brackets == 0 and open_angle_brackets == 0 and not in_string and not in_regexp
-
-
-		c = hx_src_section[pos]
-
-
-		next = hx_src_section[pos+1] if pos < count-1 else None
-
-		if in_regexp:
-			pos += 1
-			cur += c
-			if c != "\\" and next == "/":
-				in_regexp = False
-			continue
-
-		if in_string:
-			
-			if c == string_char:
-				pos += 1
-				cur += c
-				in_string = False
-			elif (c == "\\" and next == string_char):
-				pos += 2
-				cur += c + next
-				in_string = False
-			else:
-				cur += c
-				pos += 1
-			continue
-
-	
-		if c == "~" and next == "/":
-			pos +=2
-			in_regexp = True
-			cur += c
-		elif c == "'" or c == '"':
-			in_string = True
-			string_char = c
-			cur += c
-			pos += 1		
-		elif (c == "-" and next == ">"):
-			cur += "->"
-			pos += 2
-		elif (c == "{"):
-			pos += 1
-			open_braces += 1
-			cur += c
-		elif (c == "}"):
-			pos += 1
-			open_braces -= 1
-			cur += c
-		elif (c == "("):
-			pos += 1
-			open_pars += 1
-			cur += c
-		elif (c == ")"):
-			pos += 1
-			open_pars -= 1
-			cur += c
-		elif (c == "["):
-			pos += 1
-			open_brackets += 1
-			cur += c
-		elif (c == "]"):
-			pos += 1
-			open_brackets -= 1
-			cur += c
-		elif (c == "<"):
-			pos += 1
-			open_angle_brackets += 1
-			cur += c
-		elif (c == ">"):
-			pos += 1
-			open_angle_brackets -= 1
-			cur += c
-		else:
-			pos += 1
-			cur += c
-	return False
-
-# searches the next occurrence of `char` in `hx_src_section` on the same nesting level as the char at position `start_pos`
-# the search starts at position `start_pos` in `hx_src_section`.
-def search_next_char_on_same_nesting_level (hx_src_section, char, start_pos):
-	if not isinstance(char, list):
-		char = [char]
-
-	open_pars = 0
-	open_braces = 0
-	open_brackets = 0
-	open_angle_brackets = 0
-	in_string = False
-	string_char = None
-	in_regexp = False
-
-	count = len(hx_src_section)
-	cur = ""
-	pos = start_pos
-	while (True):
-		if pos > count-1:
-			break
-
-		c = hx_src_section[pos]
+			if (pos == end_pos || pos > count-1) {
+				return open_pars == 0 && open_braces == 0 && open_brackets == 0 && open_angle_brackets == 0 && !in_string && !in_regexp;
+			}
 
 
-		next = hx_src_section[pos+1] if pos < count-1 else None
-
-		if in_regexp:
-			pos += 1
-			cur += c
-			if c != "\\" and next == "/":
-				in_regexp = False
-			continue
-
-		if in_string:
-			
-			if c == string_char:
-				pos += 1
-				cur += c
-				in_string = False
-			elif (c == "\\" and next == string_char):
-				pos += 2
-				cur += c + next
-				in_string = False
-			else:
-				cur += c
-				pos += 1
-			continue
-
-		if (c in char and open_pars == 0 and open_braces == 0 and open_brackets == 0 and open_angle_brackets == 0):
-			return (pos,cur)
-		
-		if c == "~" and next == "/":
-			pos +=2
-			in_regexp = True
-			cur += c
-		elif c == "'" or c == '"':
-			in_string = True
-			string_char = c
-			cur += c
-			pos += 1		
-		elif (c == "-" and next == ">"):
-			cur += "->"
-			pos += 2
-		elif (c == "{"):
-			pos += 1
-			open_braces += 1
-			cur += c
-		elif (c == "}"):
-			pos += 1
-			open_braces -= 1
-			cur += c
-		elif (c == "("):
-			pos += 1
-			open_pars += 1
-			cur += c
-		elif (c == ")"):
-			pos += 1
-			open_pars -= 1
-			cur += c
-		elif (c == "["):
-			pos += 1
-			open_brackets += 1
-			cur += c
-		elif (c == "]"):
-			pos += 1
-			open_brackets -= 1
-			cur += c
-		elif (c == "<"):
-			pos += 1
-			open_angle_brackets += 1
-			cur += c
-		elif (c == ">"):
-			pos += 1
-			open_angle_brackets -= 1
-			cur += c
-		else:
-			pos += 1
-			cur += c
-	return None
-
-# reverse search the next occurrence of `char` in `hx_src_section` on the same nesting level as the char at position `start_pos`.
-# the reverse search starts at position `start_pos` in `hx_src_section`.
-def reverse_search_next_char_on_same_nesting_level (hx_src_section, char, start_pos):
-	if not isinstance(char, list):
-		char = [char]
-	open_pars = 0
-	open_braces = 0
-	open_brackets = 0
-	open_angle_brackets = 0
-	in_string = False
-	string_char = None
-
-	
-	cur = ""
-	pos = start_pos
-	while (True):
-		if pos <= -1:
-			break
+			var c = hx_src_section.charAt(pos);
 
 
+			var next = if (pos < count-1) hx_src_section.charAt(pos+1) else null;
 
-		c = hx_src_section[pos]
+			if (in_regexp) 
+			{
+				pos += 1;
+				cur += c;
+				if (c != "\\" && next == "/") {
+					in_regexp = false;
+				}
+				continue;
+			}
 
-		next = hx_src_section[pos-1] if pos > 0 else None
-
-		if in_string:
-			pos -= 1
-			cur = c+cur
-			if c == string_char and next != "\\":
-				in_string = False
-			continue
-
-
-		#log(c + " in " + str(char) + ":" + str(c in char))
-
-		# single line comment
-		if (c == "/" and next == "/"):
-			pos -= 2
-			cur = "//" + c
-			continue
-
-
-
-		if (c in char and open_pars == 0 and open_braces == 0 and open_brackets == 0 and open_angle_brackets == 0):
-			return (pos,cur)
+			if (in_string) {
 				
+				if (c == string_char) {
+					pos += 1;
+					cur += c;
+					in_string = false;
+				}
+				else if (c == "\\" && next == string_char) 
+				{
+					pos += 2;
+					cur += c + next;
+					in_string = false;
+				}
+				else 
+				{
+					cur += c;
+					pos += 1;
+				}
+				continue;
+			}
 
-		if c == "'" or c == '"':
-			in_string = True
-			string_char = c
-			cur = c + cur
-			pos -= 1
-		elif (c == ">" and next == "-"):
-			cur = "->" + cur
-			pos -= 2
-		elif (c == "}"):
-			pos -= 1
-			open_braces += 1
-			cur = c + cur
-		elif (c == "{"):
-			pos -= 1
-			open_braces -= 1
-			cur = c + cur
-		elif (c == ")"):
-			pos -= 1
-			open_pars += 1
-			cur = c + cur
-		elif (c == "("):
-			pos -= 1
-			open_pars -= 1
-			cur = c + cur
-		elif (c == "]"):
-			pos -= 1
-			open_brackets += 1
-			cur = c + cur
-		elif (c == "["):
-			pos -= 1
-			open_brackets -= 1
-			cur = c + cur
-		elif (c == ">"):
-			pos -= 1
-			open_angle_brackets += 1
-			cur = c + cur
-		elif (c == "<"):
-			pos -= 1
-			open_angle_brackets -= 1
-			cur = c + cur
-		else:
-			pos -= 1
-			cur = c + cur
-	return None
+		
+			if (c == "~" && next == "/") {
+				pos +=2;
+				in_regexp = true;
+				cur += c;
+			}
+			else if (c == "'" || c == '"')
+			{
+				in_string = true;
+				string_char = c;
+				cur += c;
+				pos += 1;
+			}
+			else if (c == "-" && next == ">") 
+			{
+				cur += "->";
+				pos += 2;
+			}
+			else if (c == "{") 
+			{
+				pos += 1;
+				open_braces += 1;
+				cur += c;
+			}
+			else if (c == "}") 
+			{
+				pos += 1;
+				open_braces -= 1;
+				cur += c;
+			}
+			else if (c == "(") 
+			{
+				pos += 1;
+				open_pars += 1;
+				cur += c;
+			}
+			else if (c == ")") 
+			{
+				pos += 1;
+				open_pars -= 1;
+				cur += c;
+			}
+			else if (c == "[") 
+			{
+				pos += 1;
+				open_brackets += 1;
+				cur += c;
+			}
+			else if (c == "]") 
+			{
+				pos += 1;
+				open_brackets -= 1;
+				cur += c;
+			}
+			else if (c == "<") 
+			{
+				pos += 1;
+				open_angle_brackets += 1;
+				cur += c;
+			}
+			else if (c == ">")
+			{
+				pos += 1;
+				open_angle_brackets -= 1;
+				cur += c;
+			}
+			else 
+			{
+				pos += 1;
+				cur += c;
+			}
+		}
+		return false;
+	}
 
-# removes comments from a haxe source
-def strip_comments (src):
-	return comments.sub( "" , src )
+
+	// searches the next occurrence of `char` in `hx_src_section` on the same nesting level as the char at position `start_pos`
+	// the search starts at position `start_pos` in `hx_src_section`.
+	public static function search_next_char_on_same_nesting_level (hx_src_section:String, chars:Array<String>, start_pos:Int) {
+		
+
+		var open_pars = 0;
+		var open_braces = 0;
+		var open_brackets = 0;
+		var open_angle_brackets = 0;
+		var in_string = false;
+		var string_char = null;
+		var in_regexp = false;
+
+		var count = hx_src_section.length;
+		var cur = "";
+		var pos = start_pos;
+		while (true) {
+			if (pos > count-1)
+				break;
+
+			var c = hx_src_section.charAt(pos);
 
 
-# returns the package a haxe source
-def get_package(src):
-	pack = ""
-	for ps in package_line.findall( src ) :
-		pack = ps
-	return pack
+			var next = if (pos < count-1) hx_src_section.charAt(pos+1) else null;
+
+			if (in_regexp) 
+			{
+				pos += 1;
+				cur += c;
+				if (c != "\\" && next == "/")
+					in_regexp = false;
+				continue;
+			}
+
+			if (in_string)
+			{
+				
+				if (c == string_char)
+				{
+					pos += 1;
+					cur += c;
+					in_string = false;
+				}
+				else if (c == "\\" && next == string_char)
+				{
+					pos += 2;
+					cur += c + next;
+					in_string = false;
+				}
+				else 
+				{
+					cur += c;
+					pos += 1;
+				}
+				continue;
+			}
+
+			if (ArrayTools.contains(chars,c) && open_pars == 0 && open_braces == 0 && open_brackets == 0 && open_angle_brackets == 0) 
+			{
+				return Tup2.create(pos,cur);
+			}
+			
+			if (c == "~" && next == "/")
+			{
+				pos +=2;
+				in_regexp = true;
+				cur += c;
+			}
+			else if (c == "'" || c == '"')
+			{
+				in_string = true;
+				string_char = c;
+				cur += c;
+				pos += 1;
+			}
+			else if (c == "-" && next == ">")
+			{
+				cur += "->";
+				pos += 2;
+			}
+			else if (c == "{")
+			{
+				pos += 1;
+				open_braces += 1;
+				cur += c;
+			}
+			else if (c == "}")
+			{
+				pos += 1;
+				open_braces -= 1;
+				cur += c;
+			}
+			else if (c == "(")
+			{
+				pos += 1;
+				open_pars += 1;
+				cur += c;
+			}
+			else if (c == ")")
+			{
+				pos += 1;
+				open_pars -= 1;
+				cur += c;
+			}
+			else if (c == "[")
+			{
+				pos += 1;
+				open_brackets += 1;
+				cur += c;
+			}
+			else if (c == "]")
+			{
+				pos += 1;
+				open_brackets -= 1;
+				cur += c;
+			}
+			else if (c == "<")
+			{
+				pos += 1;
+				open_angle_brackets += 1;
+				cur += c;
+			}
+			else if (c == ">")
+			{
+				pos += 1;
+				open_angle_brackets -= 1;
+				cur += c;
+			}
+			else
+			{
+				pos += 1;
+				cur += c;
+			}
+		}
+		return null;
+	}
+
+	// reverse search the next occurrence of `char` in `hx_src_section` on the same nesting level as the char at position `start_pos`.
+	// the reverse search starts at position `start_pos` in `hx_src_section`.
+	public static function reverse_search_next_char_on_same_nesting_level (hx_src_section:String, chars:Array<String>, start_pos:Int) {
+		
+		var open_pars = 0;
+		var open_braces = 0;
+		var open_brackets = 0;
+		var open_angle_brackets = 0;
+		var in_string = false;
+		var string_char = null;
+
+		
+		var cur = "";
+		var pos = start_pos;
+		while (true) {
+			if (pos <= -1) {
+				break;
+			}
 
 
 
-def empty_type_bundle():
-	return HaxeTypeBundle(dict())
+			var c = hx_src_section.charAt(pos);
+
+			var next = if (pos > 0) hx_src_section.charAt(pos-1) else null;
+
+			if (in_string) 
+			{
+				pos -= 1;
+				cur = c+cur;
+				if (c == string_char && next != "\\") {
+					in_string = false;
+				}
+
+				continue;
+			}
 
 
-class HaxeModule(object):
-	def __init__(self, pack, name, file):
-		self.pack = pack
-		self.name = name
-		self.file = file
+			trace(c + " in " + Std.string(chars) + ":" + Std.string(ArrayTools.contains(chars, c)));
+
+			// single line comment
+			if (c == "/" && next == "/") {
+				pos -= 2;
+				cur = "//" + c;
+				continue;
+			}
+
+
+
+			if (ArrayTools.contains(chars, c) && open_pars == 0 && open_braces == 0 && open_brackets == 0 && open_angle_brackets == 0) {
+				return Tup2.create(pos,cur);
+			}
+					
+
+			if (c == "'" || c == '\"') 
+			{
+				in_string = true;
+				string_char = c;
+				cur = c + cur;
+				pos -= 1;
+			}
+			else if (c == ">" && next == "-")
+			{
+				cur = "->" + cur;
+				pos -= 2;
+			}
+			else if (c == "}")
+			{
+				pos -= 1;
+				open_braces += 1;
+				cur = c + cur;
+			}
+			else if (c == "{")
+			{
+				pos -= 1;
+				open_braces -= 1;
+				cur = c + cur;
+			}
+			else if (c == ")")
+			{
+				pos -= 1;
+				open_pars += 1;
+				cur = c + cur;
+			}
+			else if (c == "(")
+			{	
+				pos -= 1;
+				open_pars -= 1;
+				cur = c + cur;
+			}
+			else if (c == "]")
+			{
+				pos -= 1;
+				open_brackets += 1;
+				cur = c + cur;
+			}
+			else if (c == "[")
+			{
+				pos -= 1;
+				open_brackets -= 1;
+				cur = c + cur;
+			}
+			else if (c == ">")
+			{
+				pos -= 1;
+				open_angle_brackets += 1;
+				cur = c + cur;
+			}
+			else if (c == "<")
+			{
+				pos -= 1;
+				open_angle_brackets -= 1;
+				cur = c + cur;
+			}
+			else
+			{
+				pos -= 1;
+				cur = c + cur;
+			}
+		}
+		return null;
+	}
+
+	// removes comments from a haxe source
+	public static function strip_comments (src:String) 
+	{
+		return Regex.comments.sub( "" , src );
+	}
+
+	// returns the package of a haxe source file
+	public static function get_package(src:String) 
+	{
+		var pack = "";
+		var all = Regex.package_line.findall( src );
+		
+		for (ps in all) {
+			pack = ps;
+		}
+		return pack;
+	}
+
+
+	//
+	// splits a function signature into a list of types
+	// e.g.
+	// split_function_signature("A -> Array<T> -> (Void->Void) -> Int")
+	// returns:
+	// ["A","Array<T>","(Void->Void)","Int"]
+	//
+	public static function split_function_signature (signature:String) {
+		var open_pars = 0;
+		var open_braces = 0;
+		var open_brackets = 0;
+
+		var types = [];
+		var count = signature.length;
+		var cur = "";
+		var pos = 0;
+		while (true) 
+		{
+			if (pos > count-1) {
+				ArrayTools.append(types, cur);
+				break;
+			}
+
+			var c = signature.charAt(pos);
+			var next = if (pos < count-1) signature.charAt(pos+1) else null;
+			
+			if (c == "-" && next == ">") 
+			{
+				if (open_pars == 0 && open_braces == 0 && open_brackets == 0) 
+				{
+					ArrayTools.append(types, cur);
+					cur = "";
+				}
+				else 
+				{
+					cur += "->";
+				}
+				
+				pos += 2;
+			}
+			else if (c == " " && open_pars == 0 && open_braces == 0 && open_brackets == 0)
+			{
+				pos += 1;
+			}
+			else if (c == "{")
+			{
+				pos += 1;
+				open_braces += 1;
+				cur += c;
+			}
+			else if (c == "}")
+			{
+				pos += 1;
+				open_braces -= 1;
+				cur += c;
+			}
+			else if (c == "(")
+			{
+				pos += 1;
+				open_pars += 1;
+				cur += c;
+			}
+			else if (c == ")")
+			{
+				pos += 1;
+				open_pars -= 1;
+				cur += c;
+			}
+			else if (c == "<")
+			{
+				pos += 1;
+				open_brackets += 1;
+				cur += c;
+			}
+			else if (c == ">")
+			{
+				pos += 1;
+				open_brackets -= 1;
+				cur += c;
+			}
+			else
+			{
+				pos += 1;
+				cur += c;
+			}
+		}
+		return types;
+	}
+
+
+
+	//public static function empty_type_bundle():
+	//	return HaxeTypeBundle(dict())
+}
+
+
+class HaxeModule 
+{
+	public var pack:Array<String>;
+	public var name:String;
+	public var file:String;
+	
+	public function new(pack:Array<String>, name:String, file:String) 
+	{
+		this.pack = pack;
+		this.name = name;
+		this.file = file;
+	}
+}
+
+
+/*
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -838,66 +1083,5 @@ def _extract_enum_constructors_from_enum (enumStr):
 
 
 
-#
-# splits a function signature into a list of types
-# e.g.
-# split_function_signature("A -> Array<T> -> (Void->Void) -> Int")
-# returns:
-# ["A","Array<T>","(Void->Void)","Int"]
-#
-def split_function_signature (signature):
-	open_pars = 0
-	open_braces = 0
-	open_brackets = 0
 
-	types = []
-	count = len(signature)
-	cur = ""
-	pos = 0
-	while (True):
-		if pos > count-1:
-			types.append(cur)
-			break
-
-		c = signature[pos]
-		next = signature[pos+1] if pos < count-1 else None
-		
-		if (c == "-" and next == ">"):
-			if (open_pars == 0 and open_braces == 0 and open_brackets == 0):
-				types.append(cur)
-				cur = ""
-			else:
-				cur += "->"
-			
-			pos += 2
-		elif (c == " " and open_pars == 0 and open_braces == 0 and open_brackets == 0):
-			pos += 1
-		elif (c == "{"):
-			pos += 1
-			open_braces += 1
-			cur += c
-		elif (c == "}"):
-			pos += 1
-			open_braces -= 1
-			cur += c
-		elif (c == "("):
-			pos += 1
-			open_pars += 1
-			cur += c
-		elif (c == ")"):
-			pos += 1
-			open_pars -= 1
-			cur += c
-		elif (c == "<"):
-			pos += 1
-			open_brackets += 1
-			cur += c
-		
-		elif (c == ">"):
-			pos += 1
-			open_brackets -= 1
-			cur += c
-		else:
-			pos += 1
-			cur += c
-	return types
+*/
