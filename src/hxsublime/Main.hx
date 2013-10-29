@@ -11,7 +11,8 @@ import hxsublime.tools.PathTools;
 import hxsublime.tools.SublimeTools;
 import hxsublime.tools.ViewTools;
 import hxsublime.tools.ScopeTools;
-//import hxsublime.tools.HxSrcTools;
+
+import hxsublime.tools.HxSrcTools;
 
 
 class Main {
