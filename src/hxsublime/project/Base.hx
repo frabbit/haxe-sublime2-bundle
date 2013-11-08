@@ -1,3 +1,104 @@
+package hxsublime.project;
+
+import hxsublime.tools.Cache;
+import hxsublime.tools.SublimeTools;
+import python.lib.Builtin;
+import python.lib.os.Path;
+import sublime.Sublime;
+import sublime.View;
+import sublime.Window;
+
+
+
+
+class Projects {
+    public static var projects = new Cache();
+    public static var userHome = Path.expanduser("~");
+
+    
+    public static var logFile = Path.join(userHome, "st3_haxe_log.txt");
+
+    public static var nextServerPort = 6000;
+
+    public static function fileLog (msg:Dynamic) {
+        var f = Builtin.open(logFile , "a+" );
+        f.write( Std.string(msg) + "\n");
+        f.close();
+    }
+
+
+
+    public static function cleanup_projects() 
+    {
+        var win_ids = [for (w in Sublime.windows()) w.id()];
+        var remove = [];
+        for (p in projects.data.keys()) {
+            var proj = projects.get_or_default(p, null);
+            if (proj != null && !Lambda.has(win_ids, proj.win_id)) {
+                remove.push(p);
+            }
+        }
+        
+        trace(remove);
+        for (pid in remove) {
+            trace(pid);
+            var project = projects.data.get(pid).val;
+            project.destroy();
+            trace("delete project from memory");
+            projects.data.remove(pid);
+        }
+    }
+
+
+    public static function get_project_id(file:String, win:Window) {
+        var id = if (file == null) "global" + Std.string(win.id()) else file;
+        return id;
+    }
+
+    public static function get_window (?view:View):Window
+    {
+        var win = null;
+        if (view != null) {
+            win = view.window();
+            if (win != null)
+                win = Sublime.active_window();
+        }
+        else {
+            win = Sublime.active_window();
+        }
+        return win;
+    }
+
+    public static function current_project(?view:View) {
+
+
+        cleanup_projects();
+
+        var file = SublimeTools.getProjectFile();
+        
+        var win = get_window(view);
+        
+        var id = get_project_id(file, win);
+
+        trace("project id:" + id);
+        //trace("project file:" + encode_utf8(file));
+        trace("win.id:" + Std.string(win.id()));
+
+        var res = projects.get_or_insert(id, create_project.bind(id, file, win));
+        
+        return res;
+    }
+
+    public static function create_project (id:String, file:String, win:Window) {
+        
+        
+        var p = new Project(id, file, win.id(), nextServerPort);
+        nextServerPort = nextServerPort + 20;
+        return p;
+    }
+}
+
+/*
 import sublime
 import sublime_plugin
 import os
@@ -59,68 +160,6 @@ def file_log (msg):
 
 
 
-def cleanup_projects():
-    win_ids = [w.id() for w in sublime.windows()]
-    remove = []
-    for p in _projects.data.keys():
-        proj = _projects.get_or_default(p, None)
-        if proj is not None and proj.win_id not in win_ids:
-            remove.append(p)
-            # project should be closed
-    
-    log(remove)
-    for pid in remove:
-        log(pid)
-        project = _projects.data[pid][1]
-        project.destroy()
-        log("delete project from memory")
-        del _projects.data[pid]
-        del project
-
-
-def get_project_id(file, win):
-    if (file == None):
-        id = "global" + str(win.id())
-    else:
-        id = file
-
-    return id
-
-def get_window (view):
-    if (view is not None):
-        win = view.window();
-        if win == None:
-            win = sublime.active_window()
-    else:
-        win = sublime.active_window()
-    return win
-
-def current_project(view = None):
-
-
-    cleanup_projects()
-
-    file = sublimetools.get_project_file()
-    
-    win = get_window(view)
-    
-    id = get_project_id(file, win)
-
-    log("project id:" + id)
-    #log("project file:" + encode_utf8(file))
-    log("win.id:" + str(win.id()))
-
-    res = _projects.get_or_insert(id, lambda:create_project(id, file, win) )
-    
-    return res
-
-def create_project (id, file, win):
-    global _next_server_port
-    
-    p = Project(id, file, win.id(), _next_server_port)
-    _next_server_port = _next_server_port + 20
-    return p
-
 class ProjectListener( sublime_plugin.EventListener ):
 
     def on_post_save( self , view ) :
@@ -144,3 +183,4 @@ class ProjectListener( sublime_plugin.EventListener ):
 
 
 
+*/

@@ -1,3 +1,204 @@
+package hxsublime;
+
+import haxe.ds.StringMap;
+
+
+
+class HaxeLibLibrary {
+
+	public var name: String;
+	public var dev: Bool;
+	public var version: String;
+	public var classes: Array<HaxeType>;
+	public var packages: Array<String>;
+	public var path:String;
+
+	public function new(manager:HaxeLibManager, name:String , dev:Bool , version:String ) 
+	{
+		this.name = name;
+		this.dev = dev;
+		this.version = version;
+		this.classes = null;
+		this.packages = null;
+ 
+		if (dev) {
+			this.path = version;
+			this.version = "dev";
+		} else {
+			path = Path.join( manager.basePath , name , self.version.split(".").join(","));
+		}
+	}
+ 
+
+	public function as_cmd_arg () 
+	{
+		return name + ":" + version;
+	}
+
+	public function extract_types( ) 
+	{
+		if (dev || classes == null && packages == null) {
+			var t = hxtypes.extract_types( self.path );
+			classes = t._1;
+			packages = t._2;
+		}
+		
+		return Tup2.create(self.classes, self.packages);
+	}
+}
+
+
+
+class HaxeLibManager {
+	
+	var available:StringMap<HaxeLibLibrary>;
+
+	var project:Project;
+
+	var basePath : String;
+
+	var scanned : Bool;
+
+	public function new(project:Project){
+		_available = new StringMap();
+		basePath = null;
+		scanned = false;
+		this.project = project;
+	}
+
+
+	@property
+	public function available (){
+		if (!self.scanned) {
+			scan();
+		}
+		return _available;
+	}
+
+	public function get( name:String ) {
+		if( available.exists(name))
+			return available.get(name);
+		else {
+			Sublime.status_message( "Haxelib : "+ name +" project not installed" );
+			return null;
+		}
+	}
+
+	public function get_completions() {
+		var comps = [];
+		for (k in available.keys())
+		{
+			lib = available[k];
+			comps.push( Tup2.create( lib.name + " [" + lib.version + "]" , lib.name ) );
+		}
+
+		return comps;
+	}
+
+	static var libLine = Re.compile("([^:]*):[^\\[]*\[(dev\\:)?(.*)\\]");
+
+	public function scan() 
+	{
+		scanned = true;
+		var env = project.haxe_env();
+		trace("do scan");
+		var cmd = project.haxelib_exec();
+		cmd.push("config");
+		var r = run_cmd( cmd, env=env );
+		var hlout = r._1;
+		var hlerr = r._2;
+		var basePath = hlout.strip();
+
+		_available = new StringMap();
+
+		var cmd = project.haxelib_exec();
+		cmd.push("list");
+		
+		var r = run_cmd( cmd, env=env );
+		var hlout = r._1;
+		var hlerr = r._2;
+		trace("haxelib output: " + hlout);
+		trace("haxelib error: " + hlerr);
+		for (l in hlout.split("\n")) {
+			found = libLine.match( l );
+			if (found != null) 
+			{
+				var g = found.groups();
+				var name = g._1, dev = g._2, version = g._3;
+				var lib = new HaxeLibLibrary( self, name , dev != null , version );
+
+				_available.set( name , lib);
+			}
+		}
+	}
+
+	public function install_lib(lib){
+		var cmd = project.haxelib_exec();
+		var env = project.haxe_env();
+		cmd.push("install");
+		cmd.push(lib);
+		trace(Std.string(cmd));
+		run_cmd(cmd, env=env);
+		scan();
+	}
+
+	public function remove_lib(lib){
+		var cmd = project.haxelib_exec();
+		var env = project.haxe_env();
+		cmd.push("remove");
+		cmd.push(lib);
+		trace(Std.string(cmd));
+		run_cmd(cmd,env=env);
+		scan();
+	}
+
+	public function upgrade_all(){
+		var cmd = project.haxelib_exec();
+		var env = project.haxe_env();
+		cmd.push("upgrade");
+		trace(Std.string(cmd));
+		run_cmd(cmd, env=env);
+		scan();
+	}
+
+	public function self_update(){
+		var cmd = project.haxelib_exec();
+		var env = project.haxe_env();
+		cmd.push("selfupdate");
+		trace(Std.string(cmd));
+		run_cmd(cmd, env=env);
+		scan();
+	}
+
+	public function search_libs(){
+		var cmd = project.haxelib_exec();
+		var env = project.haxe_env();
+		cmd.push("search");
+		cmd.push("_");
+		trace(Std.string(cmd));
+		var res = run_cmd(cmd, env=env);
+		var out = res._1;
+		var err = res._2;
+		return _collect_libraries(out);
+	}
+
+	public function _collect_libraries(out:String){
+		var x = out.split("\n");
+		x.reverse();
+		return x;
+	}
+
+	public function is_lib_installed(lib:String){
+		return Lambda.has(available.keys(), lib);
+	}
+	
+	public function get_lib(lib:String) {
+		return available.get(lib);
+	}
+
+}
+
+/*
 import re
 import os
 import sublime
@@ -8,138 +209,6 @@ from haxe.log import log
 
 from haxe.execute import run_cmd
 
-libLine = re.compile("([^:]*):[^\[]*\[(dev\:)?(.*)\]")
-
-class HaxeLibManager:
-	
-	def __init__(self, project):
-		self._available = {}
-		self.basePath = None
-		self.scanned = False
-		self.project = project
 
 
-	@property
-	def available (self):
-		if not self.scanned:
-			self.scan()
-		return self._available
-
-	def get( self, name ) :
-		if( name in self.available.keys()):
-			return self.available[name]
-		else :
-			
-			sublime.status_message( "Haxelib : "+ name +" project not installed" )
-			return None
-
-	def get_completions(self) :
-		comps = []
-		for l in self.available :
-			lib = self.available[l]
-			comps.append( ( lib.name + " [" + lib.version + "]" , lib.name ) )
-
-		return comps
-
-	def scan(self) :
-		self.scanned = True
-		env = self.project.haxe_env()
-		log("do scan")
-		cmd = self.project.haxelib_exec()
-		cmd.append("config")
-		hlout, hlerr = run_cmd( cmd, env=env )
-		self.basePath = hlout.strip()
-
-		self._available = {}
-
-		cmd = self.project.haxelib_exec()
-		cmd.append("list")
-		
-		hlout, hlerr = run_cmd( cmd, env=env )
-		log("haxelib output: " + hlout)
-		log("haxelib error: " + hlerr)
-		for l in hlout.split("\n") :
-			found = libLine.match( l )
-			if found is not None :
-				name, dev, version = found.groups()
-				lib = HaxeLibLibrary( self, name , dev is not None , version )
-
-				self._available[ name ] = lib
-
-	def install_lib(self, lib):
-		cmd = self.project.haxelib_exec()
-		env = self.project.haxe_env()
-		cmd.append("install")
-		cmd.append(lib)
-		log(str(cmd))
-		run_cmd(cmd, env=env)
-		self.scan()
-
-	def remove_lib(self, lib):
-		cmd = self.project.haxelib_exec()
-		env = self.project.haxe_env()
-		cmd.append("remove")
-		cmd.append(lib)
-		log(str(cmd))
-		run_cmd(cmd,env=env)
-		self.scan()
-
-	def upgrade_all(self):
-		cmd = self.project.haxelib_exec()
-		env = self.project.haxe_env()
-		cmd.append("upgrade")
-		log(str(cmd))
-		run_cmd(cmd, env=env)
-		self.scan()
-
-	def self_update(self):
-		cmd = self.project.haxelib_exec()
-		env = self.project.haxe_env()
-		cmd.append("selfupdate")
-		log(str(cmd))
-		run_cmd(cmd, env=env)
-		self.scan()
-
-	def search_libs(self):
-		cmd = self.project.haxelib_exec()
-		env = self.project.haxe_env()
-		cmd.append("search")
-		cmd.append("_")
-		log(str(cmd))
-		out,err = run_cmd(cmd, env=env);
-		return self._collect_libraries(out)
-
-	def _collect_libraries(self, out):
-		return out.splitlines()[0:-1]
-
-	def is_lib_installed(self, lib):
-		return lib in self.available
-	
-	def get_lib(self, lib):
-		return self.available[lib]
-
-class HaxeLibLibrary :
-
-	def __init__( self , manager, name , dev , version ):
-		self.name = name
-		self.dev = dev
-		self.version = version
-		self.classes = None
-		self.packages = None
- 
-		if self.dev :
-			self.path = self.version
-			self.version = "dev"
-		else : 
-			self.path = os.path.join( manager.basePath , self.name , ",".join(self.version.split(".")) )
- 
-
-	def as_cmd_arg (self):
-		return self.name + ":" + self.version
-
-	def extract_types( self ):
-
-		if self.dev is True or ( self.classes is None and self.packages is None ):
-			self.classes, self.packages = hxtypes.extract_types( self.path )
-		
-		return self.classes, self.packages
+*/

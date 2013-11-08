@@ -1,12 +1,20 @@
-class ExtractBuildPathException (Exception):
-	def __init__(self, build):
-		Exception.__init__(self, "Cannot ExtractBuildPath from build " + str(build))
+package hxsublime;
+import python.lib.Types.Exception;
+class ExtractBuildPathException extends Exception {
+	public function  new(build) {
+		super("Cannot ExtractBuildPath from build " + Std.string(build))
+	}
+}
 
-class GetRelativePathException (Exception):
-	def __init__(self, build, file):
-		Exception.__init__(self, "Cannot get the relative path of " + str(file) + " for build " + str(build))
+class GetRelativePathException extends Exception {
+	public function  new(build, file) {
+		super("Cannot get the relative path of " + Std.string(file) + " for build " + Std.string(build))
+	}
+}
 
 
-class CreateTempFileOrFolderException (Exception):
-	def __init__(self, build, file_or_folder):
-		Exception.__init__(self, "Cannot create temp file or folder (" + str(file_or_folder) + ") from build (" + str(build) + ")")
+class CreateTempFileOrFolderException extends Exception {
+	public function  new(build, file_or_folder) {
+		super("Cannot create temp file or folder (" + Std.string(file_or_folder) + ") from build (" + Std.string(build) + ")")
+	}
+}

@@ -2,15 +2,19 @@
 //import os
 //
 //from haxe.tools.decorator import lazyprop
-//from haxe.log import log
+//from haxe.trace import trace
 //import pprint
 //
 //pp = pprint.PrettyPrinter(indent=4, depth=3)
 
 package hxsublime.tools;
 
+import haxe.ds.StringMap;
 import python.lib.ArrayTools;
+import python.lib.Os;
+import python.lib.os.Path;
 import python.lib.Re;
+import python.lib.Types.Dict;
 import python.lib.Types.Tup2;
 import python.lib.Types.Tup3;
 
@@ -35,10 +39,96 @@ class Regex {
 	public static var is_type = Re.compile("^[A-Z][a-zA-Z0-9_]*$");
 	public static var comments = Re.compile("(//[^\n\r]*?[\n\r]|/\\*(.*?)\\*/)", Re.MULTILINE | Re.DOTALL );
 	public static var _field = Re.compile("((?:(?:public|static|inline|private)\\s+)*)(var|function)\\s+([a-zA-Z_][a-zA-Z0-9_]*)", Re.MULTILINE);
-
+	public static var _type_decl_with_scope = Re.compile("(private\\s+)?(extern\\s+)?(class|typedef|enum|interface|abstract)\\s+([A-Z][a-zA-Z0-9_]*)\\s*(<[a-zA-Z0-9,_]+>)?(:?\\{|\\s+)" , Re.M );
+	public static var enum_constructor_start_decl = Re.compile("\\s+([a-zA-Z_]+)" , Re.M );
 }
 
 class HxSrcTools {
+
+
+	
+
+	public static function get_types_from_src (src:String, module_name:String, file:String, src_with_comments:String) 
+	{
+		if (module_name == null) {
+			module_name = Path.splitext( Path.basename(file) )._1;
+		}
+
+		var pack = get_package(src);
+
+		var res = new StringMap();
+		for (decl in Regex._type_decl_with_scope.findall( src )) {
+			var is_private = decl.group(1) != null;
+			
+			var type_name = decl.group(4);
+
+			if (type_name == "NME_") {
+				trace(Std.string(decl.group(0)));
+			}
+			var kind = decl.group(3);
+
+			var is_extern = decl.group(2) != null;
+
+			var is_module_type = type_name == module_name;
+			var is_std_type = module_name == "StdTypes";
+
+			var full_type = new HaxeType(pack, module_name, type_name, kind, is_private, is_module_type, is_std_type, is_extern, file, src, src_with_comments, decl);
+
+			if (full_type.is_enum()) {
+				full_type._enum_constructors = _extract_enum_constructors_from_src(src, decl.end(4));
+			}
+
+			if (!res.exists(full_type.full_qualified_name())) {
+				res.set(full_type.full_qualified_name(), full_type);
+			}	
+		}
+
+		return new HaxeTypeBundle(res);
+	}
+
+
+
+	private static function _extract_enum_constructors_from_src (src:String, start_pos:Int) {
+
+		var constructors = null;
+		
+		var start = search_next_char_on_same_nesting_level(src, ["{"], start_pos);
+		if (start != null) {
+			var end = search_next_char_on_same_nesting_level(src, ["}"], start._1 + 1);
+			if (end != null) {
+				constructors = _extract_enum_constructors_from_enum(src.substring(start._1 + 1, end._1-1));
+			}
+		}
+				
+		return constructors;
+	}
+
+	
+
+	private static function _extract_enum_constructors_from_enum (enumStr:String) {
+		
+		var constructors = [];
+		var start = 0;
+		while (true) {
+			var m = Regex.enum_constructor_start_decl.match(enumStr, start);
+			if (m != null) {
+				var constructor = m.group(1);
+				constructors.push(constructor);
+				var end = search_next_char_on_same_nesting_level(enumStr, [";"], m.end(1));
+				if (end != null) {
+					start = end._1+1;
+				}	
+				else {
+					break;
+				}
+			}
+			else {
+				break;
+			}
+		}
+		return constructors;
+	}
+
 	public static function skip_whitespace_or_comments(hx_src_section:String, start_pos:Int) {
 		var in_single_comment = false;
 		var in_multi_comment = false;
@@ -603,11 +693,11 @@ class HxSrcTools {
 
 class HaxeModule 
 {
-	public var pack:Array<String>;
+	public var pack:String;
 	public var name:String;
 	public var file:String;
 	
-	public function new(pack:Array<String>, name:String, file:String) 
+	public function new(pack:String, name:String, file:String) 
 	{
 		this.pack = pack;
 		this.name = name;
@@ -615,6 +705,543 @@ class HaxeModule
 	}
 }
 
+
+class HaxeTypeBundle {
+	var _types:StringMap<HaxeType>;
+
+	public function new(types) 
+	{
+		this._types = types;
+	}
+
+	public function toString() 
+	{
+		return "HaxeTypeBundle(\n" + python.lib.PPrint.pformat(_types) + "\n)";
+	}
+
+
+	// merges `itself` and `other` into a new type bundle. Order matters, because types from `other` shadow the types of self if they have
+	// the same fullqualified name, which is the dict identifier.
+	public function merge (other:HaxeTypeBundle) 
+	{
+		var res:StringMap<HaxeType> = [for (k in _types.keys()) k => _types.get(k)];
+
+		for (k in res.keys()) {
+			res.set(k, res.get(k));
+		}
+		
+		return new HaxeTypeBundle(res);
+	}
+
+	// returns all available packages based on the types inside of this bundle
+	public function packs () {
+		var res = new StringMap();
+
+		for (k in _types.keys()) {
+			var p = _types.get(k).pack;
+			if (p != "") {
+				res.set(p,null);
+			}
+		}
+
+		return Lambda.array({ iterator : function () return res.keys()});
+	}
+
+	public function all_modules () {
+		var res = new StringMap();
+		for (k in _types.keys()) {
+			var t = _types.get(k);
+			res.set(t.full_pack_with_module(), new HaxeModule(t.pack, t.module, t.file));
+		}
+			
+		return res;
+	}
+
+	public function all_modules_list () {
+		var mods = all_modules();
+		return [ for (m in mods) m];
+	}
+
+
+	public function all_types_and_enum_constructors_with_info () {
+		var res = new StringMap();
+		for (k in _types.keys()) {
+			var t = _types.get(k);
+			if (t.is_enum())
+				for (ec in t.full_qualified_enum_constructors_with_optional_module())
+					res.set(ec,t);
+			var fq_name = t.full_qualified_name_with_optional_module();
+			res.set(fq_name, t);
+		}
+
+		return res;
+	}
+
+	public function all_types_and_enum_constructors () {
+		var res = all_types_and_enum_constructors_with_info();
+		return [for (k in res.keys()) k];
+	}
+
+	// returns a list of all types stored in this type bundle
+	public function all_types() {
+		return [for (v in _types) v];
+	}
+
+
+	public function filter (fn:HaxeType->Bool) 
+	{
+		var res = new StringMap();
+		for (k in _types.keys()) {
+			var t = _types.get(k);
+			if (fn(t)) {
+				res.set(k, t);
+			}
+		}
+
+		return new HaxeTypeBundle(res);
+	}	
+
+	public function filter_by_classpath (cp) {
+		return filter(function (p) return p.classpath == cp);
+	}
+
+	public function filter_by_classpaths (cps:Array<String>) {
+		return filter(function (p) return Lambda.has(cps, p.classpath()));
+	}
+}
+class EnumConstructor 
+{
+	
+	var name:String;
+	var enumType : HaxeType;
+	public function new (name, enum_type) 
+	{
+		this.name = name;
+		this.enumType = enum_type;
+	}
+
+	public function to_snippet_insert (import_list:Array<String>, insert_file:String) 
+	{
+		for (i in import_list) {
+			if (enumType.file == insert_file ||
+				i == enumType.full_qualified_name_with_optional_module() ||
+				i == enumType.full_pack_with_module() ||
+				i == enumType.full_qualified_name_with_optional_module() + "." + name) 
+			{
+				return name;
+			}
+		}
+		
+		return enumType.full_qualified_name_with_optional_module() + "." + name;
+	}
+
+	//@lazyprop
+	public function type_hint() 
+	{
+		return "enum value";
+	}
+
+
+	public function to_snippet(insert_file:String, import_list:Array<String>):Tup2<String, String>
+	{
+		var location = if (enumType.full_pack_with_optional_module().length > 0) " (" + enumType.full_pack_with_optional_module() + ")" else "";
+		var display = enumType.name + "." + name + location + "\t" + type_hint();
+		var insert = to_snippet_insert(import_list, insert_file);
+
+		return Tup2.create(display, insert);
+	}
+}
+
+class HaxeField {
+	public var type : HaxeType;
+	public var name : String;
+	public var kind : String;
+	public var is_static : Bool;
+	public var is_public : Bool;
+	public var is_inline : Bool;
+	public var is_private : Bool;
+
+	public var match_decl : MatchObject;
+
+	public function new (type, name, kind, is_static, is_public, is_inline, is_private, match_decl) 
+	{
+		this.type = type;
+		this.name = name;
+		this.kind = kind;
+		this.is_static = is_static;
+		this.is_public = is_public;
+		this.is_inline = is_inline;
+		this.is_private = is_private;
+		this.match_decl = match_decl;
+	}
+		
+
+	@lazyprop
+	public function src_pos () {
+		for (decl in Regex._field.finditer( type.src_with_comments ))
+		{
+			if (decl.group(0) == match_decl.group(0)) {
+				return decl.start(0);
+			}
+		}
+		return null;
+	}
+
+	@lazyprop
+	public function is_var () 
+	{
+		return kind == "var";
+	}
+
+	@property
+	public function file () 
+	{
+		return type.file;
+	}
+
+	@lazyprop
+	public function is_function () 
+	{
+		return kind == "function";
+	}
+
+	
+	public function toString () 
+	{
+		return type.full_qualified_name_with_optional_module() + ( if (is_static || name == "new") "::" else ".") + name;
+	}
+
+	public function to_expression () {
+		return type.full_qualified_name_with_optional_module() + "." + name;
+	}
+
+}
+
+class HaxeType {
+
+	public var src:String;
+	public var src_with_comments:String;
+	public var match_decl:MatchObject;
+	public var is_private:Bool;
+	public var pack:String;
+	public var module:String;
+	public var kind:String;
+	public var name:String;
+	public var is_module_type:Bool;
+	public var is_std_type:Bool;
+	public var is_extern:Bool;
+	public var file:String;
+	public var _enum_constructors:Array<String>;
+
+	public function new(pack, module, name, kind, is_private, is_module_type, is_std_type, is_extern, file, src, src_with_comments, match_decl) 
+	{
+		this.src = src; // src without comments
+		this.src_with_comments = src_with_comments;
+		this.match_decl = match_decl;
+		this.is_private = is_private;
+		this.pack = pack;
+		this.module = module;
+		this.kind = kind;
+		this.name = name;
+		this.is_module_type = is_module_type;
+		this.is_std_type = is_std_type;
+		this.is_extern = is_extern;
+		this.file = file;
+		this._enum_constructors = null;
+	}
+
+	@lazyprop
+	public function stripped_start_decl_pos() {
+		return match_decl.start(0);
+	}
+
+	@lazyprop
+	public function class_body () {
+
+		var res = null;
+		if (this.stripped_end_decl_pos == null) 
+		{
+			res = "";
+		}
+		else 
+		{
+			res = this.src.substring(this.stripped_start_decl_pos(), this.stripped_end_decl_pos());
+		}
+
+		return res;
+	}
+
+	
+	@lazyprop
+	public function public_static_fields () 
+	{
+		var res = [];
+		res = res.concat(this.public_static_vars());
+		res = res.concat(this.public_static_functions());
+		return res;
+	}
+
+
+
+
+	@lazyprop 
+	public function all_fields () 
+	{
+
+		var res = new StringMap();
+		if (class_body != null) {
+			for (decl in Regex._field.findall(class_body())) 
+			{
+				var modifiers = decl.group(1);
+				var is_static = modifiers != null && modifiers.find("static") > -1;
+				var is_inline = modifiers != null && modifiers.find("inline") > -1;
+				var is_private = modifiers != null && modifiers.find("private") > -1;
+				var is_public = modifiers != null && modifiers.find("public") > -1;
+				var kind = decl.group(2);
+				var name = decl.group(3);
+				if (name == "WAIT_END_RET") trace(modifiers);
+
+				if (is_private || is_public || is_static || this.is_extern || HxSrcTools.is_same_nesting_level_at_pos(class_body(), decl.start(0), class_body_start()._1))
+					res.set(name, new HaxeField(this, name, kind, is_static, is_public, is_inline, is_private, decl));
+			}
+		}
+		return res;
+	}
+
+	
+	@lazyprop
+	public function all_fields_list () 
+	{
+		var all = all_fields();
+		return [for (k in all.keys()) all.get(k) ];
+	}
+
+	@lazyprop
+	public function public_static_vars () 
+	{
+		var all = all_fields();
+		return [for (k in all.keys()) if (all.get(k).is_static && all.get(k).is_var()) all.get(k)];
+	}
+
+	@lazyprop
+	public function public_static_functions () 
+	{
+		var all = all_fields();
+		return [for (k in all.keys()) if (all.get(k).is_static && all.get(k).is_function() ) all.get(k)];
+	}
+
+	@lazyprop
+	public function class_body_start () {
+		var start = match_decl.start(0);
+		if (is_abstract() || is_class()) {
+			return HxSrcTools.search_next_char_on_same_nesting_level(src, ["{"], start);
+		}
+		return null;
+	}
+
+	@lazyprop
+	public function stripped_end_decl_pos () {
+		
+		var class_body_start = this.class_body_start();
+		var res = null;
+		if (class_body_start != null) {
+			trace("have class_body_start:" + Std.string(class_body_start._1));
+			var class_body_end = HxSrcTools.search_next_char_on_same_nesting_level(src, ["}"], class_body_start._1+1);
+			if (class_body_end != null) {
+				trace("have class_body_end:" + Std.string(class_body_end._1));
+				res = class_body_end._1;
+			}
+			else {
+				res = null;
+			}
+		}
+		else 
+		{
+			res = null;
+		}
+		return res;
+
+	}
+		
+
+
+
+	@lazyprop
+	public function src_pos ():Int {
+		for (decl in Regex.type_decl_with_scope.findall( src_with_comments )) {
+			trace(Std.string(decl.group(0)));
+			trace(Std.string(match_decl.group(0)));
+			if (decl.group(0) == match_decl.group(0)) {
+				return decl.start(0);
+			}
+		}
+		return null;
+	}
+
+	public function to_snippet(insert_file:String, import_list:Array<String>) {
+		var location = if (full_pack_with_optional_module().length > 0) (" (" + full_pack_with_optional_module() + ")") else "";
+		var display = name + location + "\t" + type_hint;
+		var insert = to_snippet_insert(import_list, insert_file);
+
+		return Tup2.create(display, insert);
+	}
+
+	// convert this type into insert snippets. Multiple snippets when it's an enum, separated into the enum itself and it's constructors.
+	public function to_snippets(import_list:Array<String>, insert_file:String) {
+		var res = [to_snippet(insert_file, import_list)];
+
+		if (is_enum() && _enum_constructors != null) {
+			res = res.concat([for (ev in enum_constructors()) ev.to_snippet(insert_file, import_list)]);
+		}
+		return res;
+	}
+
+
+	public function to_snippet_insert (import_list:Array<String>, insert_file:String)
+	{
+		for (i in import_list) {
+			if (file == insert_file ||
+				i == full_pack_with_module() ||
+				i == full_qualified_name_with_optional_module() || 
+				i == full_qualified_name()) 
+			{
+				return name;
+			}
+		}
+		
+		return full_qualified_name_with_optional_module();
+	}
+
+
+	@lazyprop
+	public function toplevel_pack():Null<String> {
+		var pl = pack_list();
+		if (pl.length > 0)
+			return pl[0];
+		return null;
+	}
+
+	@lazyprop	
+	public function type_hint() 
+	{
+		return kind;
+	}
+
+	
+	@lazyprop
+	public function full_pack_with_optional_module() 
+	{
+		var mod = if (is_module_type || is_std_type) "" else pack_suffix + module;
+		return pack + mod;
+	}
+
+	@lazyprop
+	public function full_pack_with_module() 
+	{
+		return pack + pack_suffix + module;
+	}
+
+	@lazyprop
+	public function is_enum () 
+	{
+		return kind == "enum";
+	}
+
+	@lazyprop
+	public function is_class () {
+		return kind == "class";
+	}
+
+	@lazyprop
+	public function is_abstract () {
+		return return kind == "abstract";
+	}
+
+	public function __repr__() {
+		return toString();
+	}
+
+	@lazyprop
+	public function pack_list():Array<String> {
+		return if (pack.length > 0) pack.split(".") else [];
+	}
+
+	@lazyprop
+	public function pack_suffix() {
+		return if (pack.length == 0) "" else ".";
+	}
+
+	@lazyprop
+	public function full_qualified_name_with_optional_module() {
+		var mod = if (is_module_type || is_std_type ) "" else module + ".";
+		return pack + pack_suffix + mod + name;
+	}
+
+	@lazyprop
+	public function enum_constructors() 
+	{
+		var res = null;
+		if (is_enum() && _enum_constructors != null) {
+			res = [for (e in _enum_constructors) new EnumConstructor(e, this) ];
+		}
+		else {
+			res = [];
+		}
+		return res;
+	}
+	
+	@lazyprop
+	public function full_qualified_enum_constructors_with_optional_module() {
+		var res = null;
+		if (!is_enum() || _enum_constructors == null) 
+		{
+			res = [];
+		}
+		else 
+		{
+			var fqName = full_qualified_name_with_optional_module();
+			res = [for (e in _enum_constructors) fqName + "." + e];
+		}
+		return res;
+	}
+
+	@lazyprop
+	public function classpath() {
+		var path_append = [for (_ in pack_list()) ".."];
+
+		
+		var mod_dir = python.lib.os.Path.dirname(file);
+		var fp = [mod_dir];
+		fp = fp.concat(path_append);
+
+		var full_dir = fp.join(Os.sep);
+
+		return Path.normpath(full_dir);
+	}
+
+	@lazyprop
+	public function full_qualified_name() {
+		return pack + pack_suffix() + module + "." + name;
+	}
+
+	public function toString() 
+	{
+		return ("{"
+			+ " pack:" + Std.string(this.pack) + ", "
+			+ " module:" + Std.string(this.module) + ", "
+			+ " name:" + Std.string(this.name) + ", "
+			+ " kind:" + Std.string(this.kind) + ", "
+			+ " enum_constructors:" + Std.string(this.enum_constructors()) + ", "
+			+ " is_private:" + Std.string(this.is_private) + ", "
+			+ " is_module_type:" + Std.string(this.is_module_type) + ", "
+			+ " is_std_type:" + Std.string(this.is_std_type) + ", "
+			+ " is_extern:" + Std.string(this.is_extern) + ", "
+			+ " file:'" + Std.string(this.file) + "'"
+			+ " classpath:'" + Std.string(this.classpath()) + "'"
+			+ " }");
+	}
+
+}
 
 /*
 
@@ -638,447 +1265,7 @@ class HaxeModule
 
 
 
-class HaxeTypeBundle(object):
-	def __init__(self, types):
-		self._types = types
 
-	def __repr__(self):
-		return "HaxeTypeBundle(\n" + pp.pformat(self._types) + "\n)"
-
-
-	# merges `itself` and `other` into a new type bundle. Order matters, because types from `other` shadow the types of self if they have
-	# the same fullqualified name, which is the dict identifier.
-	def merge (self, other):
-		res = dict(self._types)
-		for k,v in other._types.items():
-			res[k] = v
-		return HaxeTypeBundle(res)
-
-	# returns all available packages based on the types inside of this bundle
-	def packs (self):
-		res = dict()
-		for k in self._types:
-			p = self._types[k].pack
-			if p != "":
-				res[p] = None
-
-		return list(res.keys())
-
-	def all_modules (self):
-		res = dict()
-		for k in self._types:
-			t = self._types[k]
-			res[t.full_pack_with_module] = HaxeModule(t.pack, t.module, t.file)
-			
-		return res
-
-	def all_modules_list (self):
-		mods = self.all_modules()
-		return [ mods[m] for m in mods]
-
-
-	def all_types_and_enum_constructors_with_info (self):
-		res = dict()
-		for k in self._types:
-			t = self._types[k]
-			if t.is_enum:
-				for ec in t.full_qualified_enum_constructors_with_optional_module:
-					res[ec] = t
-			fq_name = t.full_qualified_name_with_optional_module
-			res[fq_name] = t
-
-		return res
-
-	def all_types_and_enum_constructors (self):
-		res = self.all_types_and_enum_constructors_with_info()
-		return list(res.keys())
-
-	# returns a list of all types stored in this type bundle
-	def all_types(self):
-		return list(self._types.values())
-
-
-	def filter (self, fn):
-		res = dict()
-		for k in self._types:
-			t = self._types[k]
-			if fn(t) == True:
-				res[k] = t
-
-		return HaxeTypeBundle(res)
-
-	def filter_by_classpath (self, cp):
-		return self.filter(lambda p: p.classpath == cp)
-
-	def filter_by_classpaths (self, cps):
-		return self.filter(lambda p: p.classpath in cps)
-
-class EnumConstructor(object):
-	def __init__(self, name, enum_type):
-		self.name = name
-		self.enum = enum_type
-
-	def to_snippet_insert (self, import_list, insert_file):
-		for i in import_list:
-			if (self.enum.file == insert_file or
-				i == self.enum.full_qualified_name_with_optional_module or
-				i == self.enum.full_pack_with_module or 
-				i == self.enum.full_qualified_name_with_optional_module + "." + self.name):
-				return self.name
-		
-		return self.enum.full_qualified_name_with_optional_module + "." + self.name
-
-	@lazyprop
-	def type_hint(self):
-		return "enum value"
-
-
-	def to_snippet(self, insert_file, import_list):
-		location = " (" + self.enum.full_pack_with_optional_module + ")" if len(self.enum.full_pack_with_optional_module) > 0 else ""
-		display = self.enum.name + "." + self.name + location + "\t" + self.type_hint
-		insert = self.to_snippet_insert(import_list, insert_file)
-
-		return (display, insert)
-
-class HaxeField(object):
-	def __init__(self, type, name, kind, is_static, is_public, is_inline, is_private, match_decl):
-		self.type = type
-		self.name = name
-		self.kind = kind
-		self.is_static = is_static
-		self.is_public = is_public
-		self.is_inline = is_inline
-		self.is_private = is_private
-		self.match_decl = match_decl
-		
-
-	@lazyprop
-	def src_pos (self):
-		for decl in _field.finditer( self.type.src_with_comments ):
-			if decl.group(0) == self.match_decl.group(0):
-				return decl.start(0)
-		return None
-
-	@lazyprop
-	def is_var (self):
-		return self.kind == "var"
-
-	@property
-	def file (self):
-		return self.type.file
-
-	@lazyprop
-	def is_function (self):
-		return self.kind == "function"
-
-	
-	def to_string (self):
-		return self.type.full_qualified_name_with_optional_module + ("::" if self.is_static or self.name == "new" else ".") + self.name
-
-	def to_expression (self):
-		return self.type.full_qualified_name_with_optional_module + "." + self.name
-
-class HaxeType(object):
-	def __init__(self, pack, module, name, kind, is_private, is_module_type, is_std_type, is_extern, file, src, src_with_comments, match_decl):
-		self.src = src # src without comments
-		self.src_with_comments = src_with_comments
-		self.match_decl = match_decl
-
-		self.is_private = is_private
-		self.pack = pack
-		self.module = module
-		self.kind = kind
-		self.name = name
-		self.is_module_type = is_module_type
-		self.is_std_type = is_std_type
-		self.is_extern = is_extern
-
-		self.file = file
-
-		self._enum_constructors = None
-
-	@lazyprop
-	def stripped_start_decl_pos(self):
-		return self.match_decl.start(0)
-
-	@lazyprop
-	def class_body (self):
-
-		if self.stripped_end_decl_pos is None:
-			res = ""
-		else:
-			res = self.src[self.stripped_start_decl_pos:self.stripped_end_decl_pos]
-
-		return res
-
-	
-	@lazyprop
-	def public_static_fields (self):
-		res = []
-		res.extend(self.public_static_vars)
-		res.extend(self.public_static_functions)
-		return res
-
-
-	@lazyprop 
-	def all_fields (self):
-		res = dict()
-		if self.class_body is not None:
-			for decl in _field.finditer(self.class_body):
-				modifiers = decl.group(1)
-				is_static = modifiers is not None and modifiers.find("static") > -1
-				is_inline = modifiers is not None and modifiers.find("inline") > -1
-				is_private = modifiers is not None and modifiers.find("private") > -1
-				is_public = modifiers is not None and modifiers.find("public") > -1
-				kind = decl.group(2)
-				name = decl.group(3)
-				if name == "WAIT_END_RET":
-					log(modifiers)
-
-				if is_private or is_public or is_static or self.is_extern or is_same_nexting_level_at_pos(self.class_body, decl.start(0), self.class_body_start[0]):
-					res[name] = HaxeField(self, name, kind, is_static, is_public, is_inline, is_private, decl)
-		return res
-
-	
-	@lazyprop
-	def all_fields_list (self):
-		return [self.all_fields[f] for f in self.all_fields]	
-
-	@lazyprop
-	def public_static_vars (self):
-		return [self.all_fields[f] for f in self.all_fields if f.is_static and f.is_var]
-
-	@lazyprop
-	def public_static_functions (self):
-		return [self.all_fields[f] for f in self.all_fields if f.is_static and f.is_function]
-
-	@lazyprop
-	def class_body_start (self):
-		start = self.match_decl.start(0)
-		if self.is_abstract or self.is_class:
-			return search_next_char_on_same_nesting_level(self.src, "{", start)
-		return None
-
-	@lazyprop
-	def stripped_end_decl_pos (self):
-		
-		class_body_start = self.class_body_start
-		if class_body_start is not None:
-			log("have class_body_start:" + str(class_body_start[0]))
-			class_body_end = search_next_char_on_same_nesting_level(self.src, "}", class_body_start[0]+1)
-			if class_body_end is not None:
-				log("have class_body_end:" + str(class_body_end[0]))
-				res = class_body_end[0]
-			else:
-				res = None
-		else:
-			res = None
-
-		return res
-		
-
-
-
-	@lazyprop
-	def src_pos (self):
-		for decl in _type_decl_with_scope.finditer( self.src_with_comments ):
-			log(str(decl.group(0)))
-			log(str(self.match_decl.group(0)))
-			if decl.group(0) == self.match_decl.group(0):
-				return decl.start(0)
-		return None
-
-	def to_snippet(self, insert_file, import_list):
-		location = " (" + self.full_pack_with_optional_module + ")" if len(self.full_pack_with_optional_module) > 0 else ""
-		display = self.name + location + "\t" + self.type_hint
-		insert = self.to_snippet_insert(import_list, insert_file)
-
-		return (display, insert)
-
-	# convert this type into insert snippets. Multiple snippets when it's an enum, separated into the enum itself and it's constructors.
-	def to_snippets(self, import_list, insert_file):
-		res = [self.to_snippet(insert_file, import_list)]
-
-		if self.is_enum and self._enum_constructors is not None:
-			res.extend([ev.to_snippet(insert_file, import_list) for ev in self.enum_constructors])
-		return res
-
-
-	def to_snippet_insert (self, import_list, insert_file):
-		for i in import_list:
-			if (self.file == insert_file or
-				i == self.full_pack_with_module or
-				i == self.full_qualified_name_with_optional_module or 
-				i == self.full_qualified_name):
-				return self.name
-		
-		return self.full_qualified_name_with_optional_module
-
-
-	@lazyprop
-	def toplevel_pack(self):
-		if len(self.pack_list) > 0:
-			return self.pack_list[0]
-		return None
-
-	@lazyprop	
-	def type_hint(self):
-		return self.kind
-
-	
-	@lazyprop
-	def full_pack_with_optional_module(self):
-		mod = "" if (self.is_module_type or self.is_std_type) else self.pack_suffix + self.module
-		return self.pack + mod
-
-	@lazyprop
-	def full_pack_with_module(self):
-		return self.pack + self.pack_suffix + self.module
-	
-
-	@lazyprop
-	def is_enum (self):
-		return self.kind == "enum"
-
-	@lazyprop
-	def is_class (self):
-		return self.kind == "class"
-
-	@lazyprop
-	def is_abstract (self):
-		return self.kind == "abstract"
-
-	def __repr__(self):
-		return self.to_string()
-
-	@lazyprop
-	def pack_list(self):
-		return self.pack.split(".") if len(self.pack) > 0 else []
-
-	@lazyprop
-	def pack_suffix(self):
-		return "" if len(self.pack) == 0 else "."
-
-	@lazyprop
-	def full_qualified_name_with_optional_module(self):
-		mod = "" if (self.is_module_type or self.is_std_type) else self.module + "."
-		return self.pack + self.pack_suffix + mod + self.name
-
-	@lazyprop
-	def enum_constructors(self):
-		if self.is_enum and not self._enum_constructors is None:
-			res = [EnumConstructor(e, self) for e in self._enum_constructors ]
-		else:
-			res = []
-		return res
-
-	@lazyprop
-	def full_qualified_enum_constructors_with_optional_module(self):
-		if not self.is_enum or self._enum_constructors is None:
-			res = []
-		else:
-			res = [self.full_qualified_name_with_optional_module + "." + e for e in self._enum_constructors]
-		return res
-
-	@lazyprop
-	def classpath(self):
-		path_append = [".." for _ in self.pack_list]
-		
-		mod_dir = os.path.dirname(self.file)
-		fp = [mod_dir]
-		fp.extend(path_append)
-
-		full_dir = os.sep.join(fp)
-
-		return os.path.normpath(full_dir)
-
-
-	@lazyprop
-	def full_qualified_name(self):
-		return self.pack + self.pack_suffix + self.module + "." + self.name
-
-	def to_string(self):
-		return ("{"
-			+ " pack:" + str(self.pack) + ", "
-			+ " module:" + str(self.module) + ", "
-			+ " name:" + str(self.name) + ", "
-			+ " kind:" + str(self.kind) + ", "
-			+ " enum_constructors:" + str(self.enum_constructors) + ", "
-			+ " is_private:" + str(self.is_private) + ", "
-			+ " is_module_type:" + str(self.is_module_type) + ", "
-			+ " is_std_type:" + str(self.is_std_type) + ", "
-			+ " is_extern:" + str(self.is_extern) + ", "
-			+ " file:'" + str(self.file) + "'"
-			+ " classpath:'" + str(self.classpath) + "'"
-			+ " }")
-
-
-_type_decl_with_scope = re.compile("(private\s+)?(extern\s+)?(class|typedef|enum|interface|abstract)\s+([A-Z][a-zA-Z0-9_]*)\s*(<[a-zA-Z0-9,_]+>)?(:?\{|\s+)" , re.M )
-
-def get_types_from_src (src, module_name, file, src_with_comments):
-	if module_name == None:
-		module_name = os.path.splitext( os.path.basename(file) )[0]
-
-	pack = get_package(src)
-
-	res = dict()
-	for decl in _type_decl_with_scope.finditer( src ):
-		is_private = decl.group(1) != None
-		
-		type_name = decl.group(4)
-
-		if type_name == "NME_":
-			log(str(decl.group(0)))
-		kind = decl.group(3)
-
-		is_extern = decl.group(2) is not None
-
-		is_module_type = type_name == module_name
-		is_std_type = module_name == "StdTypes"
-
-		full_type = HaxeType(pack, module_name, type_name, kind, is_private, is_module_type, is_std_type, is_extern, file, src, src_with_comments, decl)
-
-		if full_type.is_enum:
-			full_type._enum_constructors = _extract_enum_constructors_from_src(src, decl.end(4))
-
-		if not full_type.full_qualified_name in res:
-			res[full_type.full_qualified_name] = full_type
-
-	return HaxeTypeBundle(res)
-
-
-
-def _extract_enum_constructors_from_src (src, start_pos):
-
-	constructors = None
-	
-	start = search_next_char_on_same_nesting_level(src, "{", start_pos)
-	if start is not None:
-		end = search_next_char_on_same_nesting_level(src, "}", start[0]+1)
-		if end is not None:
-			constructors = _extract_enum_constructors_from_enum(src[start[0]+1: end[0]-1])
-			
-	return constructors
-
-enum_constructor_start_decl = re.compile("\s+([a-zA-Z_]+)" , re.M )
-
-def _extract_enum_constructors_from_enum (enumStr):
-	
-	constructors = []
-	start = 0;
-	while True:
-		m = enum_constructor_start_decl.match(enumStr, start)
-		if m != None:
-			constructor = m.group(1)
-			constructors.append(constructor)
-			end = search_next_char_on_same_nesting_level(enumStr, ";", m.end(1))
-			if end != None:
-				start = end[0]+1
-			else:
-				break
-		else:
-			break
-	return constructors
 
 
 
