@@ -6,7 +6,8 @@ import python.lib.Shutil.ShUtil;
 class PathTools {
 	public static function removeDir (path:String) 
 	{
-		if (Path.isdir(path)) {
+		if (Path.isdir(path)) 
+		{
 			ShUtil.rmtree(path);
 		}
 	}

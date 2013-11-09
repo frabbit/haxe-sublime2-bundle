@@ -10,11 +10,11 @@ class ProjectCompletionState {
     public var running:Cache<Tup2<Int,Int>>;
     public var trigger:Cache<Options>;
     public var current_id:Int;
-    public var errors:Array<String>
+    public var errors;
     public var async:Cache<CompletionResult>;
     public var current:{
-        input : Dynamic,
-        output : Dynamic
+        input : CompletionContext,
+        output : CompletionResult
     }
 
     public function new() {
@@ -37,8 +37,8 @@ class ProjectCompletionState {
     public function is_equivalent_completion_already_running(ctx:CompletionContext) {
         // check if another completion with the same properties is already running
         // in this case we don't need to start a new completion
-        var complete_offset = ctx.complete_offset
-        var view_id = ctx.view_id
+        var complete_offset = ctx.complete_offset;
+        var view_id = ctx.view_id;
 
         var last_completion_id = current_id;
         var running_completion = running.get_or_default(last_completion_id, null);
@@ -54,10 +54,10 @@ class ProjectCompletionState {
 
     public function set_new_completion (ctx:CompletionContext) {
         // store current completion id and properties
-        running.insert(ctx.id, (ctx.complete_offset, ctx.view_id))
-        current_id = ctx.id
+        running.insert(ctx.id, Tup2.create(ctx.complete_offset, ctx.view_id));
+        current_id = ctx.id;
 
-        set_errors([])
+        set_errors([]);
     }
 
     public function set_trigger(view:View, options) {
@@ -81,15 +81,15 @@ class ProjectCompletionState {
     }
 
     public function get_and_delete_async(view:View) {
-        return self.async.get_and_delete(view.id(), null)
+        return self.async.get_and_delete(view.id(), null);
     }
 
     public function get_async( view:View) {
-        return async.get_or_default(view.id(), null)
+        return async.get_or_default(view.id(), null);
     }
 
     public function delete_async( view:View) {
-        return async.delete(view.id())
+        return async.delete(view.id());
     }
 
 }

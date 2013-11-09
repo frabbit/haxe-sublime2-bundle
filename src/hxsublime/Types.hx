@@ -5,8 +5,10 @@ import python.lib.Re;
 import python.lib.os.Path;
 
 
-class Types {
-	public static function find_types (classpaths, libs, base_path, filtered_classes = null, filtered_packages = null, include_private_types = true) {
+class Types 
+{
+	public static function find_types (classpaths, libs, base_path, filtered_classes = null, filtered_packages = null, include_private_types = true) 
+	{
 
 		var bundle = hxsrctools.empty_type_bundle();
 
@@ -44,10 +46,12 @@ class Types {
 
 	public static function extract_types( path:String , filtered_classes = null, filtered_packages = null, depth = 0, pack = [], include_private_types = true)  
 	{
-		if (filtered_classes == null) {
+		if (filtered_classes == null) 
+		{
 			filtered_classes = [];
 		}
-		if (filtered_packages == null) {
+		if (filtered_packages == null) 
+		{
 			filtered_packages = [];
 		}
 		

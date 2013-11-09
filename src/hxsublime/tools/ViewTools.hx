@@ -16,14 +16,16 @@ import python.lib.Types;
 import sublime.View;
 import sublime.Edit;
 
-class AsyncEdit {
+class AsyncEdit 
+{
 	public static var dict : Dict<Int, View->Edit->Void> = new Dict();
 	public static var id:Int;
 }
 
 //from haxe import config as hxconfig
 
-class HaxeTextEditCommand extends TextCommand {
+class HaxeTextEditCommand extends TextCommand 
+{
 	static var _async_edit_dict;
 	
 	override public function run (args:KwArgs) 
@@ -32,7 +34,8 @@ class HaxeTextEditCommand extends TextCommand {
         var edit:Edit = d.get("edit", null);
         var id:Int = d.get("id", null);
         
-        if (AsyncEdit.dict.hasKey(id)) {
+        if (AsyncEdit.dict.hasKey(id)) 
+        {
         	var fun = AsyncEdit.dict.get(id, null);
             AsyncEdit.dict.remove(id);
             fun(view, edit);
@@ -44,25 +47,29 @@ class HaxeTextEditCommand extends TextCommand {
 class ViewTools {
 	
 	
-	public static function insertSnippet (view:View, snippet:String) {
+	public static function insertSnippet (view:View, snippet:String) 
+	{
 		view.run_command("insert_snippet", { 'contents' : snippet } );
 	}
 
-	public static function insertAtCursor(view:View, txt:String) {
-		function  doEdit(v:View, e:Edit) {
+	public static function insertAtCursor(view:View, txt:String) 
+	{
+		function doEdit(v:View, e:Edit) 
+		{
 			v.insert(e, getFirstCursorPos(v), txt);
 		}
 		asyncEdit(view, doEdit);
 	}
 
 
-	public static function getFirstCursorPos (view:View) {
+	public static function getFirstCursorPos (view:View) 
+	{
 		return view.sel()[0].begin();
 	}
 
 
-	public static function asyncEdit(view:View, doEdit:View->Edit->Void) {
-		
+	public static function asyncEdit(view:View, doEdit:View->Edit->Void) 
+	{	
 	    function start() 
 	    {
 	        var id = AsyncEdit.id;
@@ -79,12 +86,15 @@ class ViewTools {
 	}
 
 
-	public static function find_view_by_name (name:String):Null<View> {
+	public static function find_view_by_name (name:String):Null<View> 
+	{
 		var windows = Sublime.windows();
-		for (w in windows) {
+		for (w in windows) 
+		{
 			var views = w.views();
 
-			for (v in views) {
+			for (v in views) 
+			{
 				if (v.name() == name) return v;
 			}
 		}
@@ -92,7 +102,8 @@ class ViewTools {
 	}
 
 
-	public static function createMissingFolders(view:View) {
+	public static function createMissingFolders(view:View) 
+	{
 		var fn = view.file_name();
 		var path = Path.dirname( fn );
 		if (!Path.isdir( path )) {
@@ -112,45 +123,56 @@ class ViewTools {
 		return view.substr(new Region(0, endPos));
 	}
 
-	public static function getContent (view:View) {
+	public static function getContent (view:View) 
+	{
 		return view.substr(new Region(0, view.size()));
 	}
 
-	public static function isHxsl (view:View) {
+	public static function isHxsl (view:View) 
+	{
 		return ST.endsWith(view.file_name(), Config.HXSL_SUFFIX);
 	}
 
-	public static function isSupported (view:View) {
+	public static function isSupported (view:View) 
+	{
 		return view.score_selector(0,Config.SOURCE_HAXE+','+Config.SOURCE_HXML+','+Config.SOURCE_ERAZOR+','+Config.SOURCE_NMML) > 0;
 	}
 
-	public static function isUnsupported (view:View) {
+	public static function isUnsupported (view:View) 
+	{
 		return !isSupported(view);
 	}
 
-	public static function getScopesAt (view:View, pos:Int) {
+	public static function getScopesAt (view:View, pos:Int) 
+	{
 		return view.scope_name(pos).split(" ");
 	}
 
 
-	public static function isHaxe(view:View) {
+	public static function isHaxe(view:View) 
+	{
 		return view.score_selector(0,Config.SOURCE_HAXE) > 0;
 	}
-	public static function isHxml(view:View) {
+	public static function isHxml(view:View) 
+	{
 		return view.score_selector(0,Config.SOURCE_HXML) > 0;
 	}
 
-	public static function isErazor(view:View) {
+	public static function isErazor(view:View) 
+	{
 		return view.score_selector(0,Config.SOURCE_ERAZOR) > 0;
 	}
 
-	public static function isNmml(view:View) {
+	public static function isNmml(view:View) 
+	{
 		return view.score_selector(0,Config.SOURCE_NMML) > 0;
 	}
 
 
-	public static function replaceContent (view:View, newContent:String) {
-		function doEdit(view:View, edit:Edit) {
+	public static function replaceContent (view:View, newContent:String) 
+	{
+		function doEdit(view:View, edit:Edit) 
+		{
 			view.replace(edit, new Region(0, view.size()), newContent);
 			//view.end_edit(edit);
 		}
@@ -159,15 +181,18 @@ class ViewTools {
 		asyncEdit(view, doEdit);
 	}
 		
-	public static function inHaxeCode (view:View, caret:Int) {
+	public static function inHaxeCode (view:View, caret:Int) 
+	{
 		return view.score_selector(caret,"source.haxe") > 0 && view.score_selector(caret,"string") == 0 && view.score_selector(caret,"comment") == 0;
 	}
 
-	public static function inHaxeString (view:View, caret:Int) {
+	public static function inHaxeString (view:View, caret:Int) 
+	{
 		return view.score_selector(caret,"source.haxe") > 0 && view.score_selector(caret,"string") > 0;
 	}
 
-	public static function inHaxeComments (view:View, caret) {
+	public static function inHaxeComments (view:View, caret:Int) 
+	{
 		return view.score_selector(caret,"source.haxe") > 0 && view.score_selector(caret,"comment") > 0;
 	}
 

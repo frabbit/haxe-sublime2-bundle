@@ -1,23 +1,38 @@
+package hxsublime.commands;
 
+private typedef Entry = { file : String, src_pos : Int};
+
+class HaxeGotoAnythingCommand extends HaxeGotoBaseCommand<Entry>
+{
+
+    override public function get_entries (types)
+    {
+        var fields = [for (k in types.keys()) for (p in types[k].all_fields_list) [p.to_string() + " - " + p.kind, p.type.file]];
+        var types = [for (k in types.keys()) [k, types[k].file]];
+        fields.extend(types);
+        return fields;
+    }
+
+    override public function get_data (types)
+    {
+        fields = [for (k in types.keys()) for (p in types[k].all_fields_list) Tup2.create(k + "." + p.name,p)];
+        types = [for (k in types.keys()) Tup2.create(k,types[k])];
+        fields.extend(types);
+        return fields;
+    }
+
+    override public function get_file(data_entry)
+    {
+        return data_entry.file;
+    }
+
+    override public function get_src_pos(data_entry)
+    {
+        return data_entry.src_pos;
+    }
+}
+/*
 from haxe.commands import HaxeGotoBaseCommand
     
 
-class HaxeGotoAnythingCommand( HaxeGotoBaseCommand ):
-
-    def get_entries (self, types):
-        fields = [[p.to_string() + " - " + p.kind, p.type.file] for k in types for p in types[k].all_fields_list]
-        types = [[k, types[k].file] for k in types]
-        fields.extend(types)
-        return fields
-        
-    def get_data (self, types):
-        fields = [(k + "." + p.name,p) for k in types for p in types[k].all_fields_list]
-        types = [(k,types[k]) for k in types]
-        fields.extend(types)
-        return fields
-
-    def get_file(self, data_entry):
-        return data_entry.file
-
-    def get_src_pos(self, data_entry):
-        return data_entry.src_pos
+*/

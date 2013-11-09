@@ -21,7 +21,7 @@ class Project {
     public var project_path:String;
 
 
-    public function new (id, file, win_id, server_port:Int) {
+    public function new (id, file:String, win_id, server_port:Int) {
         
         this.completion_context = new ProjectCompletionState();
         this._haxelib_manager = new HaxeLibManager(self);

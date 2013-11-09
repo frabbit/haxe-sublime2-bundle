@@ -1,3 +1,258 @@
+package hxsublime.build;
+
+import hxsublime.build.HxmlBuild;
+import hxsublime.project.Project;
+import sublime.View;
+
+
+
+
+class NmeBuild {
+
+	
+	var _title : String;
+	var _target;
+	var _hxml_build : HxmlBuild;
+
+	public var nmml : String;
+	public var project : Project;
+
+	public function new (project:Project, title:String, nmml:String, target, cb:HxmlBuild = null)
+	{
+		this._title = title;
+		this._target = target;
+		this.nmml = nmml;
+		this._hxml_build = cb;
+		this.project = project;
+	}
+
+	@property
+	public function title()
+	{
+		return this._title;
+	}
+
+	@property
+	public function build_file()
+	{
+		return this.nmml;
+	}
+
+	@property
+	public function target()
+	{
+		return this._target;
+	}
+
+	@property
+	public function plattform()
+	{
+		return this._target.plattform;
+	}
+
+	public function _get_hxml_build_with_nme_display()
+	{
+		var view = sublime.active_window().active_view();
+		var display_cmd = list(this.get_build_command(this.project, view));
+		display_cmd.push("display");
+		//from haxe.build.tools import create_haxe_build_from_nmml
+		return create_haxe_build_from_nmml(this.project, this.target, this.nmml, display_cmd);
+	}
+
+	@property
+	public function hxml_build ()
+	{
+		if (this._hxml_build == null) 
+		{
+			this._hxml_build = this._get_hxml_build_with_nme_display();
+		}
+
+		return this._hxml_build;
+	
+	}
+
+	public function to_string() 
+	{
+		var title = this.title;
+		var target = this.target.name;
+		return '${title} (NME - ${target})';
+		
+	}
+
+	public function set_std_bundle(std_bundle)
+	{
+		this.hxml_build.set_std_bundle(std_bundle);
+	}
+
+	public function _filter_platform_specific(packs_or_classes)
+	{
+	 	var res = [];
+	 	for (c in packs_or_classes) {
+	 		if (!c.startswith("native") && !c.startswith("browser") && !c.startswith("flash") && !c.startswith("flash9") && !c.startswith("flash8")) {
+	 			res.push(c);
+	 		}
+	 	}
+	 	return res;
+	}
+	public function get_types()
+	{
+		var bundle = this.hxml_build.get_types()
+		return bundle;
+	}
+
+	@property
+	public function std_bundle()
+	{
+		return this.hxml_build.std_bundle;
+	}
+
+	public function add_arg(arg)
+	{
+		this.hxml_build.add_arg(arg);
+	}
+
+	public function copy ()
+	{
+		var hxml_copy = if (this._hxml_build != null) this.hxml_build.copy() else null;
+
+		return new NmeBuild(this.project, this.title, this.nmml, this.target, hxml_copy);
+	}
+
+	public function get_relative_path(file:String)
+	{
+		return this.hxml_build.get_relative_path(file);
+	}
+
+	public function get_build_folder()
+	{
+		var r = null;
+		if (this.nmml != null) 
+		{
+			r = os.path.dirname(this.nmml);
+		}
+		trace("build_folder: " + Std.string(r));
+		trace("nmml: " + Std.string(this.nmml));
+		return r;
+	}
+
+	public function set_auto_completion(display, macro_completion)
+	{
+		this.hxml_build.set_auto_completion(display, macro_completion)
+	}
+
+	public function set_times()
+	{
+		this.hxml_build.set_times();
+	}
+
+	public function add_define (define:String)
+	{
+		this.hxml_build.add_define(define);
+	}
+
+	public function add_classpath(cp:String)
+	{
+		this.hxml_build.add_classpath(cp);
+	}
+
+	public function run(project:Project, view:View, async:Bool, on_result:String->String->Void, server_mode:Null<Bool> = null)
+	{
+		this.hxml_build.run(project, view, async, on_result, server_mode);
+	}
+
+	public function _get_run_exec(project:Project, view:View)
+	{
+		return project.nme_exec(view);
+	}
+
+	public function get_build_command(project:Project, view:View)
+	{
+		return this._get_run_exec(project, view).copy();
+	}
+
+	public function prepare_check_cmd(project:Project, server_mode:Bool, view:View)
+	{
+		var r = this.prepare_build_cmd(project, server_mode, view);
+		var cmd = r._1, folder = r._2;
+		cmd.push("--no-output")
+		return cmd, folder
+	}
+
+	public function prepare_build_cmd(project:Project, server_mode:Bool, view:View)
+	{
+		return this._prepare_cmd(project, server_mode, view, "build");
+	}
+
+	public function prepare_run_cmd (project:Project, server_mode:Bool, view:View)
+	{
+		return this._prepare_cmd(project, server_mode, view, "test");
+	}
+
+	public function _prepare_cmd(project:Project, server_mode:Bool, view:View, command:String)
+	{
+		var cmd = this.get_build_command(project, view);
+
+		cmd.push(command);
+		cmd.push(this.build_file);
+		cmd.push(this.target.plattform);
+		cmd.extend(this.target.args);
+
+		if (server_mode) 
+		{
+			cmd.extend(["--connect", Std.parseInt(project.server.get_server_port())]);
+		}
+
+		return Tup2.create(cmd, this.get_build_folder());
+	}
+
+	public function _prepare_run(project:Project, view, server_mode)
+	{
+		return this.hxml_build._prepare_run(project, view, server_mode);
+	}
+
+	@property
+	public function classpaths ()
+	{
+		return this.hxml_build.classpaths;
+	}
+
+	@property
+	public function args ()
+	{
+		return this.hxml_build.args;
+	}
+
+	public function is_type_available (type)
+	{
+		var pack = type.toplevel_pack;
+		return pack == null || this.is_pack_available(pack);
+	}
+
+	public function is_pack_available (pack:String)
+	{
+
+		if (pack == "") 
+		{
+			return true;
+		}
+
+		var pack = pack.split(".")[0];
+		var target = this.hxml_build.target;
+		
+		var tp = config.target_packages.copy();
+		tp.extend(["native", "browser", "nme"])
+
+		var no_target_pack = !Lambda.has(tp, pack);
+		is_nme_pack = pack == "nme";
+
+		var available = target == null || no_target_pack || is_nme_pack;
+
+		return available;
+	}
+}
+
+/*
+
 import os
 import sublime 
 from haxe import config
@@ -6,168 +261,5 @@ from haxe.log import log
 
 from haxe.tools.stringtools import encode_utf8
 
-class NmeBuild(object) :
 
-	def __init__(self, project, title, nmml, target, cb = None):
-		self._title = title
-		self._target = target
-		self.nmml = nmml
-		self._hxml_build = cb
-		self.project = project
-
-	@property
-	def title(self):
-		return self._title
-	@property
-	def build_file(self):
-
-		return self.nmml
-
-	@property
-	def target(self):
-		return self._target
-
-	@property
-	def plattform(self):
-		return self._target.plattform
-
-	def _get_hxml_build_with_nme_display(self):
-		view = sublime.active_window().active_view()
-		display_cmd = list(self.get_build_command(self.project, view))
-		display_cmd.append("display")
-		from haxe.build.tools import create_haxe_build_from_nmml
-		return create_haxe_build_from_nmml(self.project, self.target, self.nmml, display_cmd)
-
-	@property
-	def hxml_build (self):
-		if self._hxml_build is None:
-			self._hxml_build = self._get_hxml_build_with_nme_display()
-			#self._hxml_build.get_types()
-
-		return self._hxml_build
-	
-	def to_string(self) :
-		return "{title} (NME - {target})".format(title=self.title, target=self.target.name);
-		
-	def set_std_bundle(self, std_bundle):
-		self.hxml_build.set_std_bundle(std_bundle)
-
-	
-
-	def _filter_platform_specific(self, packs_or_classes):
-	 	res = []
-	 	for c in packs_or_classes:
-	 		if not c.startswith("native") and not c.startswith("browser") and not c.startswith("flash") and not c.startswith("flash9") and not c.startswith("flash8"):
-	 			res.append(c)
-
-	 	return res
-
-	def get_types(self):
-		bundle = self.hxml_build.get_types()
-		return bundle
-
-
-	@property
-	def std_bundle(self):
-		return self.hxml_build.std_bundle
-
-
-	def add_arg(self, arg):
-		self.hxml_build.add_arg(arg)
-
-
-	def copy (self):
-		hxml_copy = self.hxml_build.copy() if self._hxml_build is not None else None
-		return NmeBuild(self.project, self.title, self.nmml, self.target, hxml_copy)
-
-	def get_relative_path(self, file):
-		return self.hxml_build.get_relative_path(file)
-
-	def get_build_folder(self):
-		r = None
-		if self.nmml is not None:
-			r = os.path.dirname(self.nmml)
-		log("build_folder: " + encode_utf8(r))
-		log("nmml: " + encode_utf8(self.nmml))
-		return r
-
-	def set_auto_completion(self, display, macro_completion):
-		self.hxml_build.set_auto_completion(display, macro_completion)
-
-	def set_times(self):
-		self.hxml_build.set_times()
-
-	def add_define (self, define):
-		self.hxml_build.add_define(define)
-
-	def add_classpath(self, cp):
-		self.hxml_build.add_classpath(cp)
-
-	def run(self, project, view, async, on_result, server_mode = None):
-		self.hxml_build.run(project, view, async, on_result, server_mode)
-
-
-	def _get_run_exec(self, project, view):
-		return project.nme_exec(view)
-
-	def get_build_command(self, project, view):
-		return list(self._get_run_exec(project, view))
-
-	def prepare_check_cmd(self, project, server_mode, view):
-		cmd, folder = self.prepare_build_cmd(project, server_mode, view)
-		cmd.append("--no-output")
-		return cmd, folder
-
-	def prepare_build_cmd(self, project, server_mode, view):
-		return self._prepare_cmd(project, server_mode, view, "build")
-
-
-	def prepare_run_cmd (self, project, server_mode, view):
-		return self._prepare_cmd(project, server_mode, view, "test")
-
-
-	def _prepare_cmd(self, project, server_mode, view, command):
-		cmd = self.get_build_command(project, view)
-
-		cmd.append(command)
-		cmd.append(self.build_file)
-		cmd.append(self.target.plattform)
-		cmd.extend(self.target.args)
-
-		if server_mode:
-			cmd.extend(["--connect", str(project.server.get_server_port())])
-
-		return (cmd, self.get_build_folder())
-
-	def _prepare_run(self, project, view, server_mode):
-		return self.hxml_build._prepare_run(project, view, server_mode)
-
-	@property
-	def classpaths (self):
-		return self.hxml_build.classpaths
-
-	@property
-	def args (self):
-		return self.hxml_build.args
-
-	def is_type_available (self, type):
-		pack = type.toplevel_pack
-		return pack is None or self.is_pack_available(pack)
-
-
-	def is_pack_available (self, pack):
-		if pack == "":
-			return True
-
-		pack = pack.split(".")[0]
-		target = self.hxml_build.target
-		
-		tp = list(config.target_packages)
-		tp.extend(["native", "browser", "nme"])
-
-		no_target_pack = not pack in tp
-		is_nme_pack = pack == "nme"
-
-		available = target == None or no_target_pack or is_nme_pack
-
-		return available
+*/

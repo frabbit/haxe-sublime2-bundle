@@ -1,3 +1,649 @@
+package hxsublime.build;
+
+import hxsublime.Haxelib.HaxeLibLibrary;
+import hxsublime.project.Project;
+import hxsublime.tools.HxSrcTools.HaxeTypeBundle;
+import python.lib.os.Path;
+import python.lib.Time;
+import sublime.View;
+
+
+
+class HxmlBuild {
+
+	public var show_times:Bool;
+	public var std_bundle:HaxeTypeBundle;
+	public var args:Array<Tup2<String,String>>;
+	public var main:String;
+	public var target:String;
+	public var output:String;
+	public var hxml:String;
+	public var _build_file:String;
+	public var classpaths:Array<String>;
+	public var libs:Array<HaxeLibLibrary>;
+	public var type_bundle:HaxeTypeBundle;
+	public var _update_time;
+	public var mode_completion:Bool;
+	public var defines:Array<String>;
+	public var name:String;
+
+	public function __init__(hxml, build_file)  
+	{
+		
+		this.show_times = false;
+		this.std_bundle = hxsrctools.empty_type_bundle();
+		this.args = [];
+		this.main = null;
+		this.target = null;
+		this.output = "dummy.js";
+		this.hxml = hxml;
+		this._build_file = build_file;
+		this.classpaths = [];
+		this.libs = [];
+		this.type_bundle = null;
+		this._update_time = null;
+		this.mode_completion = false;
+		this.defines = [];
+		this.name = null;
+	}
+		
+
+	@property
+	public function title() 
+	{
+		return this.output;
+	}
+
+	
+
+	@property
+	public function build_file() 
+	{
+		return this._build_file;
+	}
+
+	public function add_define (define:String) 
+	{
+		this.defines.push(define);
+	}
+		
+	
+	public function set_main(main:String) 
+	{
+		this.main = main;
+	}
+	
+
+
+	public function get_name () 
+	{
+		var n = null;
+		if (this.name != null) {
+			n = this.name
+		}
+		else {
+			n = if (this.main == null) "[No Main]" else this.main;
+		}
+		return n
+	}
+
+	public function set_std_bundle(std_bundle) 
+	{
+		this.std_bundle = std_bundle
+	}
+
+	
+	public function equals (other) 
+	{
+		
+		return (this.args == other.args 
+			&& this.main == other.main
+			&& this.name == other.name
+			&& this.target == other.target
+			&& this.output == other.output
+			&& this.hxml == other.hxml
+			&& this.classpaths == other.classpaths
+			&& this.libs == other.libs
+			&& this.show_times == other.show_times
+			&& this.mode_completion == other.mode_completion
+			&& this.defines == other.defines
+			&& this._build_file == other._build_file)
+	}
+		   
+	public function merge (other_build) 
+	{
+		ob = other_build
+		this.args.extend(ob.args)
+
+		//for c in ob.classpaths:
+		//	if c !in this.classpaths:
+		//		this.classpaths.push(c)
+		this.classpaths.extend(ob.classpaths)
+		
+		this.libs.extend(ob.libs);
+		this.defines = defines.extend(ob.defines);
+		if (this.main == null) {
+			this.main = ob.main;
+		}
+		if (this.name == null) {
+			this.name = ob.name;
+		}
+	}
+	
+	public function copy () 
+	{
+
+		this.get_types();
+
+		var hb = new HxmlBuild(this.hxml, this.build_file);
+		hb.args = this.args.copy();
+		hb.main = this.main;
+		hb.name = this.name;
+		hb.target = this.target;
+		hb.output = this.output;
+		hb.defines = this.defines.copy();
+		hb.std_bundle = this.std_bundle;
+		hb.classpaths = this.classpaths.copy();
+		hb.libs = this.libs.copy();
+		hb.type_bundle = this.type_bundle;
+		hb._update_time = this._update_time;
+		hb.show_times = this.show_times;
+		hb.mode_completion = this.mode_completion;
+		return hb;
+	}
+	public function add_arg(arg:String) 
+	{
+		this.args.push(arg);
+	}
+
+	public function get_build_folder () 
+	{
+		return if (this.build_file != null) Path.dirname(this.build_file) else null;
+	}
+
+	public function set_build_cwd () 
+	{
+		this.set_cwd(this.get_build_folder());
+	}
+	
+	public function align_drive_letter(path) 
+	{
+		var is_win =  sublime.platform() == "windows"
+		
+		if (is_win) {
+			var reg = re.compile("^([a-z]):(.*)$");
+			var match = re.match(reg, path);
+			if (match != null) {
+				path = match.group(1).upper() + ":" + match.group(2);
+			}
+		}
+		return path
+	}
+
+	public function add_classpath (cp) 
+	{
+		var cp = this.align_drive_letter(cp);
+		if (!cp in this.classpaths) {
+			this.classpaths.push(cp)
+			this.args.push(Tup2.create("-cp", cp))
+		}
+	}
+	
+
+	public function add_lib(lib:HaxeLibLibrary) 
+	{
+		this.libs.push(lib)
+		this.add_arg( Tup2.create("-lib", lib.name))
+	}
+
+	public function get_classpath_of_file (file) 
+	{
+		var file = st2_to_unicode(file);
+		
+		var file = this.align_drive_letter(file);
+		
+		var cps = this.classpaths.copy();
+
+		build_folder = this.get_build_folder()
+		if (build_folder != null && !Lambda.has(cps, build_folder)) 
+		{
+			trace("add build folder to classpaths: " + build_folder + ", classpaths: " + Std.string(cps))
+			cps.push(build_folder);
+		}
+		for (cp in cps) 
+		{
+			var prefix = Path.commonprefix([cp, file]);
+			if (prefix == cp) {
+				return cp;
+			}
+		}
+
+		return null
+	}
+
+	public function is_file_in_classpath (file:String) 
+	{
+		file = this.align_drive_letter(file);
+		return this.get_classpath_of_file(file) != null;
+	}
+
+	public function get_relative_path (file:String) 
+	{
+		file = this.align_drive_letter(file);
+
+		var cp = this.get_classpath_of_file(file);
+
+		return if (cp != null) file.replace(cp, "")[1:] else null
+	}
+
+	public function target_to_string () 
+	{
+		if (this.target == null) {
+			target = "js";
+		}
+		else 
+		{
+			var target = this.target;
+			if (target == "js" && Lambda.has(this.defines, "nodejs")) 
+			{
+				target = "node.js";
+			}
+		}
+		return target;
+	}
+
+	public function to_string()  
+	{
+
+		var out = Path.basename(this.output);
+		var main = this.get_name();
+		var target = this.target_to_string();
+		return '$main ($target - $out)';
+	}
+	
+	public function make_hxml()  
+	{
+		var outp = "# Autogenerated "+this.hxml+"\n\n"
+		outp += "# "+this.to_string() + "\n"
+		outp += "-main "+ this.main + "\n"
+		for (a in this.args) {
+			outp += " ".join( list(a) ) + "\n";
+		}
+		
+		var d = Path.dirname( this.hxml ) + "/"
+		
+		// relative paths
+		outp = outp.replace( d , "")
+		outp = outp.replace( "-cp "+Path.dirname( this.hxml )+"\n", "")
+
+		outp = outp.replace("--no-output " , "")
+		outp = outp.replace("-v" , "")
+
+		outp = outp.replace("dummy" , this.main.lower() )
+
+		return outp.strip()
+	}
+
+	public function set_cwd (cwd:String) 
+	{
+		this.args.push(Tup2.create("--cwd" , cwd ));
+	}
+
+	public function set_times () 
+	{
+		this.show_times = true
+		this.args.push(Tup2.create("--times", ""))
+		this.args.push(Tup2.create("-D", "macro-times"))
+		this.args.push(Tup2.create("-D", "macro_times"))
+	}
+
+	public function set_server_mode (server_port = 6000) 
+	{
+		this.args.push(Tup2.create("--connect" , str(server_port)))
+	}
+
+	public function get_command_args (haxe_path) 
+	{
+		cmd = list(haxe_path)
+
+		for a in this.args :
+			cmd.extend( list(a) )
+
+		for l in this.libs :
+			cmd.push( "-lib" )
+			cmd.push( l.as_cmd_arg() )
+
+		if this.main != null:
+			cmd.push("-main")
+			cmd.push(this.main)
+		return cmd
+	}
+
+	public function set_auto_completion (display, macro_completion = false, no_output = true) 
+	{
+		
+		this.mode_completion = true;
+
+		var args = this.args;
+
+		this.main = null;
+
+		public function filterTargets (x) 
+		{
+			return x._1 != "-cs" && x._1 != "-x" && x._1 != "-js" && x._1 != "-php" && x._1 != "-cpp" && x._1 != "-swf" && x._1 != "-java";
+		}
+
+		if (macro_completion) 
+		{
+			args = args.filter(filterTargets ).copy();
+		}
+		else 
+		{
+			args = args.map(function (x) return if (x._1 == "-x") Tup2.create("-neko", x._2) else x).copy();
+		}
+
+		function filter_commands_and_dce (x) 
+		{
+			return x._1 != "-cmd" && x._1 != "-dce"
+		}
+
+
+		args = list(filter(filter_commands_and_dce, args ))
+
+		if (!this.show_times) 
+		{
+			function filter_times (x) 
+			{
+				return x._1 != "--times";
+			}
+			args = args.filter(filter_times).copy();
+		}
+
+		if (macro_completion) 
+		{
+			args.push(Tup2.create("-neko", "__temp.n"));
+		}
+
+		
+		args.push( Tup2.create("--display", display ) );
+		if (no_output) 
+		{
+			args.push( Tup2.create("--no-output" , "") );
+		}
+
+		this.args = args;
+	}
+
+
+	public function _update_types() 
+	{
+
+		// haxe.output_panel.HaxePanel.status("haxe-debug", "updating types")
+		trace("update types for classpaths:" + Std.string(this.classpaths))
+		trace("update types for libs:" + Std.string(this.libs))
+		this.type_bundle = hxtypes.find_types(this.classpaths, this.libs, this.get_build_folder(), [], [], include_private_types = false )
+	}
+
+		
+
+
+	public function _should_refresh_types(now) 
+	{
+		
+		// if this._update_time != null:
+		// 	trace("update_diff:" + str(now - this._update_time))
+		// 	trace("update_diff:" + str((now - this._update_time > 100)))
+		return this.type_bundle == null || this._update_time == null || (now - this._update_time) > 10
+	}
+
+	public function get_types()  
+	{
+		var now = Time.time()
+		
+		if (this._should_refresh_types(now)) {
+			trace("UPDATE THE TYPES NOW")
+			this._update_time = now
+			this._update_types()
+		}
+
+		return this.type_bundle
+	}
+
+	public function prepare_check_cmd(project, server_mode, view) 
+	{
+		cmd, build_folder = this.prepare_build_cmd(project, server_mode, view)
+		cmd.push("--no-output")
+		return cmd, build_folder
+	}
+	
+
+	@property
+	public function absolute_output() 
+	{
+		if (Path.isabs(this.output)) {
+			return this.output;
+		}
+		else {
+			return this.get_build_folder() + "/" + this.output;
+		}
+	}
+		
+
+	public function prepare_run_cmd (project, server_mode, view) 
+	{
+		cmd, build_folder, nekox_file = this._prepare_run(project, view, server_mode)
+
+		
+		default_open_ext = hxsettings.open_with_default_app()
+
+		if (nekox_file != null) 
+		{
+			cmd.extend(["-cmd", "neko " + nekox_file])
+		}
+		else if (this.target == "swf" && default_open_ext != null)
+		{
+			cmd.extend(["-cmd", default_open_ext + " " + this.absolute_output])
+		}
+		else if (this.target == "neko")
+		{
+			cmd.extend(["-cmd", "neko " + this.absolute_output])
+		}
+		else if (this.target == "cpp")
+		{
+			sep_index = this.main.rfind(".")
+			exe = this.main[sep_index+1:] if sep_index > -1 else this.main
+			cmd.extend(["-cmd", Path.join(this.absolute_output,exe) + "-debug"])
+		}
+		else if (this.target == "js" && "nodejs" in this.defines)
+		{
+			cmd.extend(["-cmd", "nodejs " + this.absolute_output])
+		}
+		else if (this.target == "java")
+		{
+			var sep_index = this.absolute_output.rfind(Path.sep)
+			var jar = if (sep_index == -1) this.absolute_output + ".jar" else this.absolute_output.substr(sep_index+1) + ".jar";
+			cmd.extend(["-cmd", "java -jar " + Path.join(this.absolute_output, jar)]);
+		}
+		else if (this.target == "cs") 
+		{
+			cmd.extend(["-cmd", "cd " + this.absolute_output])
+			cmd.extend(["-cmd", "gmcs -recurse:*.cs -main:" + this.main + " -out:" + this.main + ".exe-debug"])
+			cmd.extend(["-cmd", Path.join(".", this.main + ".exe-debug")])
+		}
+
+		return Tup2.create(cmd, build_folder);
+	}
+
+	public function prepare_build_cmd (project:Project, server_mode:Bool, view:View) 
+	{
+		cmd, build_folder,_ = this._prepare_run(project, view, server_mode);
+		return Tup2.create(cmd, build_folder);
+	}
+
+	public function _prepare_run (project, view, server_mode:Null<Bool> = null) 
+	{
+
+		server_mode = if (server_mode == null) project.is_server_mode() else server_mode;
+		
+		run_exec = this._get_run_exec(project, view);
+		b = this.copy()
+		
+		nekox_file_name = null
+		
+		for (i in 0...b.args.length) 
+		{
+			var a = b.args[i]
+			if (a[0] == "-x") {
+				nekox_file_name = a[1] + ".n"
+				b.args[i] = Tup2.create("-neko", nekox_file_name);
+			}
+		}
+
+		if (server_mode) {
+			project.start_server( view )
+			b.set_server_mode(project.server.get_server_port())
+		}
+
+		
+		b.set_build_cwd()
+		var cmd = b.get_command_args(run_exec)
+
+		return Tup3.create(cmd, this.get_build_folder(), nekox_file_name)
+	}
+
+	public function _get_run_exec(project:Project, view:View) 
+	{
+		return project.haxe_exec(view)
+	}
+
+	public function escape_cmd(cmd:Array<String>) 
+	{
+		print_cmd = cmd.copy();
+		l = print_cmd.length;
+		for (i in 0...l) 
+		{
+			var e = print_cmd[i];
+			if (e == "--macro" && i < l-1) 
+			{
+				print_cmd[i+1] = "'" + print_cmd[i+1] + "'";
+			}
+		}
+		return print_cmd;
+	}
+
+	public function _run_async (project:Project, view:View, callback:String->String->Void, server_mode:Null<Bool> = null) 
+	{
+		var env = project.haxe_env(view);
+		cmd, build_folder, nekox_file_name = this._prepare_run(project, view, server_mode)
+		var print_cmd = cmd.copy();
+		for (i in 0...print_cmd.length) 
+		{
+			var e = print_cmd[i]
+			if (e == "--macro" && i < len(print_cmd)-1)
+			{
+				print_cmd[i+1] = "'" + print_cmd[i+1] + "'";
+			}
+		}
+		
+		function cb (out, err) 
+		{
+			this._on_run_complete(out, err, build_folder, nekox_file_name)
+			callback(out, err)
+		}
+
+		run_cmd_async( args=cmd, input="", cwd=build_folder, env=env, callback=cb )
+	}
+	
+	
+
+	public function _run_sync (project:Project, view:View, server_mode:Null<Bool> = null) 
+	{
+		var env = project.haxe_env(view)
+		var r = this._prepare_run(project, view, server_mode)
+		var cmd = r._1; 
+		var build_folder = r._2; 
+		var nekox_file_name = r._3;
+
+		trace(" ".join(cmd))
+		out, err = run_cmd( args=cmd, input="", cwd=build_folder, env=env )
+		
+		this._on_run_complete(out, err, build_folder, nekox_file_name)
+		
+		return out,err
+	}
+
+
+	public function _on_run_complete(out, err, build_folder, nekox_file_name) 
+	{
+		trace("---------------cmd-------------------");
+		trace("out:" + out);
+		trace("err:" + err);
+		trace("---------compiler-output-------------");
+		if (nekox_file_name != null) 
+		{
+			this._run_neko_x(build_folder, nekox_file_name);
+		}
+	}
+		
+
+	public function _run_neko_x(build_folder:String, neko_file_name:String) 
+	{
+		neko_file = Path.join(build_folder, neko_file_name);
+		trace("run nekox: " + neko_file) ;
+		out, err = run_cmd(["neko", neko_file]);
+		hxpanel.default_panel().writeln(out);
+		hxpanel.default_panel().writeln(err);
+	}
+
+	public function run(project:Project, view:View, async:Bool, callback:String->String->Void, server_mode = null) 
+	{
+		if (async) {
+			trace("RUN ASYNC COMPLETION")
+			this._run_async( project, view, callback, server_mode )
+		}
+		else {
+			trace("RUN SYNC COMPLETION")
+			var r = this._run_sync( project, view, server_mode );
+			var out = r._1;
+			var err = r._2;
+			callback(out, err)
+		}
+	}
+
+	public function is_type_available (type) 
+	{
+		var pack = type.toplevel_pack;
+		return pack == null || this.is_pack_available(pack);
+	}
+
+
+	public function is_pack_available (pack) 
+	{
+		if (pack == "") 
+		{
+			return true;
+		}
+
+		pack = pack.split(".")[0];
+		var target = this.target;
+
+		var available = true;
+
+		if (pack != null && target != null && pack in config.target_packages) 
+		{
+			if (target in config.target_std_packages) 
+			{
+				if (pack !in config.target_std_packages[target]) 
+				{
+					available = false;
+				}
+			}
+		}
+		return available;
+	}
+}
+
+/*
 import os
 import re
 import time
@@ -14,457 +660,5 @@ from haxe.execute import run_cmd, run_cmd_async
 from haxe.log import log
 
 
-class HxmlBuild :
 
-	def __init__(self, hxml, build_file) :
-		
-		self.show_times = False
-		self.std_bundle = hxsrctools.empty_type_bundle()
-		self.args = []
-		self.main = None
-		self.target = None
-		self.output = "dummy.js"
-		self.hxml = hxml
-		self._build_file = build_file
-		self.classpaths = []
-		self.libs = []
-		self.type_bundle = None
-		self._update_time = None
-		self.mode_completion = False
-		self.defines = []
-		self.name = None
-		
-
-	@property
-	def title(self):
-		return self.output
-
-	
-
-	@property
-	def build_file(self):
-		return self._build_file
-
-	def add_define (self, define):
-		self.defines.append(define)
-		
-	
-	def set_main(self, main):
-		self.main = main
-	
-
-
-	def get_name (self):
-
-		if self.name is not None:
-			n = self.name
-		else:
-			n = "[No Main]" if self.main is None else self.main
-		return n
-
-	def set_std_bundle(self, std_bundle):
-		self.std_bundle = std_bundle
-
-	
-	def equals (self, other):
-		
-		return (self.args == other.args 
-			and self.main == other.main
-			and self.name == other.name
-			and self.target == other.target
-			and self.output == other.output
-			and self.hxml == other.hxml
-			and self.classpaths == other.classpaths
-			and self.libs == other.libs
-			and self.show_times == other.show_times
-			and self.mode_completion == other.mode_completion
-			and self.defines == other.defines
-			and self._build_file == other._build_file)
-		   
-	def merge (self, other_build):
-		ob = other_build
-		self.args.extend(ob.args)
-
-		#for c in ob.classpaths:
-		#	if c not in self.classpaths:
-		#		self.classpaths.append(c)
-		self.classpaths.extend(ob.classpaths)
-		
-		self.libs.extend(ob.libs)
-		self.defines.extend(ob.defines)
-		if self.main is None:
-			self.main = ob.main
-		if self.name is None:
-			self.name = ob.name
-	
-	def copy (self):
-
-		self.get_types()
-
-		hb = HxmlBuild(self.hxml, self.build_file)
-		hb.args = list(self.args)
-		hb.main = self.main
-		hb.name = self.name
-		hb.target = self.target
-		hb.output = self.output
-		hb.defines = list(self.defines)
-		hb.std_bundle = self.std_bundle
-		hb.classpaths = list(self.classpaths)
-		hb.libs = list(self.libs)
-		hb.type_bundle = self.type_bundle
-		hb._update_time = self._update_time
-		hb.show_times = self.show_times
-		hb.mode_completion = self.mode_completion
-		return hb
-
-	def add_arg(self, arg):
-		self.args.append(arg)
-
-	def get_build_folder (self):
-		return os.path.dirname(self.build_file) if self.build_file is not None else None
-
-	def set_build_cwd (self):
-		self.set_cwd(self.get_build_folder())
-	
-	def align_drive_letter(self, path):
-		is_win =  sublime.platform() == "windows"
-		
-		if is_win:
-			reg = re.compile("^([a-z]):(.*)$")
-			match = re.match(reg, path)
-			if match is not None:
-				path = match.group(1).upper() + ":" + match.group(2)
-		return path
-
-	def add_classpath (self, cp):
-		cp = self.align_drive_letter(cp)
-		if not cp in self.classpaths:
-			self.classpaths.append(cp)
-			self.args.append(("-cp", cp))
-	
-
-	def add_lib(self, lib):
-		self.libs.append(lib)
-		self.add_arg( ("-lib", lib.name))
-
-	def get_classpath_of_file (self, file):
-		file = st2_to_unicode(file)
-		
-		file = self.align_drive_letter(file)
-		
-		cps = list(self.classpaths)
-
-		build_folder = self.get_build_folder()
-		if build_folder is not None and build_folder not in cps:
-			log("add build folder to classpaths: " + build_folder + ", classpaths: " + str(cps))
-			cps.append(build_folder)
-		for cp in cps:
-			cp = st2_to_unicode(cp)
-			prefix = os.path.commonprefix([cp, file])
-			if prefix == cp:
-				return cp
-
-		return None
-
-	def is_file_in_classpath (self, file):
-		file = self.align_drive_letter(file)
-		return self.get_classpath_of_file(file) is not None
-
-	def get_relative_path (self, file):
-		file = st2_to_unicode(file)
-		file = self.align_drive_letter(file)
-
-		cp = self.get_classpath_of_file(file)
-
-		#print("cp:" + str(type(cp)))
-		#print("file:" + str(type(file)))
-
-		return file.replace(cp, "")[1:] if cp is not None else None
-
-	def target_to_string (self):
-		if self.target is None:
-			target = "js"
-		else:
-			target = self.target
-			if target == "js" and "nodejs" in self.defines:
-				target = "node.js"
-		return target
-
-	def to_string(self) :
-
-		out = os.path.basename(self.output)
-		
-		return "{main} ({target} - {out})".format(self=self, out=out, main=self.get_name(), target=self.target_to_string());
-	
-	def make_hxml( self ) :
-		outp = "# Autogenerated "+self.hxml+"\n\n"
-		outp += "# "+self.to_string() + "\n"
-		outp += "-main "+ self.main + "\n"
-		for a in self.args :
-			outp += " ".join( list(a) ) + "\n"
-		
-		d = os.path.dirname( self.hxml ) + "/"
-		
-		# relative paths
-		outp = outp.replace( d , "")
-		outp = outp.replace( "-cp "+os.path.dirname( self.hxml )+"\n", "")
-
-		outp = outp.replace("--no-output " , "")
-		outp = outp.replace("-v" , "")
-
-		outp = outp.replace("dummy" , self.main.lower() )
-
-		return outp.strip()
-
-	def set_cwd (self, cwd):
-		self.args.append(("--cwd" , cwd ))
-
-	def set_times (self):
-		self.show_times = True
-		self.args.append(("--times", ""))
-		self.args.append(("-D", "macro-times"))
-		self.args.append(("-D", "macro_times"))
-
-	def set_server_mode (self, server_port = 6000):
-		self.args.append(("--connect" , str(server_port)))
-
-	def get_command_args (self, haxe_path):
-		cmd = list(haxe_path)
-
-		for a in self.args :
-			cmd.extend( list(a) )
-
-		for l in self.libs :
-			cmd.append( "-lib" )
-			cmd.append( l.as_cmd_arg() )
-
-		if self.main != None:
-			cmd.append("-main")
-			cmd.append(self.main)
-		return cmd
-
-	def set_auto_completion (self, display, macro_completion = False, no_output = True):
-		
-		self.mode_completion = True
-
-		args = self.args
-
-		self.main = None
-
-		def filterTargets (x):
-			return x[0] != "-cs" and x[0] != "-x" and x[0] != "-js" and x[0] != "-php" and x[0] != "-cpp" and x[0] != "-swf" and x[0] != "-java"
-
-		if macro_completion:
-			args = list(filter(filterTargets, args ))
-		else:
-			args = list(map(lambda x : ("-neko", x[1]) if x[0] == "-x" else x, args))
-
-		def filter_commands_and_dce (x):
-			return x[0] != "-cmd" and x[0] != "-dce"
-
-
-
-		args = list(filter(filter_commands_and_dce, args ))
-
-		if not self.show_times:
-			def filter_times (x):
-				return x[0] != "--times"
-			args = list(filter(filter_times, args))
-
-		if (macro_completion) :
-			args.append(("-neko", "__temp.n"))
-
-		
-		args.append( ("--display", display ) )
-		if (no_output):
-			args.append( ("--no-output" , "") )
-
-		self.args = args
-
-
-	def _update_types(self):
-
-		#haxe.output_panel.HaxePanel.status("haxe-debug", "updating types")
-		log("update types for classpaths:" + str(self.classpaths))
-		log("update types for libs:" + str(self.libs))
-		self.type_bundle = hxtypes.find_types(self.classpaths, self.libs, self.get_build_folder(), [], [], include_private_types = False )
-
-		
-
-
-	def _should_refresh_types(self, now):
-		
-		# if self._update_time is not None:
-		# 	log("update_diff:" + str(now - self._update_time))
-		# 	log("update_diff:" + str((now - self._update_time > 100)))
-		return self.type_bundle is None or self._update_time is None or (now - self._update_time) > 10
-
-	def get_types( self ) :
-		now = time.time()
-		
-		if self._should_refresh_types(now):
-			log("UPDATE THE TYPES NOW")
-			self._update_time = now
-			self._update_types()
-
-		return self.type_bundle
-
-	def prepare_check_cmd(self, project, server_mode, view):
-		cmd, build_folder = self.prepare_build_cmd(project, server_mode, view)
-		cmd.append("--no-output")
-		return cmd, build_folder
-	
-
-	@property
-	def absolute_output(self):
-		if os.path.isabs(self.output):
-			return self.output
-		else:
-			return self.get_build_folder() + "/" + self.output	
-		
-
-	def prepare_run_cmd (self, project, server_mode, view):
-		cmd, build_folder, nekox_file = self._prepare_run(project, view, server_mode)
-
-		
-		default_open_ext = hxsettings.open_with_default_app()
-
-		if nekox_file != None:
-			cmd.extend(["-cmd", "neko " + nekox_file])
-		elif self.target == "swf" and default_open_ext != None:
-			cmd.extend(["-cmd", default_open_ext + " " + self.absolute_output])
-		elif self.target == "neko":
-			cmd.extend(["-cmd", "neko " + self.absolute_output])
-		elif self.target == "cpp":
-			sep_index = self.main.rfind(".")
-			exe = self.main[sep_index+1:] if sep_index > -1 else self.main
-			cmd.extend(["-cmd", os.path.join(self.absolute_output,exe) + "-debug"])
-		elif self.target == "js" and "nodejs" in self.defines:
-			cmd.extend(["-cmd", "nodejs " + self.absolute_output])
-		elif self.target == "java":
-			sep_index = self.absolute_output.rfind(os.path.sep)
-			jar = self.absolute_output + ".jar" if sep_index == -1 else self.absolute_output[sep_index+1:] + ".jar"
-			cmd.extend(["-cmd", "java -jar " + os.path.join(self.absolute_output, jar)])
-		elif self.target == "cs":
-			cmd.extend(["-cmd", "cd " + self.absolute_output])
-			cmd.extend(["-cmd", "gmcs -recurse:*.cs -main:" + self.main + " -out:" + self.main + ".exe-debug"])
-			cmd.extend(["-cmd", os.path.join(".", self.main + ".exe-debug")])
-
-		return cmd, build_folder
-
-	def prepare_build_cmd (self, project, server_mode, view):
-		cmd, build_folder,_ = self._prepare_run(project, view, server_mode)
-		return (cmd, build_folder)
-
-	def _prepare_run (self, project, view, server_mode = None):
-
-		server_mode = project.is_server_mode() if server_mode is None else server_mode
-		
-		run_exec = self._get_run_exec(project, view)
-		b = self.copy()
-		
-		nekox_file_name = None
-		
-		for i in range(0, len(b.args)):
-			a = b.args[i]
-			if a[0] == "-x":
-				nekox_file_name = a[1] + ".n"
-				b.args[i] = ("-neko", nekox_file_name)
-
-		if server_mode:
-			project.start_server( view )
-			b.set_server_mode(project.server.get_server_port())
-
-		
-		b.set_build_cwd()
-		cmd = b.get_command_args(run_exec)
-
-		return (cmd, self.get_build_folder(), nekox_file_name)
-
-	def _get_run_exec(self, project, view):
-		return project.haxe_exec(view)
-
-	def escape_cmd(self, cmd):
-		print_cmd = list(cmd)
-		l = len(print_cmd)
-		for i in range(0, l):
-			e = print_cmd[i]
-			if e == "--macro" and i < l-1:
-				print_cmd[i+1] = "'" + print_cmd[i+1] + "'"
-		return print_cmd
-
-	def _run_async (self, project, view, callback, server_mode = None):
-
-		env = project.haxe_env(view)
-		cmd, build_folder, nekox_file_name = self._prepare_run(project, view, server_mode)
-		print_cmd = list(cmd)
-		for i in range(0, len(print_cmd)):
-			e = print_cmd[i]
-			if e == "--macro" and i < len(print_cmd)-1:
-				print_cmd[i+1] = "'" + print_cmd[i+1] + "'"
-		
-		def cb (out, err):
-			self._on_run_complete(out, err, build_folder, nekox_file_name)
-			callback(out, err)
-
-		run_cmd_async( args=cmd, input="", cwd=build_folder, env=env, callback=cb )
-	
-	
-
-	def _run_sync (self, project, view, server_mode = None):
-		
-		env = project.haxe_env(view)
-		cmd, build_folder, nekox_file_name = self._prepare_run(project, view, server_mode)
-		log(" ".join(cmd))
-		out, err = run_cmd( args=cmd, input="", cwd=build_folder, env=env )
-		
-		self._on_run_complete(out, err, build_folder, nekox_file_name)
-		
-		return out,err
-
-
-	def _on_run_complete(self, out, err, build_folder, nekox_file_name):
-		log("---------------cmd-------------------")
-		log("out:" + out)
-		log("err:" + err)
-		log("---------compiler-output-------------")
-		if nekox_file_name is not None:
-			self._run_neko_x(build_folder, nekox_file_name)
-		
-
-	def _run_neko_x(self, build_folder, neko_file_name):
-		neko_file = os.path.join(build_folder, neko_file_name)
-		log("run nekox: " + neko_file) 
-		out, err = run_cmd(["neko", neko_file])
-		hxpanel.default_panel().writeln(out)
-		hxpanel.default_panel().writeln(err)
-
-	def run(self, project, view, async, callback, server_mode = None):
-		if async:
-			log("RUN ASYNC COMPLETION")
-			self._run_async( project, view, callback, server_mode )
-		else:
-			log("RUN SYNC COMPLETION")
-			out, err = self._run_sync( project, view, server_mode )
-			callback(out, err)
-
-	def is_type_available (self, type):
-		pack = type.toplevel_pack
-		return pack is None or self.is_pack_available(pack)
-
-
-	def is_pack_available (self, pack):
-		if pack == "":
-			return True
-
-		pack = pack.split(".")[0]
-		target = self.target
-
-		available = True
-
-		if pack is not None and target is not None and pack in config.target_packages:
-			if target in config.target_std_packages:
-				if pack not in config.target_std_packages[target]:
-					available = False;
-		return available
-
+*/

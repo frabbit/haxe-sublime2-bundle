@@ -1,3 +1,164 @@
+package hxsublime.compiler;
+
+import python.lib.Types.OSError;
+
+class Server {
+	public var _use_wrapper : Bool;
+	public var _server_proc;
+	public var _server_port : Int;
+	public var _orig_server_port : Int;
+
+	public function new (port:Int) {
+
+		this._use_wrapper = hxsettings.use_haxe_servermode_wrapper();
+		this._server_proc = null;
+		this._server_port = port;
+		this._orig_server_port = port;
+	}
+
+
+	public function get_server_port () 
+	{
+		return this._server_port;
+	}
+
+	public function start( haxe_path:String, cwd:String = null, env = null, retries:Int = 10 ) 
+	{
+				
+		if (this._server_proc == null) { 
+			if (this._use_wrapper) 
+			{
+				wrapper = plugin.plugin_base_dir() + "/wrapper"
+				cmd = ["neko", wrapper]
+			}
+			else 
+			{
+				cmd = list()
+			}
+			
+			cmd.extend([haxe_path , "--wait" , Std.string(this._server_port) ])
+			trace("start server:")
+			
+			trace(" ".join(cmd))
+
+			function onError (e:Dynamic) {
+				var err = 'Error starting server ${cmd.join(" ")}: ${Std.string(e)}';
+				Sublime.error_message(err)
+				if (retries > 0) 
+				{
+					this.stop();
+					this._server_port += 1;
+					trace("retry starting server at port: " + Std.string(this._server_port));
+					this.start(haxe_path, cwd, env, retries-1);
+				}
+				else 
+				{
+					msg = "Cannot start haxe compilation server on ports {0}-{1}";
+					msg = msg.format((this._orig_server_port, this._server_port));
+					trace("Server starting error");
+					// hxpanel.default_panel().writeln(msg)
+					// sublime.error_message(msg)
+				}
+			}
+			try {
+				
+				
+				full_env = os.environ.copy()
+				if (env != null) 
+				{
+					full_env.update(env)
+				}
+					
+				if (env != null) 
+				{
+					for (k in env) 
+					{
+						try 
+						{
+							val = env[k]
+						}
+						catch (e:Dynamic) 
+						{
+							val = env[k]
+						}
+						
+						full_env[k] = os.path.expandvars(val)
+					}
+				}
+				
+
+				trace("server env:" + Std.string(full_env))
+				this._server_proc = Popen(cmd, cwd=cwd, env=full_env, stdin=PIPE, stdout=PIPE, startupinfo=STARTUP_INFO)
+				
+				this._server_proc.poll()
+
+				time.sleep(0.05)
+					
+				trace("server started at port: " + Std.string(this._server_port))
+				// hxpanel.default_panel().writeln("server started at port: " + Std.string(this._server_port))
+			}
+			catch (e:OSError) 
+			{
+				onError(e);
+			}
+			catch (e:ValueError) 
+			{
+				onError(e);
+			}
+			catch (e:Dynamic) 
+			{
+				trace("ERROR : " + Std.string(e))
+			}
+		}
+	}
+		
+
+	public function stop( completeCallback:Void->Void = null)  
+	{
+		var old_port = this._server_port;
+		try {
+			var proc = this._server_proc;
+
+			if (proc != null) {
+				this._server_proc = null;
+				
+				if (this._use_wrapper) {
+					proc.stdin.write("x")
+					time.sleep(0.2);
+				}
+				else {
+					proc.terminate();
+					time.sleep(0.2);
+				}
+				proc.kill();
+				proc.wait();
+				proc = null;
+				//del proc
+				
+				// running the process on the same port causes zombie processes
+				// increment the server port to avoid this
+				this._server_port += 1;
+			}
+		}
+		catch (e:Dynamic) 
+		{
+			this._server_proc = null;
+		}
+		
+		if (completeCallback != null) 
+		{
+			hxpanel.default_panel().writeln("stopping server on port: " + Std.string(old_port));
+			completeCallback();
+		}
+	}
+
+	public function __del__() {
+		this.stop();
+	}
+}
+
+
+/*
 import sublime
 import sys
 import os
@@ -13,115 +174,7 @@ from haxe import panel as hxpanel
 from haxe import settings as hxsettings
 
 class Server ():
-	def __init__ (self, port):
-
-		self._use_wrapper = hxsettings.use_haxe_servermode_wrapper()
-
-		self._server_proc = None
-		self._server_port = port
-		self._orig_server_port = port
-
-
-	def get_server_port (self):
-		return self._server_port
-
-	def start( self , haxe_path, cwd = None, env = None, retries = 10 ) : 
-		if not hasattr(self, "_server_proc"):
-			self._server_proc = None
-		
-		if self._server_proc is None : 
-			try:
-				
-				if self._use_wrapper:
-					wrapper = plugin.plugin_base_dir() + "/wrapper"
-					cmd = ["neko", wrapper]
-				else:
-					cmd = list()
-				
-				cmd.extend([haxe_path , "--wait" , str(self._server_port) ])
-				log("start server:")
-				
-				log(" ".join(cmd))
-				full_env = os.environ.copy()
-				if env is not None:
-					full_env.update(env)
-					
-				if env is not None:
-					for k in env:
-						try:
-							if is_st3:
-								val = env[k]
-							else:
-								val = unicode(env[k], "ISO-8859-1").encode(sys.getfilesystemencoding())
-						except:
-							if is_st3:
-								val = env[k]
-							else:
-								val = env[k].encode(sys.getfilesystemencoding())
-						
-
-						full_env[k] = os.path.expandvars(val)
-				
-
-				log("server env:" + str(full_env))
-				self._server_proc = Popen(cmd, cwd=cwd, env=full_env, stdin=PIPE, stdout=PIPE, startupinfo=STARTUP_INFO)
-				
-				self._server_proc.poll()
-
-				time.sleep(0.05)
-					
-				log("server started at port: " + str(self._server_port))
-				# hxpanel.default_panel().writeln("server started at port: " + str(self._server_port))
-			except(OSError, ValueError) as e:
-				err = u'Error starting server %s: %s' % (" ".join(cmd), e)
-				sublime.error_message(err)
-				if (retries > 0):
-					self.stop();
-					self._server_port += 1
-					log("retry starting server at port: " + str(self._server_port))
-					self.start(haxe_path, cwd, env, retries-1)
-				else:
-					msg = "Cannot start haxe compilation server on ports {0}-{1}"
-					msg = msg.format((self._orig_server_port, self._server_port))
-					log("Server starting error")
-					#hxpanel.default_panel().writeln(msg)
-					#sublime.error_message(msg)
-			except Exception as e:
-				log("ERROR : " + str(e))
-		
-
-	def stop( self, completeCallback = None) :
-		old_port = self._server_port
-		try:
-			proc = self._server_proc
-
-			if proc is not None :
-				self._server_proc = None
-				del self._server_proc
-				if self._use_wrapper:
-					proc.stdin.write("x")
-					time.sleep(0.2)
-				else:
-					proc.terminate()
-					time.sleep(0.2)
-				proc.kill()
-				proc.wait()
-				proc = None
-				del proc
-				# running the process on the same port causes zombie processes
-				# increment the server port to avoid this
-				self._server_port = self._server_port + 1
-			
-			
-			
-		except:
-			self._server_proc = None
-		
-		if completeCallback != None:
-			hxpanel.default_panel().writeln("stopping server on port: " + str(old_port))
-			completeCallback()
-
-	def __del__(self):
-		self.stop()
+	
 		
 		
+*/

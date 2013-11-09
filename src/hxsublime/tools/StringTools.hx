@@ -20,17 +20,20 @@ class StringTools {
 		return false;
 	}
 
-	public static function reverse (s:String) {
+	public static function reverse (s:String) 
+	{
 		return untyped __python__("s[::-1]");
 	}
 
 
-	public static function isWhitespaceOrEmpty(s:String) {
+	public static function isWhitespaceOrEmpty(s:String) 
+	{
 		return Re.match(_whitespace, s) != null;
 	}
 
 
-	public static function unicodeToStr(s:Bytes, encoding:String, errors:String = "") {
+	public static function unicodeToStr(s:Bytes, encoding:String, errors:String = "") 
+	{
 		return s.decode(encoding, errors);
 	}
 
@@ -89,7 +92,8 @@ class StringTools {
 		return s.decode("utf-8", "ignore");
 	}
 
-	public static function encodeUtf8 (s:String):String {
+	public static function encodeUtf8 (s:String):String 
+	{
 		if (s == null)
 			return null;
 
@@ -103,7 +107,6 @@ class StringTools {
 			catch (e:Dynamic)
 				throw "cannot decode str";
 		
-
 		return res;
 	}
 	
