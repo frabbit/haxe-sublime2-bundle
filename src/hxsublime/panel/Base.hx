@@ -1,5 +1,8 @@
 package hxsublime.panel;
 
+import haxe.ds.StringMap;
+import hxsublime.Settings;
+import hxsublime.tools.Cache;
 import sublime.EventListener;
 import sublime.Sublime;
 import sublime.View;
@@ -9,29 +12,29 @@ import sublime.Window;
 
 class PanelCloseListener extends EventListener 
 {
-	public function on_close(view:View) 
+	override public function on_close(view:View) 
 	{
 		var win = view.window();
 		if (win == null) {
 			win = Sublime.active_window();
 		}
 		
-		var win_id = win.id()
-		var view_id = view.id()
+		var win_id = win.id();
+		var view_id = view.id();
 
-		if (Panel._slide_panel.exists(win_id)) 
+		if (Panels._slide_panel.exists(Std.string(win_id))) 
 		{
-			panel = slide_panel(win)
+			var panel = Panels.slide_panel(win);
 			if (panel.output_view != null && view_id == panel.output_view.id()) 
 			{
-				panel.output_view = null
+				panel.output_view = null;
 			}
 		}
 
-		var panel_win_id = view.settings().get("haxe_panel_win_id")
+		var panel_win_id = view.settings().get("haxe_panel_win_id");
 		if (panel_win_id != null) 
 		{
-			for (p in [Panel._tab_panel, Panel._debug_panel]) 
+			for (p in [Panels._tab_panel, Panels._debug_panel]) 
 			{
 				var panel = p.get_or_default(panel_win_id, null);
 				if (panel != null && panel.output_view != null && view_id == panel.output_view_id) 
@@ -45,20 +48,20 @@ class PanelCloseListener extends EventListener
 	}
 }
 
-class Panel {
+class Panels {
 
-	public static var _tab_panel = new Cache();
-	public static var _debug_panel = new Cache();
-	public static var _slide_panel = new StringMap();
+	public static var _tab_panel = new Cache<Panel>();
+	public static var _debug_panel = new Cache<Panel>();
+	public static var _slide_panel = new StringMap<Panel>();
 
 	public static function tab_panel(win:Window = null)
 	{
 		if (win == null) 
 		{
-			win = sublime.active_window();
+			win = Sublime.active_window();
 		}
 		
-		return _tab_panel.get_or_insert(win.id(), function () return new TabPanel(win, panel_name="Haxe Output"))
+		return _tab_panel.get_or_insert(Std.string(win.id()), function ():Panel return new TabPanel(win, "Haxe Output"));
 	}
 
 	public static function debug_panel(win:Window = null)
@@ -67,7 +70,7 @@ class Panel {
 		{
 			win = Sublime.active_window();
 		}
-		return _debug_panel.get_or_insert(win.id(), function () return new TabPanel(win, "Haxe Plugin Debug Panel"));
+		return _debug_panel.get_or_insert(Std.string(win.id()), function ():Panel return new TabPanel(win, "Haxe Plugin Debug Panel"));
 	}
 
 	public static function __slide_panel(win:Window = null)
@@ -75,9 +78,9 @@ class Panel {
 		return tab_panel(win);
 	}
 
-	public static function default_panel(win:Window = null)
+	public static function default_panel(win:Window = null):Panel
 	{
-		if (settings.use_slide_panel()) 
+		if (Settings.use_slide_panel()) 
 		{
 			return slide_panel(win);
 		}
@@ -92,16 +95,16 @@ class Panel {
 		
 		if (win == null) 
 		{
-			win = sublime.active_window();
+			win = Sublime.active_window();
 		}
 		
 		var win_id = win.id();
 		
-		if (!_slide_panel.exists(win_id)) 
+		if (!_slide_panel.exists(Std.string(win_id))) 
 		{
-			_slide_panel.set(win_id, new SlidePanel(win));
+			_slide_panel.set(Std.string(win_id), new SlidePanel(win));
 		}
-		return _slide_panel.get(win_id);
+		return _slide_panel.get(Std.string(win_id));
 	}
 }
 

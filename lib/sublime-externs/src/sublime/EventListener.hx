@@ -1,6 +1,7 @@
 
 package sublime;
 
+import python.lib.Re.Pattern;
 import python.lib.Types;
 
 private typedef TODO = Dynamic;
@@ -74,11 +75,11 @@ extern class EventListener {
 	
 	// Called when a text command is issued. The listener may return a (command, arguments) tuple to rewrite the command, or None to run the command unmodified.
 	// returns 	(new_command_name, new_args)
-	public function on_text_command(view:View, command_name:String, args:KwArgs):Tup2<String, Array<Dynamic>>
+	public function on_text_command(view:View, command_name:String, args:KwArgs):Tup2<String, Array<Dynamic>>;
 	
 	// Called when a window command is issued. The listener may return a (command, arguments) tuple to rewrite the command, or None to run the command unmodified.
 	// returns 	(new_command_name, new_args)	
-	public function on_window_command(window:Window, command_name:String, args:KwArgs):Tup2<String, Array<Dynamic>>
+	public function on_window_command(window:Window, command_name:String, args:KwArgs):Tup2<String, Array<Dynamic>>;
 	
 	// Called after a text command has been executed.
 	public function post_text_command(view:View, command_name:String, args:KwArgs):Void;

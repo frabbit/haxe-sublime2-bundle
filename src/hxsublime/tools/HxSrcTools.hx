@@ -697,8 +697,9 @@ class HxSrcTools {
 
 
 
-	//public static function empty_type_bundle():
-	//	return HaxeTypeBundle(dict())
+	public static function empty_type_bundle() {
+		return new HaxeTypeBundle(new StringMap());
+	}
 }
 
 
@@ -1195,7 +1196,7 @@ class HaxeType
 	@lazyprop
 	public function is_abstract () 
 	{
-		return return kind == "abstract";
+		return kind == "abstract";
 	}
 
 	public function __repr__() 

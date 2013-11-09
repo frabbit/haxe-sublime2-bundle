@@ -1,20 +1,22 @@
 package hxsublime;
 
 import python.lib.os.Path;
+import python.lib.Types.Tup2;
 import sublime.Settings;
+import sublime.Sublime;
 import sublime.View;
 
 
 
 class Settings 
 {
-	public static function plugin_settings():Settings 
+	public static function plugin_settings():sublime.Settings 
 	{
 		return Sublime.load_settings('Haxe.sublime-settings');
 	}
 
 
-	public static function get_from_settings(id:String, settings:Settings, plugin:Bool) 
+	public static function get_from_settings(id:String, settings:sublime.Settings, plugin:Bool) 
 	{
 		var prefix = if (plugin) "plugin_" else "";
 		var res = null;
@@ -30,7 +32,7 @@ class Settings
 		return res;
 	}
 
-	public static function get (id:String, view:View = null) 
+	public static function get (id:String, view:View = null):Dynamic
 	{
 		if (view == null) 
 		{
@@ -56,7 +58,7 @@ class Settings
 		return res;
 	}
 
-	public static function get_bool (id:String, defaultVal:Bool, view:View = null) 
+	public static function get_bool (id:String, defaultVal:Bool, view:View = null):Bool
 	{
 		var r = get(id, view);
 		if (r == null) 
@@ -77,7 +79,7 @@ class Settings
 	}
 
 
-	public static function get_int (id, defaultVal, view = null) {
+	public static function get_int (id:String, defaultVal:Int, view = null):Int {
 		var r = get(id, view);
 		if (r == null) {
 			return defaultVal;
@@ -93,13 +95,13 @@ class Settings
 		}
 	}
 
-	public static function get_string (id, defaultVal, view = null) {
+	public static function get_string (id:String, defaultVal:String, view = null):String {
 		var r = get(id, view);
 		if (r == null) {
 			return defaultVal;
 		}
 		else {
-			if Std.is(r, String)) {
+			if (Std.is(r, String)) {
 				return r;
 			}
 			else {
@@ -115,17 +117,17 @@ class Settings
 
 	public static function top_level_completions_on_demand (view:View = null) 
 	{
-		return get_bool("haxe_completions_top_level_only_on_demand", false, view)
+		return get_bool("haxe_completions_top_level_only_on_demand", false, view);
 	}
 
 	public static function show_only_async_completions (view:View = null) 
 	{
-		return get_bool("haxe_completions_show_only_async", true, view)
+		return get_bool("haxe_completions_show_only_async", true, view);
 	}
 
 	public static function is_async_completion (view:View = null) 
 	{
-		return get_bool("haxe_completion_async", true, view)
+		return get_bool("haxe_completion_async", true, view);
 	}
 
 	public static function get_completion_delays (view:View = null) 
@@ -133,39 +135,39 @@ class Settings
 		return Tup2.create(
 			get_int("haxe_completion_async_timing_hide", 60, view),
 			get_int("haxe_completion_async_timing_show", 150, view)
-		)
+		);
 	}
 
 
 	public static function show_completion_times (view:View = null) 
 	{
-		return get_bool("haxe_completion_show_times", false, view)
+		return get_bool("haxe_completion_show_times", false, view);
 	}
 
 
 	public static function haxe_exec (view:View = null) 
 	{
-		return get_string("haxe_exec", "haxe", view)
+		return get_string("haxe_exec", "haxe", view);
 	}
 
 	public static function use_haxe_servermode(view:View = null) 
 	{
-		return get_bool("haxe_use_servermode", true, view)
+		return get_bool("haxe_use_servermode", true, view);
 	}
 
 	public static function use_haxe_servermode_wrapper (view:View = null) 
 	{
-		return get_bool("haxe_use_servermode_wrapper", false, view)
+		return get_bool("haxe_use_servermode_wrapper", false, view);
 	}
 
 	public static function haxe_sdk_path (view:View = null) 
 	{
-		return get_string("haxe_sdk_path", null, view)
+		return get_string("haxe_sdk_path", null, view);
 	}
 
 	public static function open_with_default_app(view:View = null) 
 	{
-		return get_string("haxe_open_with_default_app", null, view)
+		return get_string("haxe_open_with_default_app", null, view);
 	}
 
 	public static function haxe_inst_path (view:View = null) 
@@ -174,7 +176,7 @@ class Settings
 		var defaultVal = if (tmp != null) (Path.normpath(haxe_sdk_path(view)) + Path.sep + "haxe") else null;
 		if (tmp == null && haxe_exec(view) != "haxe") 
 		{
-			defaultVal = (os.path.normpath(os.path.dirname(haxe_exec(view))));
+			defaultVal = (Path.normpath(Path.dirname(haxe_exec(view))));
 		}
 		
 		return get_string("haxe_inst_path", defaultVal, view);
@@ -184,8 +186,8 @@ class Settings
 	{
 		var tmp = haxe_sdk_path(view);
 			
-		var defaultVal = if (tmp != null) (os.path.normpath(haxe_sdk_path(view)) + os.path.sep + "default") else null;
-		return get_string("neko_inst_path", defaultVal, view)
+		var defaultVal = if (tmp != null) (Path.normpath(haxe_sdk_path(view)) + Path.sep + "default") else null;
+		return get_string("neko_inst_path", defaultVal, view);
 	}
 
 	public static function haxe_library_path (view:View = null) 

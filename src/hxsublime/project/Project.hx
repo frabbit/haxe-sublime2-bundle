@@ -1,8 +1,13 @@
 package hxsublime.project;
 
+import hxsublime.build.Build;
+import hxsublime.compiler.Server;
+import hxsublime.Haxelib.HaxeLibManager;
+import hxsublime.project.CompletionState.ProjectCompletionState;
 import python.lib.os.Path;
 import python.lib.Re;
 import sublime.Edit;
+import sublime.View;
 
 
 

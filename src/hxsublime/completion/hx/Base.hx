@@ -452,6 +452,7 @@ class Base {
         return "(.,".indexOf(char) > -1;
     }
 
+    
 
     public static function highlight_errors( errors , view:View ):Void  {
         regions = []

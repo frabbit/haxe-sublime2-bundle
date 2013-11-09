@@ -1,5 +1,7 @@
 package hxsublime;
 
+import hxsublime.Haxelib.HaxeLibLibrary;
+import hxsublime.tools.HxSrcTools;
 import python.lib.Re;
 
 import python.lib.os.Path;
@@ -7,10 +9,10 @@ import python.lib.os.Path;
 
 class Types 
 {
-	public static function find_types (classpaths, libs, base_path, filtered_classes = null, filtered_packages = null, include_private_types = true) 
+	public static function find_types (classpaths, libs:Array<HaxeLibLibrary>, base_path, filtered_classes = null, filtered_packages = null, include_private_types = true) 
 	{
 
-		var bundle = hxsrctools.empty_type_bundle();
+		var bundle = HxSrcTools.empty_type_bundle();
 
 		var cp = [];
 		cp = cp.concat( classpaths );
@@ -132,7 +134,7 @@ class Types
 
 		file_type_cache.set(file, Tup2.create(mtime, bundle));
 
-		return bundle
+		return bundle;
 	}
 }
 

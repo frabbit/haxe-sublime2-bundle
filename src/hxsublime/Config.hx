@@ -18,7 +18,7 @@ class Config {
     };
     public static var ignored_folders_list =  [".git", ".svn"];
 
-    public static var ignored_folders = mk_ignored_folders();
+    
 
     public static function mk_ignored_folders () return {
         var x = new Dict();
@@ -27,10 +27,11 @@ class Config {
         }
         x;
     }
+    public static var ignored_folders = mk_ignored_folders();
 
     public static var ignored_packages_list = ["neko._std", "cpp._std", "php._std", "js._std", "flash._std"];
 
-    public static var ignored_packages = mk_ignored_packages();
+    
     
     public static function mk_ignored_packages () return {
         var x = new Dict();
@@ -39,6 +40,7 @@ class Config {
         }
         x;
     }    
+    public static var ignored_packages = mk_ignored_packages();
 
     public static var ignored_types = ["haxe.io.BytesData.Unsigned_char__"];
 

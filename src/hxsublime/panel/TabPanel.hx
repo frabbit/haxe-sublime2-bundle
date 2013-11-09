@@ -1,6 +1,9 @@
 package hxsublime.panel;
 
+import hxsublime.panel.Tools;
+import hxsublime.tools.ViewTools;
 import sublime.Edit;
+import sublime.Sublime;
 import sublime.View;
 import sublime.Window;
 
@@ -14,7 +17,7 @@ class TabPanel {
 	public var panel_syntax:String;
 
 
-	public function __init__ (win:Window, panel_name = "Haxe Output", panel_syntax = "Packages/Haxe/Haxe.tmLanguage") 
+	public function new (win:Window, panel_name = "Haxe Output", panel_syntax = "Packages/Haxe/Haxe.tmLanguage") 
 	{
 		this.win = win;
 		this.output_view = null;
@@ -24,27 +27,33 @@ class TabPanel {
 		this.panel_syntax = panel_syntax;
 	}
 
-	
-	public function write (msg:String, show_timestamp=true) {
+	public function clear() 
+	{
+		
+	}
+
+	public function write (msg:String, scope:String = null, show_timestamp=true):Void {
 		
 		function f () 
 		{
 			var max = Std.int(Math.max(this.all.length, 300));
 			this.all = [for (i in 0...max) this.all[i]];
 			
-			var msg1 = if (show_timestamp) paneltools.timestamp_msg(msg) else msg;
+			var msg1 = if (show_timestamp) Tools.timestamp_msg(msg) else msg;
 			
-			if (paneltools.valid_message(msg)) {
+			if (Tools.valid_message(msg)) {
 				this.all = [msg1].concat(all);
 
 				var v = this.output_view;
 
-				if (v == null) {
-					v = viewtools.find_view_by_name(this.panel_name)
+				if (v == null) 
+				{
+					v = ViewTools.find_view_by_name(this.panel_name);
 					
-					if (v == null) {
+					if (v == null) 
+					{
 						v = make_tab_panel(this.win, this.panel_name, this.panel_syntax);
-						viewtools.replace_content(v, this.all.join(""));
+						ViewTools.replaceContent(v, this.all.join(""));
 					}
 
 					this.output_view = v;
@@ -56,26 +65,26 @@ class TabPanel {
 					function do_edit(v:View, edit:Edit) 
 					{
 						v.insert(edit, 0, msg1);
-						v.end_edit( edit );
 					}
-					viewtools.async_edit(v, do_edit)
+					ViewTools.asyncEdit(v, do_edit);
 				}
 			}
-					
+		}
 
-		sublime.set_timeout(f,40)
+		Sublime.set_timeout(f,40);
 	}
 
 	
-	public function writeln (msg:String, show_timestamp=true) 
+	public function writeln (msg:String, scope:String = null, show_timestamp=true):Void
 	{
 		this.write(msg + "\n");
 	}
 
 	
-	public function status (title:String, msg:String, show_timestamp=true) {
+	public function status (title:String, msg:String):Void
+	{
 		
-		if (paneltools.valid_message(msg)) {
+		if (Tools.valid_message(msg)) {
 			this.writeln(title + ": " + msg);
 		}
 	}
@@ -84,17 +93,17 @@ class TabPanel {
 	{
 		var active = win.active_view();
 		var v = win.new_file();
-		v.set_name(name)
+		v.set_name(name);
 		//v.set_read_only(true)
-		v.settings().set('word_wrap', true)
+		v.settings().set('word_wrap', true);
 		
-		v.settings().set("result_file_regex", paneltools.haxe_file_regex())
+		v.settings().set("result_file_regex", Tools.haxe_file_regex());
 		//v.settings().set("result_line_regex", _haxe_file_regex())
-		v.settings().set("haxe_panel_win_id", win.id())
+		v.settings().set("haxe_panel_win_id", win.id());
 		v.set_scratch(true);
 		v.set_syntax_file(syntax);
 		// always create the output panels on the last group (nicer)
-		last_group = win.num_groups()-1;
+		var last_group = win.num_groups()-1;
 		win.set_view_index(v, last_group, 0);
 		// restore old focus
 		win.focus_view(active);

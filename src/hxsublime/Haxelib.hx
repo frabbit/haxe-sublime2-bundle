@@ -1,6 +1,8 @@
 package hxsublime;
 
 import haxe.ds.StringMap;
+import hxsublime.project.Project;
+import hxsublime.tools.HxSrcTools.HaxeType;
 
 
 
@@ -51,7 +53,7 @@ class HaxeLibLibrary {
 
 class HaxeLibManager {
 	
-	var available:StringMap<HaxeLibLibrary>;
+	var _available:StringMap<HaxeLibLibrary>;
 
 	var project:Project;
 
@@ -95,7 +97,7 @@ class HaxeLibManager {
 		return comps;
 	}
 
-	static var libLine = Re.compile("([^:]*):[^\\[]*\[(dev\\:)?(.*)\\]");
+	static var libLine = Re.compile("([^:]*):[^\\[]*\\[(dev\\:)?(.*)\\]");
 
 	public function scan() 
 	{

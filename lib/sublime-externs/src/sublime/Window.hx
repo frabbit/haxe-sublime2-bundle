@@ -60,7 +60,7 @@ extern class Window {
 	
 	// TODO
 
-	//public function run_command(string, <args>):Void;
+	public function run_command(string:String, args:Dynamic):Void;
 	/*
 	None	Shows a quick panel, to select an item in a list. on_done will be called once, with the index of the selected item. If the quick panel was cancelled, on_done will be called with an argument of -1.
 	Items may be an array of strings, or an array of string arrays. In the latter case, each entry in the quick panel will show multiple rows.
@@ -70,9 +70,9 @@ extern class Window {
 	on_highlighted, if given, will be called every time the highlighted item in the quick panel is changed.
 	*/
 	
-	//public function show_quick_panel(items, on_done, <flags>, <selected_index>, <on_highlighted>)
+	public function show_quick_panel(items:Array<String>, on_done:Int->Void, flags:Int, selected_index:Int, on_highlighted:Int->Void):Void;
 	//public function show_input_panel(caption, initial_text, on_done, on_change, on_cancel)	View	Shows the input panel, to collect a line of input from the user. on_done and on_change, if not None, should both be functions that expect a single string argument. on_cancel should be a function that expects no arguments. The view used for the input widget is returned.
-	//public function create_output_panel(name)	View	Returns the view associated with the named output panel, created it if required. The output panel can be shown by running the show_panel window command, with the panel argument set to the name with an "output." prefix.
+	public function create_output_panel(name:String):View; //	View	Returns the view associated with the named output panel, created it if required. The output panel can be shown by running the show_panel window command, with the panel argument set to the name with an "output." prefix.
 	//public function lookup_symbol_in_index(symbol)	[Location]	Returns all locations where the symbol is defined across files in the current project.
 	//public function lookup_symbol_in_open_files(symbol)	[Location]	Returns all locations where the symbol is defined across open files.
 

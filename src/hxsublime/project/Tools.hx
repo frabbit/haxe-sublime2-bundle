@@ -6,6 +6,7 @@ import sublime.Sublime;
 class Tools {
 	public static function get_window (view:View) 
 	{
+		var win = null;
 	    if (view != null) 
 	    {
 	        var win = view.window();

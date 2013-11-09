@@ -1,5 +1,13 @@
 package hxsublime.project;
 
+import hxsublime.compiler.Output.CompilerError;
+import hxsublime.completion.hx.Types.CompletionContext;
+import hxsublime.completion.hx.Types.CompletionOptions;
+import hxsublime.completion.hx.Types.CompletionResult;
+import hxsublime.tools.Cache;
+import python.lib.Types.Tup2;
+import sublime.View;
+
 //from haxe.log import log
 //from haxe.tools.cache import Cache
 
@@ -8,14 +16,14 @@ class ProjectCompletionState {
 
 
     public var running:Cache<Tup2<Int,Int>>;
-    public var trigger:Cache<Options>;
+    public var trigger:Cache<CompletionOptions>;
     public var current_id:Int;
-    public var errors;
+    public var errors:Array<CompilerError>;
     public var async:Cache<CompletionResult>;
     public var current:{
         input : CompletionContext,
         output : CompletionResult
-    }
+    };
 
     public function new() {
         

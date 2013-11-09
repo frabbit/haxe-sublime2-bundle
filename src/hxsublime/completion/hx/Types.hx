@@ -1,14 +1,19 @@
 package hxsublime.completion.hx;
 
+import hxsublime.build.Build;
+import hxsublime.project.Project;
 import hxsublime.tools.StringTools;
+import sublime.Region;
+import sublime.View;
 
 
 
 
 class CompletionResult {
     
-    public static function empty_result (ctx, retrieve_toplevel_comps = null):
-        return new CompletionResult("", [], "", [], ctx, retrieve_toplevel_comps)
+    public static function empty_result (ctx, retrieve_toplevel_comps = null) {
+        return new CompletionResult("", [], "", [], ctx, retrieve_toplevel_comps);
+    }
 
 
     public var ret:String;
@@ -23,16 +28,16 @@ class CompletionResult {
 
     public function new (ret:String, comps:Array<String>, status:String, hints:Array<String>, ctx:CompletionContext, retrieve_toplevel_comps:Void->Array<String>) 
     {
-        this.ret = ret
-        this.comps = comps
-        this.status = status
-        this.hints = hints
-        this.ctx = ctx
+        this.ret = ret;
+        this.comps = comps;
+        this.status = status;
+        this.hints = hints;
+        this.ctx = ctx;
         if (retrieve_toplevel_comps == null) {
             retrieve_toplevel_comps = function () return [];
         }
 
-        this.retrieve_toplevel_comps = retrieve_toplevel_comps
+        this.retrieve_toplevel_comps = retrieve_toplevel_comps;
     }
 
         
@@ -92,8 +97,8 @@ class CompletionBuild {
     public var build:Build;
     public var ctx:CompletionContext;
     public var temp_path:String;
-    public var temp_file:String
-    public var cache:TODO
+    public var temp_file:String;
+    public var cache:TODO;
 
     public function new (ctx:CompletionContext, temp_path:String, temp_file:String)
     {
@@ -120,11 +125,13 @@ class CompletionBuild {
 
 
 class CompletionOptions {
-    public function new(trigger, context = hcc.COMPILER_CONTEXT_REGULAR, types = hcc.COMPLETION_TYPE_REGULAR, toplevel = hcc.COMPLETION_TYPE_TOPLEVEL):
+    public function new(trigger, context = hcc.COMPILER_CONTEXT_REGULAR, types = hcc.COMPLETION_TYPE_REGULAR, toplevel = hcc.COMPLETION_TYPE_TOPLEVEL)
+    {
         this._types = new CompletionTypes(types);
         this._toplevel = TopLevelOptions(toplevel);
         this._context = context;
         this._trigger = trigger;
+    }
 
     public function copy_as_manual() 
     {
@@ -169,7 +176,7 @@ class CompletionOptions {
 
     public function eq (other:CompletionOptions) 
     {
-        return this._trigger == other._trigger and this._types.eq(other._types) and this._toplevel.eq(other._toplevel) and this._context == other._context;
+        return this._trigger == other._trigger && this._types.eq(other._types) && this._toplevel.eq(other._toplevel) && this._context == other._context;
     }
 }
 
@@ -255,8 +262,10 @@ class TopLevelOptions {
 
 
 class CompletionSettings {
-    public function new(settings):
-        this.settings = settings
+    public function new(settings)
+    {
+        this.settings = settings;
+    }
 
     @lazyprop
     public function smarts_hints_only_next() {
@@ -328,7 +337,7 @@ class CompletionContext {
 
     @lazyprop
     public function complete_offset_in_bytes() {
-        var s = src_until_complete_offset()
+        var s = src_until_complete_offset();
         
         var s_bytes = s.encode();
         
@@ -358,18 +367,18 @@ class CompletionContext {
 
     @lazyprop
     public function in_control_struct() {
-        return control_struct.search( self.src_until_complete_offset ) is not None
+        return control_struct.search( self.src_until_complete_offset ) != null;
     }
 
     @lazyprop
     public function src_until_complete_offset() {
-        return self.src[0:self.complete_offset]
+        return self.src.substring(0,self.complete_offset);
     }
 
     @lazyprop 
     public function line_after_offset() {
-        line_end = self.src.find("\n", self.offset)
-        return self.src[self.offset:line_end]
+        line_end = self.src.find("\n", self.offset);
+        return self.src.substring(self.offset,line_end);
     }
 
     // src of current file
@@ -402,8 +411,8 @@ class CompletionContext {
 
     @lazyprop
     public function _completion_info() {
-        trace("CALLED ONCE")
-        return get_completion_info(view, offset, src)
+        trace("CALLED ONCE");
+        return get_completion_info(view, offset, src);
     }
 
     @lazyprop
@@ -454,9 +463,9 @@ class CompletionContext {
                 prefix_same = this.prefix == other.prefix || (this.prefix_is_whitespace() && other.prefix_is_whitespace());
             }
 
-            trace("same PREFIX:" + Std.string(prefix_same))
-            trace("PREFIXES:" + this.prefix + " - " + other.prefix)
-            return prefix_same
+            trace("same PREFIX:" + Std.string(prefix_same));
+            trace("PREFIXES:" + this.prefix + " - " + other.prefix);
+            return prefix_same;
         }
 
         return 
@@ -473,73 +482,106 @@ class CompletionContext {
     }
 
 
-    public static function count_commas_and_complete_offset (src, prev_comma, complete_offset) 
+    public static function count_commas_and_complete_offset (src:String, prev_comma:Int, complete_offset:Int) 
     {
         var commas = 0;
         var closed_pars = 0;
         var closed_braces = 0;
         var closed_brackets = 0;
 
-        for i in range( prev_comma , 0 , -1 ) :
-            c = src[i]
-            if c == ")" :
-                closed_pars += 1
-            elif c == "(" :
-                if closed_pars < 1 :
-                    complete_offset = i+1
-                    break
-                else :
-                    closed_pars -= 1
-            elif c == "," :
-                if closed_pars == 0 and closed_braces == 0 and closed_brackets == 0 :
-                    commas += 1
-            elif c == "{" :
-                #commas = 0
-                closed_braces -= 1
-
-            elif c == "}" :
-                closed_braces += 1
-            elif c == "[" :
-                #commas = 0
-                closed_brackets -= 1
-            elif c == "]" :
-                closed_brackets += 1
-
-        return (commas, complete_offset)
+        for (j in 0...prev_comma) 
+        {
+            var i = prev_comma - j;
+            
+            var c = src[i];
+            
+            if (c == ")" )
+            {
+                closed_pars += 1;
+            }
+            else if (c == "(" )
+            {
+                if (closed_pars < 1 )
+                {
+                    complete_offset = i+1;
+                    break;
+                }
+                else 
+                {
+                    closed_pars -= 1;
+                }
+            }
+            else if (c == "," )
+            {
+                if (closed_pars == 0 && closed_braces == 0 && closed_brackets == 0 )
+                {
+                    commas += 1;
+                }
+            }
+            else if (c == "{" )
+            {
+                //commas = 0
+                closed_braces -= 1;
+            }
+            else if (c == "}" )
+            {
+                closed_braces += 1;
+            }
+            else if (c == "[" )
+            {
+                //commas = 0
+                closed_brackets -= 1;
+            }
+            else if (c == "]" )
+            {
+                closed_brackets += 1;
+            }
+        }
+        return Tup2.create(commas, complete_offset);
     }
 
 
-    public static function get_completion_info (view, offset, src) 
+    public static function get_completion_info (view:View, offset:Int, src:String) 
     {
-        prev = src[offset-1]
-        commas = 0
+        var prev = src.charAt(offset-1);
+        var commas = 0;
         
-        complete_offset = offset
-        is_new = False
-        prev_symbol_is_comma = False
-        if (prev == " " and (offset-4 >= 0) and src[offset-4:offset-1] == "new"):
-            is_new = True
-        elif prev not in "(.;" :
-            fragment = view.substr(sublime.Region(0,offset))
-            prev_dot = fragment.rfind(".")
-            prev_par = fragment.rfind("(")
-            prev_comma = fragment.rfind(",")
-            prev_colon = fragment.rfind(":")
-            prev_brace = fragment.rfind("{")
-            prev_semi = fragment.rfind(";")
+        var complete_offset = offset;
+        var is_new = false;
+        var prev_symbol_is_comma = false;
+        if (prev == " " && (offset-4 >= 0) && src.substring(offset-4,offset-1) == "new")
+        {
+            is_new = true;
+        }
+        else if ("(.;".contains(prev) ) 
+        {
+            var fragment = view.substr(new Region(0,offset));
+            var prev_dot = fragment.lastIndexOf(".");
+            var prev_par = fragment.lastIndexOf("(");
+            var prev_comma = fragment.lastIndexOf(",");
+            var prev_colon = fragment.lastIndexOf(":");
+            var prev_brace = fragment.lastIndexOf("{");
+            var prev_semi = fragment.lastIndexOf(";");
             
             
-            prev_symbol = max(prev_dot,prev_par,prev_comma,prev_brace,prev_colon, prev_semi)
+            var prev_symbol = max(prev_dot,prev_par,prev_comma,prev_brace,prev_colon, prev_semi);
             
-            if prev_symbol == prev_comma:
-                commas, complete_offset = count_commas_and_complete_offset(src, prev_comma, complete_offset)
-                #print("closedBrackets : " + str(closedBrackets))
-                prev_symbol_is_comma = True
-            else :
-                complete_offset = max( prev_dot + 1, prev_par + 1 , prev_colon + 1, prev_brace + 1, prev_semi + 1 )
+            if (prev_symbol == prev_comma)
+            {
+                var r = count_commas_and_complete_offset(src, prev_comma, complete_offset);
+                var commas = r._1, complete_offset = r._2;
+                //print("closedBrackets : " + str(closedBrackets))
+                prev_symbol_is_comma = true;
+            }
+            else 
+            {
+                complete_offset = max( prev_dot + 1, prev_par + 1 , prev_colon + 1, prev_brace + 1, prev_semi + 1 );
+            }
+        }
                 
-        log("COMPLETE_CHAR:" + src[complete_offset-1])
-        return (commas, complete_offset, prev_symbol_is_comma, is_new)
+        trace("COMPLETE_CHAR:" + src.charAt(complete_offset-1));
+
+        return Tup5.create(commas, complete_offset, prev_symbol_is_comma, is_new);
     }
 
 

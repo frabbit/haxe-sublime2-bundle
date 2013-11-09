@@ -1,16 +1,22 @@
 package hxsublime.compiler;
 
+import hxsublime.Plugin;
+import python.lib.subprocess.Popen;
 import python.lib.Types.OSError;
+import sublime.Sublime;
 
-class Server {
+using python.lib.ArrayTools;
+
+class Server 
+{
 	public var _use_wrapper : Bool;
-	public var _server_proc;
+	public var _server_proc:Popen;
 	public var _server_port : Int;
 	public var _orig_server_port : Int;
 
 	public function new (port:Int) {
 
-		this._use_wrapper = hxsettings.use_haxe_servermode_wrapper();
+		this._use_wrapper = Settings.use_haxe_servermode_wrapper();
 		this._server_proc = null;
 		this._server_port = port;
 		this._orig_server_port = port;
@@ -26,24 +32,25 @@ class Server {
 	{
 				
 		if (this._server_proc == null) { 
+			var cmd = null;
 			if (this._use_wrapper) 
 			{
-				wrapper = plugin.plugin_base_dir() + "/wrapper"
-				cmd = ["neko", wrapper]
+				var wrapper = Plugin.plugin_base_dir() + "/wrapper";
+				cmd = ["neko", wrapper];
 			}
 			else 
 			{
-				cmd = list()
+				cmd = [];
 			}
 			
-			cmd.extend([haxe_path , "--wait" , Std.string(this._server_port) ])
-			trace("start server:")
+			cmd.extend([haxe_path , "--wait" , Std.string(this._server_port) ]);
+			trace("start server:");
 			
-			trace(" ".join(cmd))
+			trace(cmd.join(" "));
 
 			function onError (e:Dynamic) {
 				var err = 'Error starting server ${cmd.join(" ")}: ${Std.string(e)}';
-				Sublime.error_message(err)
+				Sublime.error_message(err);
 				if (retries > 0) 
 				{
 					this.stop();
@@ -54,7 +61,7 @@ class Server {
 				else 
 				{
 					msg = "Cannot start haxe compilation server on ports {0}-{1}";
-					msg = msg.format((this._orig_server_port, this._server_port));
+					msg = msg.format(Tup2.create(this._orig_server_port, this._server_port));
 					trace("Server starting error");
 					// hxpanel.default_panel().writeln(msg)
 					// sublime.error_message(msg)
@@ -63,10 +70,10 @@ class Server {
 			try {
 				
 				
-				full_env = os.environ.copy()
+				full_env = os.environ.copy();
 				if (env != null) 
 				{
-					full_env.update(env)
+					full_env.update(env);
 				}
 					
 				if (env != null) 
@@ -75,26 +82,26 @@ class Server {
 					{
 						try 
 						{
-							val = env[k]
+							val = env[k];
 						}
 						catch (e:Dynamic) 
 						{
-							val = env[k]
+							val = env[k];
 						}
 						
-						full_env[k] = os.path.expandvars(val)
+						full_env[k] = os.path.expandvars(val);
 					}
 				}
 				
 
-				trace("server env:" + Std.string(full_env))
-				this._server_proc = Popen(cmd, cwd=cwd, env=full_env, stdin=PIPE, stdout=PIPE, startupinfo=STARTUP_INFO)
+				trace("server env:" + Std.string(full_env));
+				this._server_proc = Popen(cmd, cwd=cwd, env=full_env, stdin=PIPE, stdout=PIPE, startupinfo=STARTUP_INFO);
 				
-				this._server_proc.poll()
+				this._server_proc.poll();
 
-				time.sleep(0.05)
+				time.sleep(0.05);
 					
-				trace("server started at port: " + Std.string(this._server_port))
+				trace("server started at port: " + Std.string(this._server_port));
 				// hxpanel.default_panel().writeln("server started at port: " + Std.string(this._server_port))
 			}
 			catch (e:OSError) 
@@ -107,7 +114,7 @@ class Server {
 			}
 			catch (e:Dynamic) 
 			{
-				trace("ERROR : " + Std.string(e))
+				trace("ERROR : " + Std.string(e));
 			}
 		}
 	}
@@ -123,7 +130,7 @@ class Server {
 				this._server_proc = null;
 				
 				if (this._use_wrapper) {
-					proc.stdin.write("x")
+					proc.stdin.write("x");
 					time.sleep(0.2);
 				}
 				else {

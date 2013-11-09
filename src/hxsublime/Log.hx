@@ -1,9 +1,13 @@
-import Sublime;
+package hxsublime;
+
+import hxsublime.panel.Base.Panels;
+import python.lib.Codecs;
+import sublime.Sublime;
 
 class Log {
 	public static function debug(msg:Dynamic) 
 	{
-		log(msg, False)
+		log(msg, false);
 	}
 
 	public static function log (msg:Dynamic, to_file = false) 
@@ -11,21 +15,21 @@ class Log {
 		var msgStr = Std.string(msg);
 		if (to_file) 
 		{
-			f = codecs.open( "st3_haxe_log.txt" , "wb" , "utf-8" , "ignore" );
-			f.append( msgStr + "\n" );
+			var f = Codecs.open( "st3_haxe_log.txt" , "ab" , "utf-8" , "ignore" );
+			f.write( msgStr + "\n" );
 			f.close();
 		}
 		else if (Settings.use_debug_panel()) 
 		{
 			
 			function f() {
-				hxpanel.debug_panel().writeln(encode_utf8(msg));
+				Panels.debug_panel().writeln(msg);
 			}
 			Sublime.set_timeout(f, 100);
 		}
 		else {
 			try {
-				print(msgStr);
+				trace(msgStr);
 			}
 			catch (e:Dynamic) {}
 		}
