@@ -3,6 +3,7 @@ package hxsublime.build;
 
 import hxsublime.Config.Target;
 import hxsublime.project.Project;
+import hxsublime.tools.HxSrcTools.HaxeType;
 import hxsublime.tools.HxSrcTools.HaxeTypeBundle;
 import python.lib.Types.Tup2;
 import sublime.View;
@@ -22,5 +23,9 @@ typedef Build = {
 	public function prepare_build_cmd(project:Project, server_mode:Bool, view:View):Tup2<Array<String>, String>;
 	public function prepare_run_cmd(project:Project, server_mode:Bool, view:View):Tup2<Array<String>, String>; 
 	public function escape_cmd (cmd:Array<String>):Array<String>;
+	public function is_type_available(t:HaxeType):Bool;
+	public function is_pack_available(p:String):Bool;
+	public function get_types():HaxeTypeBundle;
+	public var std_bundle:HaxeTypeBundle;
 	public var target:String;
 }

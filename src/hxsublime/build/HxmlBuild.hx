@@ -637,14 +637,14 @@ class HxmlBuild {
 		}
 	}
 
-	public function is_type_available (type) 
+	public function is_type_available (type:HaxeType) 
 	{
-		var pack = type.toplevel_pack;
+		var pack = type.toplevel_pack();
 		return pack == null || this.is_pack_available(pack);
 	}
 
 
-	public function is_pack_available (pack) 
+	public function is_pack_available (pack:String) 
 	{
 		if (pack == "") 
 		{

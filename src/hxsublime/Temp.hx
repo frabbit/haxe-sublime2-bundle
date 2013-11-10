@@ -13,7 +13,7 @@ import python.lib.Types.Tup2;
 
 class Temp {
 
-	public static function get_temp_path_id(build) {
+	public static function get_temp_path_id(build:Build) {
 
 		
 		var path = build.get_build_folder();
@@ -29,7 +29,7 @@ class Temp {
 		return temp_path;
 	}
 
-	public static function create_temp_path(build) {
+	public static function create_temp_path(build:Build) {
 
 		var temp_path = get_temp_path_id(build);
 		
@@ -61,7 +61,7 @@ class Temp {
 		return new_file;
 	}
 
-	public static function create_temp_path_and_file(build, orig_file:String, content:String) {
+	public static function create_temp_path_and_file(build:Build, orig_file:String, content:String) {
 		var temp_path = create_temp_path(build);
 			
 		var temp_file = create_file(temp_path, build, orig_file, content);

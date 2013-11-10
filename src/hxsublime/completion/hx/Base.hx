@@ -2,13 +2,16 @@ package hxsublime.completion.hx;
 
 import hxsublime.completion.hx.Constants;
 import hxsublime.completion.hx.Toplevel.TopLevel;
+import hxsublime.completion.hx.Types.CompletionBuild;
 import hxsublime.completion.hx.Types.CompletionContext;
 import hxsublime.completion.hx.Types.CompletionOptions;
 import hxsublime.completion.hx.Types.CompletionResult;
 import hxsublime.completion.hx.Types.CompletionSettings;
 import hxsublime.project.Base.Projects;
+import hxsublime.project.CompletionState.CompletionCache;
 import hxsublime.project.Project;
 import hxsublime.Settings;
+import hxsublime.Temp;
 import hxsublime.tools.ViewTools;
 import python.lib.Re;
 import python.lib.Types.Tup2;
@@ -163,12 +166,12 @@ class Base {
             }
             else {
 
-                last_ctx = cache["input"];
+                var last_ctx = cache.input;
 
                 if (use_completion_cache(ctx,last_ctx)) 
                 {
                     trace("USE COMPLETION CACHE");
-                    out = cache["output"];
+                    var out = cache.output;
                     update_completion_cache(cache, out);
                     project.completion_context.add_completion_result(out);
                     res = cancel_completion(view);
@@ -176,10 +179,10 @@ class Base {
                     //res = combine_hints_and_comps(out)
                     //res = completion_result_with_smart_snippets(view, res, out, ctx.options)
                 }
-                else if (supported_compiler_completion_char(ctx.complete_char)) 
+                else if (supported_compiler_completion_char(ctx.complete_char())) 
                 {
                     
-                    comp_build = create_completion_build(ctx);
+                    var comp_build = create_completion_build(ctx);
                     if (comp_build != null) {
                         run_compiler_completion(comp_build, function (out, err) completion_finished(ctx, comp_build,  out, err));
                     }
@@ -204,20 +207,20 @@ class Base {
         return res;
     }
 
-    public static function create_completion_build (ctx) {
-        tmp_src = ctx.temp_completion_src;
+    public static function create_completion_build (ctx:CompletionContext) {
+        var tmp_src = ctx.temp_completion_src;
 
-        var r = hxtemp.create_temp_path_and_file(ctx.build, ctx.orig_file, tmp_src);
+        var r = Temp.create_temp_path_and_file(ctx.build(), ctx.orig_file, tmp_src);
         var temp_path = r._1, temp_file = r._2;
 
-        temp_creation_success = temp_path != null && temp_file != null;
+        var temp_creation_success = temp_path != null && temp_file != null;
 
        function mk_build() 
        {
-            comp_build = CompletionBuild(ctx, temp_path, temp_file);
-            build =comp_build.build;
-            display = comp_build.display;
-            macro_completion = ctx.options.macro_completion;
+            var comp_build = new CompletionBuild(ctx, temp_path, temp_file);
+            var build =comp_build.build;
+            var display = comp_build.display;
+            var macro_completion = ctx.options.macro_completion;
             // prepare build options
             build.set_auto_completion(display, macro_completion);
             if (ctx.settings.show_completion_times(comp_build.ctx.view)) 
@@ -453,9 +456,9 @@ class Base {
         return ctx;
     }
 
-    public static function update_completion_cache(cache, comp_result) {
-        cache["output"] = comp_result;
-        cache["input"] = comp_result.ctx;
+    public static function update_completion_cache(cache:CompletionCache, comp_result:CompletionResult) {
+        cache.output = comp_result;
+        cache.input = comp_result.ctx;
     }
 
 
