@@ -17,4 +17,9 @@ class PathTools {
 		return Path.normpath(Path.join(path1, path2));	
 	}
 
+	public static function is_abs_path(path:String) 
+	{
+		return Path.normpath(path) == Path.abspath(path);
+	}
+
 }

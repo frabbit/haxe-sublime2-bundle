@@ -3,6 +3,7 @@ package hxsublime.commands;
 import hxsublime.Plugin;
 import hxsublime.project.Project;
 import python.lib.os.Path;
+import sublime.EventListener;
 import sublime.Region;
 import sublime.TextCommand;
 import sublime.View;
@@ -14,12 +15,12 @@ class HaxeFindDeclarationCommand extends TextCommand
     override public function run( _:KwArgs ) 
     {
 
-        this.run1(true)
+        this.run1(true);
     }
 
     public function helper_method()
     {
-        return "hxsublime.FindDeclaration.__sublimeFindDecl"
+        return "hxsublime.FindDeclaration.__sublimeFindDecl";
     }
 
 
@@ -61,14 +62,14 @@ class HaxeFindDeclarationCommand extends TextCommand
 
         var using_pos = if (package_match == null) 0 else package_match.end(0);
 
-        var using_insert = "using hxsublime.FindDeclaration;"
+        var using_insert = "using hxsublime.FindDeclaration;";
 
         var src_before_using = src.substring(0, using_pos);
         var src_after_using = src.substr(using_pos);
 
         
-        var sel = view.sel()[0]
-        var pos = sel.begin()
+        var sel = view.sel()[0];
+        var pos = sel.begin();
 
         var expr_end = null;
         var expr_start = null;
@@ -76,8 +77,8 @@ class HaxeFindDeclarationCommand extends TextCommand
         if (sel.end() == pos) 
         {
 
-            word_str, word_start, word_end = Helper.get_word_at(view, src, pos);
-
+            var r = Helper.get_word_at(view, src, pos);
+            var word_str = r._1, word_start = r._2, word_end = r._3;
 
             var chars = ["{", "+", "-", "(", "[", "*", "/", "=", ";", ":"];
             var res = hxsrctools.reverse_search_next_char_on_same_nesting_level(src, chars, word_end-1);
@@ -95,11 +96,11 @@ class HaxeFindDeclarationCommand extends TextCommand
             expr_end = sel.end();
         }
         
-        var src_before_expr = src[using_pos:expr_start]
+        var src_before_expr = src.substring(using_pos,expr_start);
 
-        var src_after_expr = src[expr_end:]
+        var src_after_expr = src.substr(expr_end);
 
-        var expr_string = src[expr_start:expr_end];
+        var expr_string = src.substring(expr_start,expr_end);
 
 
         var display_str = if (use_display) ".|" else "";
@@ -111,17 +112,18 @@ class HaxeFindDeclarationCommand extends TextCommand
         var insert_after = ", " + order_str + ")" + display_str;
 
 
-        var new_src = src_before_using + using_insert + src_before_expr + insert_before +  expr_string + insert_after + src_after_expr
+        var new_src = src_before_using + using_insert + src_before_expr + insert_before +  expr_string + insert_after + src_after_expr;
         
         trace(new_src);
 
-        build, temp_path, temp_file = Helper.prepare_build(view, project, use_display, new_src)
+       var r = Helper.prepare_build(view, project, use_display, new_src);
+        var build = r._1, temp_path = r._2, temp_file = r._3;
 
-        public function cb (out:String, err:String)
+        function cb (out:String, err:String)
         {
             hxtemp.remove_path(temp_path);
 
-            var file_pos = Re.compile("\|\|\|\|\|([^|]+)\|\|\|\|\|", re.I);
+            var file_pos = Re.compile("\\|\\|\\|\\|\\|([^|]+)\\|\\|\\|\\|\\|", Re.I);
 
             var res = Re.search(file_pos, out);
             if (res != null) 
@@ -156,7 +158,7 @@ class HaxeFindDeclarationCommand extends TextCommand
                 }
                 else if (order == 2 && use_display) 
                 {
-                    this.run1(true, 3)
+                    this.run1(true, 3);
                 }
                 else if (use_display)
                 {
@@ -171,7 +173,7 @@ class HaxeFindDeclarationCommand extends TextCommand
             }
         }
 
-        build.run(project, view, false, cb)
+        build.run(project, view, false, cb);
     }
 
     public function handle_successfull_result(view:View, json_res, using_insert, insert_before, insert_after, expr_end, build, temp_path, temp_file)
@@ -210,7 +212,7 @@ class HaxeFindDeclarationCommand extends TextCommand
             var offset = 0;
             for (i in 0...min) 
             {
-                if (real_source[i] == u"\r") 
+                if (real_source[i] == "\r") 
                 {
                     offset += 1;
                 }
@@ -273,7 +275,8 @@ private class Helper
         var build = project.get_build(view).copy();
         build.args.push(Tup2.create("-D", "no-inline"));
 
-        temp_path, temp_file = hxtemp.create_temp_path_and_file(build, view.file_name(), new_src);
+        var r = hxtemp.create_temp_path_and_file(build, view.file_name(), new_src);
+        var temp_path = r._1, temp_file = r._2;
 
         build.add_classpath(temp_path);
 
@@ -290,7 +293,7 @@ private class Helper
     }
 }
 
-class HaxeFindDeclarationListener extends EventListener 
+class HaxeFindDeclarationListener extends EventListener
 {
     public function on_activated(view:View) 
     {
@@ -310,7 +313,7 @@ class HaxeFindDeclarationListener extends EventListener
                 {
                     view.show_at_center(new Region(min));
                 }
-                Sublime.set_timeout(show, 70)
+                Sublime.set_timeout(show, 70);
             }
             State.find_decl_file = null;
             State.find_decl_pos = null;

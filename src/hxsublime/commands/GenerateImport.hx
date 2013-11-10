@@ -1,5 +1,8 @@
 package hxsublime.commands;
 
+import python.lib.Types.KwArgs;
+import sublime.TextCommand;
+
 
 
 class HaxeGenerateUsingCommand extends TextCommand

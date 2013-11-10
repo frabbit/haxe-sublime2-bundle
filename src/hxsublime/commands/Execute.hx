@@ -1,15 +1,18 @@
 package hxsublime.commands;
 
+import python.lib.Types.FileObject;
+import python.lib.Types.KwArgs;
 import sublime.Edit;
 import sublime.View;
+import sublime.WindowCommand;
 
 
 
 interface ProcessListener 
 {
-    public function on_data(proc, data):Void;
+    public function on_data(proc:FileObject, data:String):Void;
 
-    public function on_finished(proc):Void;
+    public function on_finished(proc:FileObject):Void;
 }
 
 private class Helper 
@@ -32,7 +35,7 @@ private class Helper
 
 
 
-class HaxeExecCommand extends WindowCommand implements ProcessListener 
+class HaxeExecCommand extends WindowCommand implements ProcessListener
 {
 
     var is_check_run:Bool;
@@ -58,7 +61,7 @@ class HaxeExecCommand extends WindowCommand implements ProcessListener
 
         if (encoding == null) 
         {
-            encoding = sys.getfilesystemencoding()
+            encoding = sys.getfilesystemencoding();
         }
 
         trace("run haxe exec");
@@ -106,15 +109,15 @@ class HaxeExecCommand extends WindowCommand implements ProcessListener
             {
                 var a = a.split('"').join('\\"');
                 if (a.length >= 2) {
-                    a = if (a.startswith('\\"')) '"' + a[2:] else a;
-                    a = if (a.endswith('\\"')) a[0:len(a)-2] + '"' else a;
+                    a = if (a.startswith('\\"')) '"' + a.substr(2) else a;
+                    a = if (a.endswith('\\"')) a.substring(0, len(a)-2) + '"' else a;
                 }
                 return a;
             }
 
             trace("Running Command : " + " ".join(map(escape_arg, cmd)));
 
-            sublime.status_message("Building")
+            sublime.status_message("Building");
         }
 
 
@@ -235,7 +238,7 @@ class HaxeExecCommand extends WindowCommand implements ProcessListener
         var sel = this.output_view.sel();
         var selection_was_at_end = (sel.length == 1 && sel[0] == sublime.Region(this.output_view.size()));
         
-        public function do_edit(v:View, edit:Edit)
+        function do_edit(v:View, edit:Edit)
         {
 
             v.set_read_only(false);
@@ -248,7 +251,7 @@ class HaxeExecCommand extends WindowCommand implements ProcessListener
             v.end_edit(edit);
 
             v.set_read_only(true);
-            
+        }
         viewtools.async_edit(this.output_view, do_edit);
     }
 
@@ -269,12 +272,12 @@ class HaxeExecCommand extends WindowCommand implements ProcessListener
             }
             else
             {
-                this.append_data(proc, '[Finished in ${elapsed} with exit code ${exit_code}]')
+                this.append_data(proc, '[Finished in ${elapsed} with exit code ${exit_code}]');
             }
         }
         if (proc != this.proc) 
         {
-            return
+            return;
         }
 
         // Set the selection to the start, so that next_result will work as expected

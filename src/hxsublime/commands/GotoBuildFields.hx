@@ -3,7 +3,9 @@ package hxsublime.commands;
 
 
 import haxe.ds.StringMap;
+import hxsublime.commands.GotoBase.HaxeGotoBaseCommand;
 import hxsublime.tools.HxSrcTools;
+import python.lib.Types.Tup2;
 
 class HaxeGotoBuildFieldsCommand extends HaxeGotoBaseCommand<HaxeField>
 {

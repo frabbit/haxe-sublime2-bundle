@@ -4,12 +4,17 @@ import hxsublime.build.Build;
 import hxsublime.compiler.Server;
 import hxsublime.Haxelib.HaxeLibManager;
 import hxsublime.project.CompletionState.ProjectCompletionState;
+import hxsublime.Settings;
+import hxsublime.tools.PathTools;
+import python.lib.Os;
 import python.lib.os.Path;
 import python.lib.Re;
 import sublime.Edit;
+import sublime.Sublime;
 import sublime.View;
 
-
+using python.lib.ArrayTools;
+//using Settings;
 
 
 class Project {
@@ -29,7 +34,7 @@ class Project {
     public function new (id, file:String, win_id, server_port:Int) {
         
         this.completion_context = new ProjectCompletionState();
-        this._haxelib_manager = new HaxeLibManager(self);
+        this._haxelib_manager = new HaxeLibManager(this);
         this.current_build = null;
         this.selecting_build = false;
         this.builds = [];
@@ -38,10 +43,10 @@ class Project {
         this.project_file = file;
         this.project_id = id;
         if (this.project_file != null) {
-            this.project_path = Path.normpath(os.path.dirname(self.project_file));
+            this.project_path = Path.normpath(Path.dirname(this.project_file));
         }
         else {
-            self.project_path = null;
+            this.project_path = null;
         }
         _update_compiler_info();
     }
@@ -66,7 +71,7 @@ class Project {
         return [Settings.haxelib_exec(), "run", "openfl"];
     }
 
-    public function haxelib_exec (view:View = None) {
+    public function haxelib_exec (view:View = null) {
         return [Settings.haxelib_exec()];
     }
 
@@ -80,7 +85,7 @@ class Project {
     }
 
     
-    public function haxe_env (view:View = None) {
+    public function haxe_env (view:View = null) {
         return _haxe_build_env(project_dir("."));
     }
     
@@ -110,9 +115,9 @@ class Project {
     public function generate_build( view:View) {
         var fn = view.file_name();
         
-        var is_hxml_build = function () return Std.is(self.current_build, hxbuild.HxmlBuild);
+        var is_hxml_build = function () return Std.is(this.current_build, hxbuild.HxmlBuild);
 
-        if (current_build != None && is_hxml_build() && fn == current_build.hxml && view.size() == 0) {
+        if (current_build != null && is_hxml_build() && fn == current_build.hxml && view.size() == 0) {
             function run_edit(v:View, e:Edit) {
                 var hxml_src = current_build.make_hxml();
                 v.insert(e,0,hxml_src);
@@ -134,7 +139,7 @@ class Project {
         extract_build_args( view , true );
     }
 
-    public function extract_build_args( view:View = None , force_panel = false ) {
+    public function extract_build_args( view:View = null , force_panel = false ) {
 
         if (view == null) {
             view = Sublime.active_window().active_view();
@@ -152,7 +157,7 @@ class Project {
         var view_build_id:Int = view.settings().get("haxe-current-build-id");
         trace("view_build_id:" + Std.string(view_build_id));
 
-        if (view_build_id != None && view_build_id < num_builds && !force_panel) 
+        if (view_build_id != null && view_build_id < num_builds && !force_panel) 
         {
             _set_current_build( view , view_build_id );
         }
@@ -206,9 +211,9 @@ class Project {
 
         std_bundle = bundle;
         std_paths = std_paths;
-        //self.std_packages = packs
-        //self.std_classes = ["Void","String", "Float", "Int", "UInt", "Bool", "Dynamic", "Iterator", "Iterable", "ArrayAccess"]
-        //self.std_classes.extend(classes)
+        //this.std_packages = packs
+        //this.std_classes = ["Void","String", "Float", "Int", "UInt", "Bool", "Dynamic", "Iterator", "Iterable", "ArrayAccess"]
+        //this.std_classes.extend(classes)
     }
 
     
@@ -219,9 +224,9 @@ class Project {
     public function _find_builds_in_folders(folders:Array<String>):Array<Build> {
         var builds = [];
         for (f in folders) {
-            builds = builds.concat(Builds.find_hxml_projects(this, f));
-            builds = builds.concat(Builds.find_nme_projects(this, f));
-            builds = builds.concat(Builds.find_openfl_projects(this, f));
+            builds.extend(hxsublime.build.Tools.find_hxml_projects(this, f));
+            builds.extend(hxsublime.build.Tools.find_nme_projects(this, f));
+            builds.extend(hxsublime.build.Tools.find_openfl_projects(this, f));
         }
         return builds;
     }
@@ -235,7 +240,7 @@ class Project {
     }
 
     public function _get_current_window (view:View) {
-        return get_window(view);
+        return hxsublime.project.Tools.get_window(view);
     }
 
     public function _get_folders (view:View) {
@@ -247,52 +252,52 @@ class Project {
     
 
 
-    public function _create_new_hxml (self, view, folder) {
+    public function _create_new_hxml (view, folder) {
         win = sublime.active_window();
-        f = os.path.join(folder,"build.hxml");
+        f = Path.join(folder,"build.hxml");
 
-        self.current_build = null;
-        self.get_build(view);
-        self.current_build.hxml = f;
+        this.current_build = null;
+        this.get_build(view);
+        this.current_build.hxml = f;
 
         //for whatever reason generate_build doesn't work without transient
         win.open_file(f,sublime.TRANSIENT);
 
-        self._set_current_build( view , int(0) );
+        this._set_current_build( view , int(0) );
     }
 
-    public function _show_build_selection_panel(self, view) {
+    public function _show_build_selection_panel(view) {
         
-        buildsView = [for (b in builds) Tup2.create(b.to_string(), os.path.basename(b.build_file))];
+        buildsView = [for (b in builds) Tup2.create(b.to_string(), Path.basename(b.build_file))];
 
         
-        self.selecting_build = true;
+        this.selecting_build = true;
         sublime.status_message("Please select your build");
         
         function on_selected (i) {
-            self.selecting_build = false;
-            self._set_current_build(view, i);
+            this.selecting_build = false;
+            this._set_current_build(view, i);
         }
 
         win = sublime.active_window();
         win.show_quick_panel( buildsView , on_selected  , sublime.MONOSPACE_FONT );
     }
 
-    public function _set_current_build( self, view , id ) {
+    public function _set_current_build( view , id ) {
         
         log( "_set_current_build");
         
-        if (id < 0 || id >= self.builds.length) {
+        if (id < 0 || id >= this.builds.length) {
             id = 0;
         }
         
-        if (self.builds.length > 0) {
+        if (this.builds.length > 0) {
             view.settings().set("haxe-current-build-id", id);
-            self.current_build = self.builds[id];
-            self.current_build.set_std_bundle(self.std_bundle);
+            this.current_build = this.builds[id];
+            this.current_build.set_std_bundle(this.std_bundle);
 
-            view.set_status("haxe-build",self.current_build.to_string());
-            //hxpanel.default_panel().writeln( "build selected: " + self.current_build.to_string() )
+            view.set_status("haxe-build",this.current_build.to_string());
+            //hxpanel.default_panel().writeln( "build selected: " + this.current_build.to_string() )
         }
         else {
             view.set_status("haxe-build","No build found/selected");
@@ -301,7 +306,7 @@ class Project {
             
     }
     
-    public function _build(self, view, type = "run") {
+    public function _build(view, type = "run") {
 
         if (view == null) {
             view = sublime.active_window().active_view();
@@ -320,13 +325,13 @@ class Project {
         }
 
         if (type == "run") { // build and run
-            r = build.prepare_run_cmd(self, self.is_server_mode_for_builds(), view);
+            r = build.prepare_run_cmd(this, this.is_server_mode_for_builds(), view);
         }
         else if (type == "build") { // just build
-            r  = build.prepare_build_cmd(self, self.is_server_mode_for_builds(), view);
+            r  = build.prepare_build_cmd(this, this.is_server_mode_for_builds(), view);
         }
         else { // only check for errors
-            r = build.prepare_check_cmd(self, self.is_server_mode(), view);
+            r = build.prepare_check_cmd(this, this.is_server_mode(), view);
         }
         var cmd = r._1;
         var build_folder = r._2;
@@ -363,7 +368,7 @@ class Project {
     public function _create_default_build (view) {
         var fn = view.file_name();
 
-        var src_dir = os.path.dirname( fn );
+        var src_dir = Path.dirname( fn );
 
         var src = view.substr(sublime.Region(0, view.size()));
     
@@ -386,14 +391,14 @@ class Project {
             var packrev = pack.copy();
             packrev.reverse();
             for (p in packrev) {
-                var spl = os.path.split( src_dir );
+                var spl = Path.split( src_dir );
                 if( spl[1] == p ) {
                     src_dir = spl[0];
                 }
             }
         }
 
-        var cl = os.path.basename(fn);
+        var cl = Path.basename(fn);
         
         cl = cl.substring(0, cl.rfind("."));
 
@@ -401,7 +406,7 @@ class Project {
         main.push( cl );
         build.main = ".".join( main );
 
-        build.output = os.path.join(folder,build.main.lower() + ".js");
+        build.output = Path.join(folder,build.main.lower() + ".js");
 
         build.args.push( Tup2.create("-cp" , src_dir) );
 
@@ -428,20 +433,21 @@ class Project {
 
     // STATIC SECTION
 
-    static function _haxe_build_env (project_dir:String) {
+    static function _haxe_build_env (project_dir:String) 
+    {
         
-        lib_path = hxsettings.haxe_library_path();
-        haxe_inst_path = hxsettings.haxe_inst_path();
-        neko_inst_path = hxsettings.neko_inst_path();
+        var lib_path = Settings.haxe_library_path();
+        var haxe_inst_path = Settings.haxe_inst_path();
+        var neko_inst_path = Settings.neko_inst_path();
 
 
-        var env = os.environ.copy();
+        var env = Os.environ.copy();
 
-        var env_path = os.environ.copy()["PATH"];
+        var env_path = Os.environ.copy().get("PATH", "");
         
         
 
-        paths = [];
+        var paths = [];
 
         function do_encode(s) {
             return s;
@@ -450,37 +456,39 @@ class Project {
         if (lib_path != null) 
         {
 
-            if (pathtools.is_abs_path(lib_path)) {
+            if (PathTools.is_abs_path(lib_path)) {
                 path = lib_path;
             } else {
-                path = os.path.normpath(os.path.join(project_dir, lib_path));
+                path = Path.normpath(Path.join(project_dir, lib_path));
             }
 
-            env.set("HAXE_LIBRARY_PATH", do_encode(os.sep.join(path.split("/"))));
-            env.set("HAXE_STD_PATH", do_encode(os.sep.join(path.split("/"))));
+            env.set("HAXE_LIBRARY_PATH", do_encode(path.split("/").join(Os.sep)));
+            env.set("HAXE_STD_PATH", do_encode(path.split("/").join(Os.sep)));
         }
         
 
         if (haxe_inst_path != null) {
-            if (pathtools.is_abs_path(haxe_inst_path)) {
+            if (PathTools.is_abs_path(haxe_inst_path)) {
                 path = haxe_inst_path;
             } else {
-                path = os.path.normpath(os.path.join(project_dir, haxe_inst_path));
+                path = Path.normpath(Path.join(project_dir, haxe_inst_path));
             }
             
-            env.set("HAXEPATH", do_encode(os.sep.join(path.split("/"))));
-            paths.push(do_encode(os.sep.join(path.split("/"))));
+            env.set("HAXEPATH", do_encode(path.split("/").join(Os.sep)));
+            paths.push(do_encode(path.split("/").join(Os.sep)));
         }
 
-        if (neko_inst_path != null) {
-            path = os.path.normpath(os.path.join(project_dir, neko_inst_path));
-            env.set("NEKO_INSTPATH", do_encode(os.sep.join(path.split("/"))));
-            paths.append(do_encode(os.sep.join(path.split("/"))));
+        if (neko_inst_path != null) 
+        {
+            path = Path.normpath(Path.join(project_dir, neko_inst_path));
+            env.set("NEKO_INSTPATH", do_encode(path.split("/").join(Os.sep)));
+            paths.append(do_encode(path.split("/").join(Os.sep)));
         }
 
         
-        if (paths.length > 0) {
-            env.set("PATH", paths.join(Os.pathsep) + os.pathsep + env_path);
+        if (paths.length > 0) 
+        {
+            env.set("PATH", paths.join(Os.pathsep) + Os.pathsep + env_path);
         }
 
         
@@ -526,7 +534,7 @@ class Project {
         if (path.length > 1) {
             var last_pos = path.length-1;
             var last_char = path[last_pos];
-            if (last_char == "/" ||  last_char == "\\" || last_char == os.path.sep) {
+            if (last_char == "/" ||  last_char == "\\" || last_char == Path.sep) {
                 path = path.substring(0,last_pos);
             }
         }
@@ -534,7 +542,7 @@ class Project {
     }
 
     static function _is_valid_classpath(path:String) {
-        return path.length > 1 && os.path.exists(path) && os.path.isdir(path);
+        return path.length > 1 && Path.exists(path) && Path.isdir(path);
     }
 
     static function _extract_std_classpaths (out:String) {
@@ -548,7 +556,7 @@ class Project {
         var std_paths = if (m != null) set(all_paths) - set(ignored_paths) else [];
         
         for (p in std_paths) {
-            var p = os.path.normpath(p);
+            var p = Path.normpath(p);
             
             p = _remove_trailing_path_sep(p);
 

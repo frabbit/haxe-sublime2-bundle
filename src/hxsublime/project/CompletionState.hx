@@ -27,12 +27,12 @@ class ProjectCompletionState {
 
     public function new() {
         
-        self.running = Cache();
-        self.trigger = Cache(1000);
-        self.current_id = null;   
-        self.errors = [];
-        self.async = Cache(1000);
-        self.current = {
+        this.running = Cache();
+        this.trigger = Cache(1000);
+        this.current_id = null;   
+        this.errors = [];
+        this.async = Cache(1000);
+        this.current = {
             input : null,
             output : null
         }
@@ -89,7 +89,7 @@ class ProjectCompletionState {
     }
 
     public function get_and_delete_async(view:View) {
-        return self.async.get_and_delete(view.id(), null);
+        return this.async.get_and_delete(view.id(), null);
     }
 
     public function get_async( view:View) {

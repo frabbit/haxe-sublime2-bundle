@@ -3,9 +3,11 @@ package hxsublime.commands;
 import hxsublime.project.Base.Projects;
 import python.lib.Os;
 import sublime.Edit;
+import sublime.EventListener;
 import sublime.Region;
 import sublime.View;
 import sublime.Window;
+import sublime.WindowCommand;
 
 // stores the info for file creation, this data is shared between command && listener instances.
 private class State {
@@ -14,7 +16,7 @@ private class State {
 
 
 
-class HaxeCreateTypeCommand extends WindowCommand 
+class HaxeCreateTypeCommand extends WindowCommand
 {
     var classpath : String;
     var win : Window;
@@ -39,7 +41,7 @@ class HaxeCreateTypeCommand extends WindowCommand
 
         if (project.has_build())
         {
-            builds.insert(0, project.get_build(view))
+            builds.insert(0, project.get_build(view));
         }
 
         var pack = [];
@@ -92,8 +94,8 @@ class HaxeCreateTypeCommand extends WindowCommand
                         }
                         else
                         {
-                            sub_packs = rel_path.split(Os.sep)
-                            trace("subpacks:" + Std.string(sub_packs))
+                            sub_packs = rel_path.split(Os.sep);
+                            trace("subpacks:" + Std.string(sub_packs));
                             for (p in sub_packs) 
                             {
                                 if ("." in p)
@@ -169,7 +171,7 @@ class HaxeCreateTypeCommand extends WindowCommand
 
         fn += ".hx";
 
-        src = "\npackage " + pack.join(".") + ";\n\n"+cur_type+" "+cl+" " 
+        src = "\npackage " + pack.join(".") + ";\n\n"+cur_type+" "+cl+" ";
         if (cur_type == "typedef")
         {
             src += "= ";
@@ -194,7 +196,7 @@ class HaxeCreateTypeCommand extends WindowCommand
     }
 }
 
-class HaxeCreateTypeListener extends sublime_plugin.EventListener
+class HaxeCreateTypeListener extends EventListener
 {
 
     override public function on_load (view:View)

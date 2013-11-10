@@ -1,5 +1,7 @@
 package hxsublime.commands;
 
+import hxsublime.commands.GotoBase.HaxeGotoBaseCommand;
+
 private typedef Entry = { file : String, src_pos : Int};
 
 class HaxeGotoAnythingCommand extends HaxeGotoBaseCommand<Entry>

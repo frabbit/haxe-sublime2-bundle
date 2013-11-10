@@ -1,10 +1,18 @@
 package hxsublime.compiler;
 
+import hxsublime.panel.Base.Panels;
 import hxsublime.Plugin;
+import python.lib.Os;
+import python.lib.os.Path;
 import python.lib.subprocess.Popen;
+import python.lib.Subprocess;
+import python.lib.Time;
 import python.lib.Types.OSError;
+import python.lib.Types.Tup2;
+import python.lib.Types.ValueError;
 import sublime.Sublime;
 
+using python.lib.StringTools;
 using python.lib.ArrayTools;
 
 class Server 
@@ -60,8 +68,8 @@ class Server
 				}
 				else 
 				{
-					msg = "Cannot start haxe compilation server on ports {0}-{1}";
-					msg = msg.format(Tup2.create(this._orig_server_port, this._server_port));
+					var msg = "Cannot start haxe compilation server on ports {0}-{1}";
+					msg = msg.format([this._orig_server_port, this._server_port]);
 					trace("Server starting error");
 					// hxpanel.default_panel().writeln(msg)
 					// sublime.error_message(msg)
@@ -70,7 +78,7 @@ class Server
 			try {
 				
 				
-				full_env = os.environ.copy();
+				var full_env = Os.environ.copy();
 				if (env != null) 
 				{
 					full_env.update(env);
@@ -78,28 +86,29 @@ class Server
 					
 				if (env != null) 
 				{
-					for (k in env) 
+					for (k in env.keys()) 
 					{
+						var val = null;
 						try 
 						{
-							val = env[k];
+							val = env.get(k, null);
 						}
 						catch (e:Dynamic) 
 						{
-							val = env[k];
+							val = env.get(k, null);
 						}
 						
-						full_env[k] = os.path.expandvars(val);
+						full_env.set(k, Path.expandvars(val));
 					}
 				}
 				
 
 				trace("server env:" + Std.string(full_env));
-				this._server_proc = Popen(cmd, cwd=cwd, env=full_env, stdin=PIPE, stdout=PIPE, startupinfo=STARTUP_INFO);
+				this._server_proc = Popen.create(cmd, {cwd:cwd, env:full_env, stdin:Subprocess.PIPE, stdout:Subprocess.PIPE, startupinfo:Plugin.startupInfo()});
 				
 				this._server_proc.poll();
 
-				time.sleep(0.05);
+				Time.sleep(0.05);
 					
 				trace("server started at port: " + Std.string(this._server_port));
 				// hxpanel.default_panel().writeln("server started at port: " + Std.string(this._server_port))
@@ -131,11 +140,11 @@ class Server
 				
 				if (this._use_wrapper) {
 					proc.stdin.write("x");
-					time.sleep(0.2);
+					Time.sleep(0.2);
 				}
 				else {
 					proc.terminate();
-					time.sleep(0.2);
+					Time.sleep(0.2);
 				}
 				proc.kill();
 				proc.wait();
@@ -154,7 +163,7 @@ class Server
 		
 		if (completeCallback != null) 
 		{
-			hxpanel.default_panel().writeln("stopping server on port: " + Std.string(old_port));
+			Panels.default_panel().writeln("stopping server on port: " + Std.string(old_port));
 			completeCallback();
 		}
 	}

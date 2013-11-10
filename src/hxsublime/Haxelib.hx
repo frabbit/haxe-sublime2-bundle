@@ -1,6 +1,7 @@
 package hxsublime;
 
 import haxe.ds.StringMap;
+import hxsublime.Execute;
 import hxsublime.project.Project;
 import hxsublime.tools.HxSrcTools.HaxeType;
 
@@ -27,7 +28,7 @@ class HaxeLibLibrary {
 			this.path = version;
 			this.version = "dev";
 		} else {
-			path = Path.join( manager.basePath , name , self.version.split(".").join(","));
+			path = Path.join( manager.basePath , name , this.version.split(".").join(","));
 		}
 	}
  
@@ -40,12 +41,12 @@ class HaxeLibLibrary {
 	public function extract_types( ) 
 	{
 		if (dev || classes == null && packages == null) {
-			var t = hxtypes.extract_types( self.path );
+			var t = hxtypes.extract_types( this.path );
 			classes = t._1;
 			packages = t._2;
 		}
 		
-		return Tup2.create(self.classes, self.packages);
+		return Tup2.create(this.classes, this.packages);
 	}
 }
 
@@ -71,7 +72,7 @@ class HaxeLibManager {
 
 	@property
 	public function available (){
-		if (!self.scanned) {
+		if (!this.scanned) {
 			scan();
 		}
 		return _available;
@@ -106,7 +107,7 @@ class HaxeLibManager {
 		trace("do scan");
 		var cmd = project.haxelib_exec();
 		cmd.push("config");
-		var r = run_cmd( cmd, env=env );
+		var r = Execute.run_cmd( cmd, env );
 		var hlout = r._1;
 		var hlerr = r._2;
 		var basePath = hlout.strip();
@@ -127,7 +128,7 @@ class HaxeLibManager {
 			{
 				var g = found.groups();
 				var name = g._1, dev = g._2, version = g._3;
-				var lib = new HaxeLibLibrary( self, name , dev != null , version );
+				var lib = new HaxeLibLibrary( this, name , dev != null , version );
 
 				_available.set( name , lib);
 			}
@@ -159,14 +160,14 @@ class HaxeLibManager {
 		var env = project.haxe_env();
 		cmd.push("upgrade");
 		trace(Std.string(cmd));
-		run_cmd(cmd, env=env);
+		Execute.run_cmd(cmd, env=env);
 		scan();
 	}
 
-	public function self_update(){
+	public function this_update(){
 		var cmd = project.haxelib_exec();
 		var env = project.haxe_env();
-		cmd.push("selfupdate");
+		cmd.push("thisupdate");
 		trace(Std.string(cmd));
 		run_cmd(cmd, env=env);
 		scan();

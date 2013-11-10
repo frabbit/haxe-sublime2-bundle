@@ -1,15 +1,22 @@
 package hxsublime.build;
 
+import hxsublime.build.HxmlBuild;
 import hxsublime.project.Project;
+import python.lib.Codecs;
 import python.lib.Glob;
 import python.lib.io.StringIO;
+import python.lib.Os;
 import python.lib.os.Path;
+import python.lib.Types.Tup2;
 import sublime.Sublime;
 
 using StringTools;
 using python.lib.ArrayTools;
 
+using python.lib.StringTools;
+
 class Tools {
+
 
 	static var _extract_tag = Re.compile("<([a-z0-9_-]+).*?\\s(name|main|title|file)=\"([ a-z0-9_./-]+)\"", re.I);
 
@@ -24,7 +31,7 @@ class Tools {
 		var f = hxml_buffer;
 		while (true)
 		{ 
-			var l = f.readline() 
+			var l = f.readline();
 			if (l == null) {
 				break;
 			}
@@ -63,23 +70,23 @@ class Tools {
 				
 			
 			
-			if (l.endswith(".hxml"))
+			if (l.endsWith(".hxml"))
 			{
 				
 				trace("found ref of hxml file:" + l);
-				path = Path.dirname(hxml);
-				sub_builds = _hxml_to_builds(project, path + os.sep + l, folder);
-				if (len(sub_builds) == 1)
+				var path = Path.dirname(hxml);
+				var sub_builds = _hxml_to_builds(project, path + Os.sep + l, folder);
+				if (sub_builds.length == 1)
 				{
-					b = sub_builds[0];
+					var b = sub_builds[0];
 					current_build.merge(b);
 				}
 			}
 
 			if (l.startsWith("-main") )
 			{
-				spl = l.split(" ");
-				if (len( spl ) == 2 )
+				var spl = l.split(" ");
+				if (spl.length == 2 )
 				{
 					current_build.main = spl[1];
 				}
@@ -90,10 +97,10 @@ class Tools {
 			
 			if (l.startsWith("-lib") )
 			{
-				var spl = l.split(" ")
-				if (len( spl ) == 2 )
+				var spl = l.split(" ");
+				if (spl.length == 2 )
 				{
-					var lib = project.haxelib_manager.get( spl[1] );
+					var lib = project.haxelib_manager().get( spl[1] );
 					if (lib != null)
 					{
 						trace("lib to build:" + str(lib));
@@ -101,13 +108,13 @@ class Tools {
 					}
 					else {
 
-						current_build.add_arg( Tup2.create("-lib", spl[1] ) )
+						current_build.add_arg( Tup2.create("-lib", spl[1] ) );
 						//from haxe import panel
-						panel.default_panel().writeln("Error: haxelib library " + str(spl[1]) + " is not installed" )
+						panel.default_panel().writeln("Error: haxelib library " + str(spl[1]) + " is not installed" );
 					}
 				}
 				else {
-					sublime.status_message( "Invalid build.hxml : lib not found" )
+					sublime.status_message( "Invalid build.hxml : lib not found" );
 				}
 			}
 
@@ -129,7 +136,7 @@ class Tools {
 				var tup = Tup2.create(x[0], x[1]);
 				current_build.add_arg( tup );
 				current_build.add_define(tup._2);
-				continue
+				continue;
 			}
 
 			for (flag in [ "swf-version" , "swf-header", 
@@ -151,14 +158,14 @@ class Tools {
 			{
 				if (l.startsWith( "-"+flag ) )
 				{
-					var spl = l.split(" ")
-					var outp = Path.join( folder , spl.substr(1).join(" ") )
-					current_build.add_arg( Tup2.create("-"+flag, outp) )
+					var spl = l.split(" ");
+					var outp = Path.join( folder , spl.substr(1).join(" ") );
+					current_build.add_arg( Tup2.create("-"+flag, outp) );
 					if (flag == "x")
 					{
 						current_build.target = "neko";
 					}
-					break
+					break;
 				}
 			}
 
@@ -179,7 +186,7 @@ class Tools {
 
 			if (l.startsWith("-cp "))
 			{
-				var cp = l.split(" ")
+				var cp = l.split(" ");
 				cp.shift();
 				var classpath = cp.join( " " );
 				
@@ -221,10 +228,10 @@ class Tools {
 		return files;
 	}
 	
-	public static function _hxml_to_builds (project, hxml, folder)
+	public static function _hxml_to_builds (project, hxml, folder):Array<HxmlBuild>
 	{
 		var build_path = Path.dirname(hxml);
-		var hxml_buffer = codecs.open( hxml , "r+" , "utf-8" , "ignore" )
+		var hxml_buffer = Codecs.open( hxml , "r+" , "utf-8" , "ignore" );
 		return _hxml_buffer_to_builds(project, hxml_buffer, folder, build_path, hxml, hxml);
 	}
 	
@@ -236,7 +243,7 @@ class Tools {
 		var title = null;
 		while (true) 
 		{
-			var l = f.readline()
+			var l = f.readline();
 			if (l == null) 
 			{
 				break;
@@ -272,9 +279,10 @@ class Tools {
 
 		nmml_dir = Path.dirname(nmml);
 
-		out, err = run_cmd( cmd, cwd=nmml_dir )
+		var r = run_cmd( cmd, cwd=nmml_dir );
+		var out = r._1, err = r._2;
 
-		return _hxml_buffer_to_builds(project, new StringIO(out), nmml_dir, nmml_dir, nmml, null)[0]
+		return _hxml_buffer_to_builds(project, new StringIO(out), nmml_dir, nmml_dir, nmml, null)[0];
 	}
 	
 	public static function find_hxml_projects( project, folder ) 
@@ -302,7 +310,7 @@ class Tools {
 		for (build in found) 
 		{
 			nmml_file = build._1;
-			title = _find_nme_project_title(nmml_file)
+			title = _find_nme_project_title(nmml_file);
 			if (title != null) 
 			{
 				for (t in config.nme_targets) 
@@ -311,7 +319,7 @@ class Tools {
 				}
 			}
 		}
-		return builds
+		return builds;
 	}
 	
 	public static function find_openfl_projects( project:Project, folder:String ) 
@@ -327,13 +335,14 @@ class Tools {
 			{
 				for (t in config.openfl_targets)
 				{
-					builds.push(new OpenFlBuild(project, title, openfl_xml, t))
+					builds.push(new OpenFlBuild(project, title, openfl_xml, t));
 				}
 			}
 		}
 
 
-		return builds
+		return builds;
+	}
 }
 
 /*

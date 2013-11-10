@@ -1,6 +1,20 @@
 package hxsublime.compiler;
 
+import haxe.ds.StringMap;
+import hxsublime.panel.Base.Panels;
+import hxsublime.Settings;
+import hxsublime.tools.HxSrcTools;
+import python.lib.Os;
+import python.lib.Re;
 import python.lib.Types.Exception;
+import python.lib.xml.etree.ElementTree;
+
+import python.lib.Types;
+import sublime.Sublime;
+
+using python.lib.StringTools;
+
+import StringTools in ST;
 
 class CompletionEntry {
 
@@ -25,17 +39,18 @@ typedef CompilerError = {
 }
 
 class Output {
-	public static var compiler_output = Re.compile("^([^:]+):([0-9]+): (?:character(?:s?)|line(?:s?))? ([0-9]+)-?([0-9]+)? : (.*)", re.M);
-	public static var no_classes_found = Re.compile("^No classes found in .*", re.M);
-	public static var no_classes_found_in_trace = Re.compile("^No classes found in trace$", re.M);
+	public static var compiler_output = Re.compile("^([^:]+):([0-9]+): (?:character(?:s?)|line(?:s?))? ([0-9]+)-?([0-9]+)? : (.*)", Re.M);
+	public static var no_classes_found = Re.compile("^No classes found in .*", Re.M);
+	public static var no_classes_found_in_trace = Re.compile("^No classes found in trace$", Re.M);
 	public static var haxe_compiler_line = "^([^:]*):([0-9]+): characters? ([0-9]+)-?[0-9]* :(.*)$";
 	public static var type_parameter_name = Re.compile("^([A-Z][_a-zA-Z0-9]*)");
 
-	public static function get_type_hint (types) {
+	public static function get_type_hint (types:PyIterator<Element>) 
+	{
 		var hints = [];
 		for (i in types) {
-			hint = i.text.strip();
-			hint_types = hxsrctools.split_function_signature(hint);
+			var hint = i.text.strip();
+			var hint_types = HxSrcTools.split_function_signature(hint);
 			hints.push( hint_types );
 		}
 		return hints;
@@ -48,22 +63,22 @@ class Output {
 	{
 
 		var new_args = [];
-		var type_params = dict();
+		var type_params = new StringMap();
 		var name_len = name.length;
 		for (t in signature_types) 
 		{
-			new_args.append("".join(t.split(name + ".")));
+			new_args.push(t.split(name + ".").join(""));
 			while (true) 
 			{
-				index = t.find(name);
+				var index = t.indexOf(name);
 				if (index == -1) break;
-				type_start_index = index + name_len + 1;
-				t = t.substr(type_start_index);
-				m = type_parameter_name.match(t);
+				var type_start_index = index + name_len + 1;
+				var t = t.substr(type_start_index);
+				var m = type_parameter_name.match(t);
 				if (m != null) 
 				{
-					param_name = m.group(1);
-					type_params[param_name] = true;
+					var param_name = m.group(1);
+					type_params.set(param_name, true);
 				}
 				else 
 				{
@@ -72,7 +87,9 @@ class Output {
 			}
 		}
 
-		type_param_list = list(reversed(list(type_params.keys())));
+		var keys = [for (k in type_params.keys()) k];
+		keys.reverse();
+		var type_param_list = keys;
 		return Tup2.create(new_args, type_param_list);
 	}
 
@@ -82,19 +99,19 @@ class Output {
 		var insert = name;
 		var label = name;
 		
-		var smart_snippets = hxsettings.smart_snippets_on_completion();
+		var smart_snippets = Settings.smart_snippets_on_completion();
 		var not_smart = !smart_snippets;
 
 		if (sig != null) {
-			types = hxsrctools.split_function_signature(sig);
+			var types = HxSrcTools.split_function_signature(sig);
 			
 			var r = get_function_type_params(name, types);
 			var types = r._1, type_params = r._2;
 
-			params_sig = "";
+			var params_sig = "";
 
-			if (len(type_params) > 0) {
-				params_sig = "<" + ", ".join(type_params) + ">";
+			if (type_params.length > 0) {
+				params_sig = "<" + type_params.join(", ") + ">";
 			}
 
 
@@ -102,32 +119,33 @@ class Output {
 			trace(Std.string(type_params));
 			
 			
-			ret = types.pop();
+			var ret = types.pop();
 
-			signature_separator = " : ";
+			var signature_separator = " : ";
 
-			if( len(types) > 0 ) {
+			if( types.length > 0 ) {
 				
-				if (len(types) == 1 && types[0] == "Void") {
+				if (types.length == 1 && types[0] == "Void") {
 
 					label = if (not_smart) (name + params_sig + "()" + signature_separator + ret) else (name + "()" + signature_separator+ ret);
 					insert = if (not_smart) name  else "" + name + "${1:()}";
 				}
 				else {
-					function escape_type (x) {
-						return x.replace("}", "\\}").replace("{", "\\{");
+					function escape_type (x:String) {
+						return ST.replace(ST.replace(x, "}", "\\}"), "{", "\\{");
 					}
 
-					params = "( " + types.join(", ") + " )";
-					label = name + params_sig + params + signature_separator + ret;
+					var params = "( " + types.join(", ") + " )";
+					var label = name + params_sig + params + signature_separator + ret;
 					
 					//hint_to_long = is_st2 and len(label) > 40
 					//if (hint_to_long) { // compact arguments
 					//	label = hxsrctools.compact_func.sub("(...)", label);
 					//}
 					
-					new_types = list(types);
-					for (i in range(0, len(new_types))) {
+					var new_types = types.copy();
+					for (i in 0...new_types.length) 
+					{
 						new_types[i] = "${" + Std.string(i+2) + ":" + escape_type(new_types[i]) + "}";
 					}
 
@@ -139,7 +157,7 @@ class Output {
 			}
 		}
 		else {
-			label = if (Re.match("^[A-Z]",name )) name + "\tclass" else name + "\tpackage";
+			label = if (Re.match("^[A-Z]", name ) != null) name + "\tclass" else name + "\tpackage";
 		}
 				
 		
@@ -154,17 +172,17 @@ class Output {
 	}
 			
 
-	public static function collect_completion_fields (li) 
+	public static function collect_completion_fields (li:Element) 
 	{
 		var comps = [];
 		if (li != null) {
-			for (i in li.getiterator("i")) {
-				name = i.get("n");
-				sig = i.find("t").text;
-				doc = i.find("d").text; // nothing to do
-				entry = completion_field_to_entry(name, sig, doc);
+			for (i in li.iter("i")) {
+				var name = i.get("n");
+				var sig = i.find("t").text;
+				var doc = i.find("d").text; // nothing to do
+				var entry = completion_field_to_entry(name, sig, doc);
 				
-				comps.append(entry);
+				comps.push(entry);
 			}
 		}
 
@@ -174,7 +192,7 @@ class Output {
 
 	public static function extract_errors( str:String ) 
 	{
-		errors = [];
+		var errors = [];
 		
 		//trace("error_str: |||" + str + "|||")
 		// swallow no classes found in * errors where * could be trace or an unknown variable etc.
@@ -191,21 +209,22 @@ class Output {
 				var left = Std.parseInt( infos.shift() );
 				var right = infos.shift();
 
+				var rightInt = 0;
 				if (right != "") {
-					right = Std.parseInt( right );
+					rightInt = Std.parseInt( right );
 				}
 				else {
-					right = left+1;
+					rightInt = left+1;
 				}
-				m = infos.shift();
+				var m = infos.shift();
 
 				if (m != "Unexpected |") 
 				{
-					errors.append({
+					errors.push({
 						"file" : f,
 						"line" : l,
 						"from" : left,
-						"to" : right,
+						"to" : rightInt,
 						"message" : m
 					});
 				}
@@ -215,10 +234,11 @@ class Output {
 		
 		//errors.append({ "file:" : "", "line" : 0, "from" : 0, "to" : 0, "message" : "".join(str.split("\n")) + " ( are you referencing a variable that doesn't exist?)"})
 		//print(errors)
-		if (len(errors) > 0) {
+		if (errors.length > 0) 
+		{
 			trace("should show panel");
-			hxpanel.slide_panel().writeln(errors[0]["message"]);
-			sublime.status_message(errors[0]["message"]);
+			Panels.slide_panel().writeln(errors[0].message);
+			Sublime.status_message(errors[0].message);
 		}
 
 		return errors;
@@ -229,12 +249,13 @@ class Output {
 	{
 		var r = parse_completion_output(temp_file, orig_file, output);
 		var hints = r._1, comps = r._2;
-		new_hints = [];
+		var new_hints = [];
 		for (h in hints) 
 		{
 			if (h.length > commas) 
 			{
-				new_hints.append(h.substr(commas));
+				var x = h.slice(commas);
+				new_hints.push(x);
 			}
 		}
 		hints = new_hints;
@@ -264,7 +285,7 @@ class Output {
 
 		if (tree != null) {
 
-			hints = get_type_hint(tree.getiterator("type"));
+			hints = get_type_hint(tree.iter("type"));
 			comps = collect_completion_fields(tree.find("list"));
 			trace("hints:" + Std.string(hints));
 			trace("comps:" + Std.string(comps));
@@ -274,8 +295,8 @@ class Output {
 			comps = [];
 		}
 			
-		if (re.findall(no_classes_found_in_trace, output).length > 0) {
-			var smart_snippets = hxsettings.smart_snippets_on_completion();
+		if (Re.findall(no_classes_found_in_trace, output).length > 0) {
+			var smart_snippets = Settings.smart_snippets_on_completion();
 			var insert = null;
 			if (smart_snippets) {
 				insert = "${1:value:Dynamic}";
@@ -283,21 +304,21 @@ class Output {
 			else {
 				insert = "${0}";
 			}
-			comps.append(CompletionEntry("value:Dynamic", insert, ""));
+			comps.push(new CompletionEntry("value:Dynamic", insert, ""));
 		}
 
 		return Tup2.create(hints, comps);
 	}
 		
 
-	public static function get_completion_status_and_errors(hints, comps, output, temp_file, orig_file) 
+	public static function get_completion_status_and_errors(hints:Array<Array<String>>, comps:Array<CompletionEntry>, output, temp_file, orig_file) 
 	{
 		var status = "";
 		
 		var errors = [];
 
 		var res = null;
-		if (hints.lenth == 0 && len(comps) == 0) 
+		if (hints.length == 0 && comps.length == 0) 
 		{
 			res = parse_completion_errors(output, temp_file, orig_file, status);
 		}
@@ -316,21 +337,21 @@ class Output {
 		var sep = Os.sep;
 		trace("sep: " + sep);
 		if (sep == "\\") {
-			function slash_replace(match_obj) {
+			function slash_replace(match_obj:MatchObject) {
 				trace("matched");
-				return sep.join(match_obj.group(0).split("/"));
+				return match_obj.group(0).split("/").join(sep);
 			}
 
 			output = Re.sub("[A-Za-z]:(.*)[.]hx", slash_replace, output);
 		}
 
-		output = output.replace( temp_file , orig_file );
+		output = ST.replace(output, temp_file , orig_file );
 		
 		trace("output after replace: " + output);
 		output = Re.sub( "\\(display(.*)\\)" ,"",output);
 		
 		var lines = output.split("\n");
-		l = lines[0].strip();
+		var l = lines[0].strip();
 		
 		var status = null;
 
@@ -339,7 +360,7 @@ class Output {
 			if (l == "<list>") {
 				status = "No autocompletion available";
 			}
-			else if (!Re.match( haxe_compiler_line , l )) {
+			else if (Re.match( haxe_compiler_line , l ) == null) {
 				status = l;
 				trace(l);
 			}

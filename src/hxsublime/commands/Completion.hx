@@ -65,7 +65,7 @@ class HaxeHintDisplayCompletionCommand extends TextCommand
     override public function run( kwArgs:KwArgs) 
     {
         var edit:Edit = kwArgs.get("edit");
-        trace("RUN - HaxeHintDisplayCompletionCommand")
+        trace("RUN - HaxeHintDisplayCompletionCommand");
         
         var options = new CompletionOptions(
             hxcc.COMPLETION_TRIGGER_MANUAL, 
@@ -80,7 +80,7 @@ class HaxeMacroHintDisplayCompletionCommand extends TextCommand
     override public function run( kwArgs:KwArgs) 
     {
         var edit:Edit = kwArgs.get("edit");
-        trace("RUN - HaxeMacroHintDisplayCompletionCommand")
+        trace("RUN - HaxeMacroHintDisplayCompletionCommand");
         
         var options = new CompletionOptions(
             hxcc.COMPLETION_TRIGGER_MANUAL, 

@@ -1,6 +1,7 @@
 package hxsublime.commands;
 
 import haxe.ds.StringMap;
+import hxsublime.commands.GotoBase.HaxeGotoBaseCommand;
 import hxsublime.tools.HxSrcTools.HaxeType;
 import python.lib.Types.Tup2;
 

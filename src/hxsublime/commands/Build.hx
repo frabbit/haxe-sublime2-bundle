@@ -1,9 +1,11 @@
 package hxsublime.commands;
 
 import hxsublime.project.Base.Projects;
+import python.lib.Types.KwArgs;
 import sublime.Edit;
 import sublime.EventListener;
 import sublime.TextCommand;
+import sublime.View;
 
 
 
@@ -15,7 +17,7 @@ class HaxeSaveAllAndRunCommand extends TextCommand
         trace("run HaxeSaveAllAndBuildCommand");
         var view = self.view;
         view.window().run_command("save_all");
-        Projects.current_project(self.view).run_build( view )
+        Projects.current_project(self.view).run_build( view );
     }
 }
 
@@ -27,7 +29,7 @@ class HaxeSaveAllAndCheckCommand extends TextCommand
         trace("run HaxeSaveAllAndBuildCommand");
         var view = self.view;
         view.window().run_command("save_all");
-        Projects.current_project(self.view).check_build( view )
+        Projects.current_project(self.view).check_build( view );
     }
 }
 
@@ -39,7 +41,7 @@ class HaxeSaveAllAndBuildCommand extends TextCommand
         trace("run HaxeSaveAllAndBuildCommand");
         var view = self.view;
         view.window().run_command("save_all");
-        Projects.current_project(self.view).just_build( view )
+        Projects.current_project(self.view).just_build( view );
     }
 }
 

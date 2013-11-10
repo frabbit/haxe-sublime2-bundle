@@ -1,20 +1,29 @@
 package hxsublime;
 
+import hxsublime.Plugin;
+import python.lib.Os;
+import python.lib.os.Path;
+import python.lib.Subprocess;
 import python.lib.subprocess.Popen;
-import python.lib.Types.OSError;
+
+import python.lib.ThreadLowLevel;
+import python.lib.Types;
+import sublime.Sublime;
+
+using python.lib.StringTools;
 
 class Execute {
 	public static function run_cmd_async(args:Array<String>, callback:String->String->Void, input:String=null, cwd:String=null, env=null)
 	{
 
-		public static function in_thread ()
+		function in_thread ()
 		{
 			var r = run_cmd(args, input, cwd, env);
 			var out = r._1, err = r._2;
-			sublime.set_timeout(callback.bind(out, err), 1);
+			Sublime.set_timeout(callback.bind(out, err), 1);
 		}
 
-		ThreadLowLevel.start_new_thread(in_thread, ())
+		ThreadLowLevel.start_new_thread(in_thread);
 	}
 
 
@@ -36,10 +45,10 @@ class Execute {
 			
 			var env = base_env;
 
-			for (k in env) 
+			for (k in env.keys()) 
 			{
-				var val = env[k];
-				env[k] = Path.expandvars(val);
+				var val = env.get(k, null);
+				env.set(k, Path.expandvars(val));
 			}
 
 
@@ -48,7 +57,7 @@ class Execute {
 			
 			
 			
-			var p = Popen.create(encoded_args, { cwd : cwd, stdout : PIPE, stderr : PIPE, stdin :PIPE, startupinfo : STARTUP_INFO, env : env});
+			var p = Popen.create(encoded_args, { cwd : cwd, stdout : Subprocess.PIPE, stderr : Subprocess.PIPE, stdin :Subprocess.PIPE, startupinfo : Plugin.startupInfo(), env : env});
 			
 			var inputBytes = input.encode("utf-8");
 			//print("INPUT:" + str(input))
@@ -61,7 +70,7 @@ class Execute {
 		catch (e:Dynamic) 
 		{
 			var p = args[0];
-			err = 'Error while running $p: in $cwd ($e)'; 
+			var err = 'Error while running $p: in $cwd ($e)'; 
 			return Tup2.create("", err);
 		}
 	}

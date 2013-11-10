@@ -3,9 +3,15 @@ package hxsublime.completion.hx;
 import hxsublime.build.Build;
 import hxsublime.project.Project;
 import hxsublime.tools.StringTools;
+import hxsublime.tools.ViewTools;
+import python.lib.Builtin;
+import python.lib.Types.Tup2;
+import python.lib.Types.Tup4;
+import python.lib.Types.Tup5;
 import sublime.Region;
 import sublime.View;
 
+using python.lib.StringTools;
 
 
 
@@ -57,33 +63,33 @@ class CompletionResult {
     }
 
     public function has_results () {
-        return comps.length > 0 || hints.length > 0 || (requires_toplevel_comps() && self._toplevel_comps.length > 0);
+        return comps.length > 0 || hints.length > 0 || (requires_toplevel_comps() && this._toplevel_comps().length > 0);
     }
 
     public function show_top_level_snippets () {
-        return requires_toplevel_comps() && !ctx.is_new;
+        return requires_toplevel_comps() && !ctx.is_new();
     }
 
     
 
     public function requires_toplevel_comps() 
     {
-        prefix_is_whitespace = StringTools.is_whitespace_or_empty(ctx.prefix);
+        var prefix_is_whitespace = hxsublime.tools.StringTools.isWhitespaceOrEmpty(ctx.prefix);
         trace("prefix_is_whitespace:" + Std.string(prefix_is_whitespace));
-        trace("has_hints:" + Std.string(self.has_hints()));
-        trace("has_hint:" + Std.string(self.ctx.options.types.has_hint()));
-        trace("has_compiler_results:" + Std.string(self.has_compiler_results()));
-        return !((prefix_is_whitespace && has_hints() && ctx.options.types.has_hint()) || has_compiler_results());
+        trace("has_hints:" + Std.string(this.has_hints()));
+        trace("has_hint:" + Std.string(this.ctx.options.types().has_hint()));
+        trace("has_compiler_results:" + Std.string(this.has_compiler_results()));
+        return !((prefix_is_whitespace && has_hints() && ctx.options.types().has_hint()) || has_compiler_results());
     }
 
     public function all_comps () {
         var res = [];
         if (requires_toplevel_comps()) {
             trace("yes required toplevel comps");
-            res = res.concat(_toplevel_comps);
+            res = res.concat(_toplevel_comps());
         }
         res = res.concat(comps);
-        res.sort();
+        res.sort(function (s1, s2) return (s1 < s2) ? -1 : (s1 > s2) ? 1 : 0);
         return res;
     }
 
@@ -125,10 +131,16 @@ class CompletionBuild {
 
 
 class CompletionOptions {
-    public function new(trigger, context = hcc.COMPILER_CONTEXT_REGULAR, types = hcc.COMPLETION_TYPE_REGULAR, toplevel = hcc.COMPLETION_TYPE_TOPLEVEL)
+
+    var _types:CompletionTypes;
+    var _toplevel:TopLevelOptions;
+    var _context:Int;
+    var _trigger:Int;
+
+    public function new(trigger:Int, context = hcc.COMPILER_CONTEXT_REGULAR, types = hcc.COMPLETION_TYPE_REGULAR, toplevel = hcc.COMPLETION_TYPE_TOPLEVEL)
     {
         this._types = new CompletionTypes(types);
-        this._toplevel = TopLevelOptions(toplevel);
+        this._toplevel = new TopLevelOptions(toplevel);
         this._context = context;
         this._trigger = trigger;
     }
@@ -308,6 +320,17 @@ class Types {
 
 
 class CompletionContext {
+
+    public var prefix:String;
+    public var view : View;
+    public var view_id : Int;
+    public var id : Int;
+    public var options:CompletionOptions;
+    public var settings:CompletionSettings;
+    public var offset:Int;
+    public var project:Project;
+    public var view_pos:Int;
+
     public function new(view:View, project:Project, offset:Int, options:CompletionOptions, settings:CompletionSettings, prefix:String) 
     {
         this.view = view;
@@ -367,24 +390,24 @@ class CompletionContext {
 
     @lazyprop
     public function in_control_struct() {
-        return control_struct.search( self.src_until_complete_offset ) != null;
+        return control_struct.search( this.src_until_complete_offset ) != null;
     }
 
     @lazyprop
     public function src_until_complete_offset() {
-        return self.src.substring(0,self.complete_offset);
+        return this.src.substring(0,this.complete_offset);
     }
 
     @lazyprop 
     public function line_after_offset() {
-        line_end = self.src.find("\n", self.offset);
-        return self.src.substring(self.offset,line_end);
+        line_end = this.src.find("\n", this.offset);
+        return this.src.substring(this.offset,line_end);
     }
 
     // src of current file
     @lazyprop
     public function src () {
-        return Viewtools.get_content(view);
+        return ViewTools.getContent(view);
     }
 
     @lazyprop
@@ -412,11 +435,11 @@ class CompletionContext {
     @lazyprop
     public function _completion_info() {
         trace("CALLED ONCE");
-        return get_completion_info(view, offset, src);
+        return get_completion_info(view, offset, src());
     }
 
     @lazyprop
-    public function commas(self) {
+    public function commas() {
         return _completion_info()[0];
     }
 
@@ -428,17 +451,17 @@ class CompletionContext {
     // position in source where compiler completion gets triggered
     @lazyprop
     public function complete_offset() {
-        return self._completion_info[1];
+        return this._completion_info[1];
     }
 
     @lazyprop
     public function is_new() {
-        return self._completion_info[3];
+        return this._completion_info()._4;
     }
 
     @lazyprop
     public function src_until_offset () {
-        return self.src().substring(0,offset-1);
+        return this.src().substring(0,offset-1);
     }
 
     @lazyprop
@@ -493,7 +516,7 @@ class CompletionContext {
         {
             var i = prev_comma - j;
             
-            var c = src[i];
+            var c = src.charAt(i);
             
             if (c == ")" )
             {
@@ -564,7 +587,7 @@ class CompletionContext {
             var prev_semi = fragment.lastIndexOf(";");
             
             
-            var prev_symbol = max(prev_dot,prev_par,prev_comma,prev_brace,prev_colon, prev_semi);
+            var prev_symbol = Builtin.max(prev_dot,prev_par,prev_comma,prev_brace,prev_colon, prev_semi);
             
             if (prev_symbol == prev_comma)
             {
@@ -575,13 +598,13 @@ class CompletionContext {
             }
             else 
             {
-                complete_offset = max( prev_dot + 1, prev_par + 1 , prev_colon + 1, prev_brace + 1, prev_semi + 1 );
+                complete_offset = Builtin.max( prev_dot + 1, prev_par + 1 , prev_colon + 1, prev_brace + 1, prev_semi + 1 );
             }
         }
                 
         trace("COMPLETE_CHAR:" + src.charAt(complete_offset-1));
 
-        return Tup5.create(commas, complete_offset, prev_symbol_is_comma, is_new);
+        return Tup4.create(commas, complete_offset, prev_symbol_is_comma, is_new);
     }
 
 

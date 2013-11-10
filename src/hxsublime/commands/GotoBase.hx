@@ -1,8 +1,13 @@
 package hxsublime.commands;
 
+import haxe.ds.StringMap;
 import hxsublime.tools.HxSrcTools.HaxeType;
+import python.lib.Types.Tup2;
+import sublime.EventListener;
 import sublime.Sublime;
-
+import sublime.TextCommand;
+import python.lib.Types;
+import sublime.View;
 
 private class State 
 {
@@ -12,7 +17,7 @@ private class State
     public static var _is_open = false;
 }
 
-class HaxeGotoBaseCommand<T> extends TextCommand 
+class HaxeGotoBaseCommand<T> extends TextCommand
 {
     var selecting_build:Bool = false;
 
@@ -57,7 +62,7 @@ class HaxeGotoBaseCommand<T> extends TextCommand
             return;
         }
 
-        var build = project.get_build(view)
+        var build = project.get_build(view);
 
         var bundle = build.get_types().merge(build.std_bundle);
 
@@ -89,7 +94,7 @@ class HaxeGotoBaseCommand<T> extends TextCommand
         this.selecting_build = true;
         sublime.status_message("Please select a type");
         
-        var win = view.window()
+        var win = view.window();
 
         var sel = view.sel();
 
@@ -151,7 +156,7 @@ class HaxeGotoBaseCommand<T> extends TextCommand
 }
 
 
-class HaxeGotoBaseListener extends EventListener 
+class HaxeGotoBaseListener extends EventListener
 {
 
     override public function on_activated(view:View)
@@ -183,11 +188,11 @@ class HaxeGotoBaseListener extends EventListener
             if (view.file_name() == find_file)
             {
                 trace("show at Y");
-                view.sel().clear()
+                view.sel().clear();
 
-                min = find_pos
+                min = find_pos;
 
-                view.sel().add(sublime.Region(min))
+                view.sel().add(sublime.Region(min));
 
                 trace("show at:" + Std.string(min));
                 // move to line is delayed, seems to work better
@@ -195,9 +200,9 @@ class HaxeGotoBaseListener extends EventListener
                 function show ()
                 {
                     trace("show at:" + Std.string(min));
-                    view.show_at_center(sublime.Region(min))
+                    view.show_at_center(sublime.Region(min));
                 }
-                sublime.set_timeout(show, 100)
+                sublime.set_timeout(show, 100);
                 State._find_decl_file = null;
                 State._find_decl_pos = null;
             }
