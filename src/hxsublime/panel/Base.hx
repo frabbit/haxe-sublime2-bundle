@@ -1,5 +1,6 @@
 package hxsublime.panel;
 
+import haxe.ds.IntMap;
 import haxe.ds.StringMap;
 import hxsublime.Settings;
 import hxsublime.tools.Cache;
@@ -22,7 +23,7 @@ class PanelCloseListener extends EventListener
 		var win_id = win.id();
 		var view_id = view.id();
 
-		if (Panels._slide_panel.exists(Std.string(win_id))) 
+		if (Panels._slide_panel.exists(win_id)) 
 		{
 			var panel = Panels.slide_panel(win);
 			if (panel.output_view != null && view_id == panel.output_view.id()) 
@@ -50,9 +51,9 @@ class PanelCloseListener extends EventListener
 
 class Panels {
 
-	public static var _tab_panel = new Cache<Panel>();
-	public static var _debug_panel = new Cache<Panel>();
-	public static var _slide_panel = new StringMap<Panel>();
+	public static var _tab_panel = new Cache<Int, Panel>(new IntMap());
+	public static var _debug_panel = new Cache<Int, Panel>(new IntMap());
+	public static var _slide_panel = new IntMap<Panel>();
 
 	public static function tab_panel(win:Window = null)
 	{
@@ -61,7 +62,7 @@ class Panels {
 			win = Sublime.active_window();
 		}
 		
-		return _tab_panel.get_or_insert(Std.string(win.id()), function ():Panel return new TabPanel(win, "Haxe Output"));
+		return _tab_panel.get_or_insert(win.id(), function ():Panel return new TabPanel(win, "Haxe Output"));
 	}
 
 	public static function debug_panel(win:Window = null)
@@ -70,7 +71,7 @@ class Panels {
 		{
 			win = Sublime.active_window();
 		}
-		return _debug_panel.get_or_insert(Std.string(win.id()), function ():Panel return new TabPanel(win, "Haxe Plugin Debug Panel"));
+		return _debug_panel.get_or_insert(win.id(), function ():Panel return new TabPanel(win, "Haxe Plugin Debug Panel"));
 	}
 
 	public static function __slide_panel(win:Window = null)
@@ -100,11 +101,11 @@ class Panels {
 		
 		var win_id = win.id();
 		
-		if (!_slide_panel.exists(Std.string(win_id))) 
+		if (!_slide_panel.exists(win_id)) 
 		{
-			_slide_panel.set(Std.string(win_id), new SlidePanel(win));
+			_slide_panel.set(win_id, new SlidePanel(win));
 		}
-		return _slide_panel.get(Std.string(win_id));
+		return _slide_panel.get(win_id);
 	}
 }
 

@@ -40,6 +40,8 @@ class Sublime {
 	public static var OP_REGEX_CONTAINS : Int;
 	public static var OP_NOT_REGEX_CONTAINS : Int;
 
+	public static var MONOSPACE_FONT:Int;
+
 	
 	// None	Runs the callback in the main thread after the given delay (in milliseconds). Callbacks with an equal delay will be run in the order they were added.
 	public static function set_timeout(callback:Void->Void, delay:Int):Void;	

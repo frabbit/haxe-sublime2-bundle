@@ -4,7 +4,13 @@ import haxe.ds.StringMap;
 import hxsublime.Execute;
 import hxsublime.project.Project;
 import hxsublime.tools.HxSrcTools.HaxeType;
+import python.lib.os.Path;
+import python.lib.Re;
+import python.lib.Types.Tup2;
+import sublime.Sublime;
 
+
+using python.lib.StringTools;
 
 
 class HaxeLibLibrary {
@@ -41,9 +47,9 @@ class HaxeLibLibrary {
 	public function extract_types( ) 
 	{
 		if (dev || classes == null && packages == null) {
-			var t = hxtypes.extract_types( this.path );
-			classes = t._1;
-			packages = t._2;
+			var t = Types.extract_types( this.path );
+			classes = t.all_types();
+			packages = t.packs();
 		}
 		
 		return Tup2.create(this.classes, this.packages);
@@ -58,7 +64,7 @@ class HaxeLibManager {
 
 	var project:Project;
 
-	var basePath : String;
+	public var basePath : String;
 
 	var scanned : Bool;
 
@@ -79,8 +85,8 @@ class HaxeLibManager {
 	}
 
 	public function get( name:String ) {
-		if( available.exists(name))
-			return available.get(name);
+		if( available().exists(name))
+			return available().get(name);
 		else {
 			Sublime.status_message( "Haxelib : "+ name +" project not installed" );
 			return null;
@@ -89,9 +95,9 @@ class HaxeLibManager {
 
 	public function get_completions() {
 		var comps = [];
-		for (k in available.keys())
+		for (k in available().keys())
 		{
-			lib = available[k];
+			var lib = available().get(k);
 			comps.push( Tup2.create( lib.name + " [" + lib.version + "]" , lib.name ) );
 		}
 
@@ -117,13 +123,13 @@ class HaxeLibManager {
 		var cmd = project.haxelib_exec();
 		cmd.push("list");
 		
-		var r = run_cmd( cmd, env=env );
+		var r = Execute.run_cmd( cmd, env );
 		var hlout = r._1;
 		var hlerr = r._2;
 		trace("haxelib output: " + hlout);
 		trace("haxelib error: " + hlerr);
 		for (l in hlout.split("\n")) {
-			found = libLine.match( l );
+			var found = libLine.match( l );
 			if (found != null) 
 			{
 				var g = found.groups();
@@ -141,7 +147,7 @@ class HaxeLibManager {
 		cmd.push("install");
 		cmd.push(lib);
 		trace(Std.string(cmd));
-		run_cmd(cmd, env=env);
+		Execute.run_cmd(cmd, null, null, env);
 		scan();
 	}
 
@@ -151,7 +157,7 @@ class HaxeLibManager {
 		cmd.push("remove");
 		cmd.push(lib);
 		trace(Std.string(cmd));
-		run_cmd(cmd,env=env);
+		Execute.run_cmd(cmd,null, null, env);
 		scan();
 	}
 
@@ -160,7 +166,7 @@ class HaxeLibManager {
 		var env = project.haxe_env();
 		cmd.push("upgrade");
 		trace(Std.string(cmd));
-		Execute.run_cmd(cmd, env=env);
+		Execute.run_cmd(cmd, null, null, env);
 		scan();
 	}
 
@@ -169,7 +175,7 @@ class HaxeLibManager {
 		var env = project.haxe_env();
 		cmd.push("thisupdate");
 		trace(Std.string(cmd));
-		run_cmd(cmd, env=env);
+		Execute.run_cmd(cmd, null, null, env);
 		scan();
 	}
 
@@ -179,7 +185,7 @@ class HaxeLibManager {
 		cmd.push("search");
 		cmd.push("_");
 		trace(Std.string(cmd));
-		var res = run_cmd(cmd, env=env);
+		var res = Execute.run_cmd(cmd, null, null, env);
 		var out = res._1;
 		var err = res._2;
 		return _collect_libraries(out);
@@ -192,11 +198,11 @@ class HaxeLibManager {
 	}
 
 	public function is_lib_installed(lib:String){
-		return Lambda.has(available.keys(), lib);
+		return available().exists(lib);
 	}
 	
 	public function get_lib(lib:String) {
-		return available.get(lib);
+		return available().get(lib);
 	}
 
 }

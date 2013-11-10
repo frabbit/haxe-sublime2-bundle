@@ -1,18 +1,27 @@
 package hxsublime.project;
 
 import hxsublime.build.Build;
+import hxsublime.build.HxmlBuild;
 import hxsublime.compiler.Server;
 import hxsublime.Haxelib.HaxeLibManager;
+import hxsublime.panel.Base.Panels;
 import hxsublime.project.CompletionState.ProjectCompletionState;
 import hxsublime.Settings;
+import hxsublime.tools.HxSrcTools;
+import hxsublime.tools.HxSrcTools.HaxeTypeBundle;
 import hxsublime.tools.PathTools;
+import hxsublime.tools.ViewTools;
 import python.lib.Os;
 import python.lib.os.Path;
 import python.lib.Re;
+import python.lib.Types.Set;
+import python.lib.Types.Tup2;
+import python.lib.Types.Tup3;
 import sublime.Edit;
+import sublime.Region;
 import sublime.Sublime;
 import sublime.View;
-
+import hxsublime.tools.HxSrcTools.Regex in HxRegex;
 using python.lib.ArrayTools;
 //using Settings;
 
@@ -29,7 +38,9 @@ class Project {
     public var project_file:String;
     public var project_id:String;
     public var project_path:String;
-
+    public var std_bundle:HaxeTypeBundle;
+    public var std_paths:Array<String>;
+    public var server_mode:Bool;
 
     public function new (id, file:String, win_id, server_port:Int) {
         
@@ -96,7 +107,7 @@ class Project {
         
         var env = haxe_env();
         
-        server.start(haxe_exec, cwd, env=env);
+        server.start(haxe_exec, cwd, env);
     }
     
 
@@ -115,25 +126,24 @@ class Project {
     public function generate_build( view:View) {
         var fn = view.file_name();
         
-        var is_hxml_build = function () return Std.is(this.current_build, hxbuild.HxmlBuild);
+        var is_hxml_build = function () return Std.is(this.current_build, HxmlBuild);
 
-        if (current_build != null && is_hxml_build() && fn == current_build.hxml && view.size() == 0) {
+        if (current_build != null && is_hxml_build() && fn == current_build.hxml() && view.size() == 0) {
             function run_edit(v:View, e:Edit) {
                 var hxml_src = current_build.make_hxml();
                 v.insert(e,0,hxml_src);
-                v.end_edit(e);
             }
 
-            viewtools.async_edit(view, run_edit);
+            ViewTools.asyncEdit(view, run_edit);
         }
     }
 
     public function select_build( view:View ) 
     {
-        var scopes = view.scope_name(view.sel()[0].end()).split();
+        var scopes = view.scope_name(view.sel()[0].end()).split(" ");
         
         if (Lambda.has(scopes, 'source.hxml')) {
-            view.run_command("save");
+            view.run_command("save", {});
         }
 
         extract_build_args( view , true );
@@ -167,7 +177,7 @@ class Project {
             {
                 Sublime.status_message("There is only one build");
             }
-            _set_current_build( view , int(0) );
+            _set_current_build( view , 0 );
         }
         else if (num_builds == 0 && force_panel) 
         {
@@ -207,10 +217,10 @@ class Project {
             ver = info._2, 
             std_paths = info._3;
         //assume it's supported if no version available
-        server_mode = ver == null || ver >= 209;
+        this.server_mode = ver == null || ver >= 209;
 
-        std_bundle = bundle;
-        std_paths = std_paths;
+        this.std_bundle = bundle;
+        this.std_paths = std_paths;
         //this.std_packages = packs
         //this.std_classes = ["Void","String", "Float", "Int", "UInt", "Bool", "Dynamic", "Iterator", "Iterable", "ArrayAccess"]
         //this.std_classes.extend(classes)
@@ -222,11 +232,11 @@ class Project {
     // TODO rewrite this function and make it understandable
     
     public function _find_builds_in_folders(folders:Array<String>):Array<Build> {
-        var builds = [];
+        var builds:Array<Build> = [];
         for (f in folders) {
-            builds.extend(hxsublime.build.Tools.find_hxml_projects(this, f));
-            builds.extend(hxsublime.build.Tools.find_nme_projects(this, f));
-            builds.extend(hxsublime.build.Tools.find_openfl_projects(this, f));
+            builds.extend(cast hxsublime.build.Tools.find_hxml_projects(this, f));
+            builds.extend(cast hxsublime.build.Tools.find_nme_projects(this, f));
+            builds.extend(cast hxsublime.build.Tools.find_openfl_projects(this, f));
         }
         return builds;
     }
@@ -234,7 +244,7 @@ class Project {
     public function _get_view_file_name (view:View) {
         if (view == null) 
         {
-            view = sublime.active_window().active_view();
+            view = Sublime.active_window().active_view();
         }
         return view.file_name();
     }
@@ -252,40 +262,40 @@ class Project {
     
 
 
-    public function _create_new_hxml (view, folder) {
-        win = sublime.active_window();
-        f = Path.join(folder,"build.hxml");
+    public function _create_new_hxml (view:View, folder:String) {
+        var win = Sublime.active_window();
+        var f = Path.join(folder,"build.hxml");
 
         this.current_build = null;
         this.get_build(view);
-        this.current_build.hxml = f;
+        this.current_build.setHxml(f);
 
         //for whatever reason generate_build doesn't work without transient
-        win.open_file(f,sublime.TRANSIENT);
+        win.open_file(f,Sublime.TRANSIENT);
 
-        this._set_current_build( view , int(0) );
+        this._set_current_build( view , 0 );
     }
 
-    public function _show_build_selection_panel(view) {
+    public function _show_build_selection_panel(view:View) {
         
-        buildsView = [for (b in builds) Tup2.create(b.to_string(), Path.basename(b.build_file))];
+        var buildsView = [for (b in builds) Tup2.create(b.to_string(), Path.basename(b.build_file()))];
 
         
         this.selecting_build = true;
-        sublime.status_message("Please select your build");
+        Sublime.status_message("Please select your build");
         
         function on_selected (i) {
             this.selecting_build = false;
             this._set_current_build(view, i);
         }
 
-        win = sublime.active_window();
-        win.show_quick_panel( buildsView , on_selected  , sublime.MONOSPACE_FONT );
+        var win = Sublime.active_window();
+        win.show_quick_panel( buildsView , on_selected  , Sublime.MONOSPACE_FONT );
     }
 
     public function _set_current_build( view , id ) {
         
-        log( "_set_current_build");
+        trace( "_set_current_build");
         
         if (id < 0 || id >= this.builds.length) {
             id = 0;
@@ -309,13 +319,14 @@ class Project {
     public function _build(view, type = "run") {
 
         if (view == null) {
-            view = sublime.active_window().active_view();
+            view = Sublime.active_window().active_view();
         }
 
         var win = view.window();
 
         var env = _haxe_build_env(project_dir("."));
         
+        var build:Build = null;
         if (has_build()) {
             build = get_original_build(view);
         }
@@ -324,6 +335,7 @@ class Project {
             build = get_original_build(view);
         }
 
+        var r = null;
         if (type == "run") { // build and run
             r = build.prepare_run_cmd(this, this.is_server_mode_for_builds(), view);
         }
@@ -337,10 +349,10 @@ class Project {
         var build_folder = r._2;
         
         
-        escaped_cmd = build.escape_cmd(cmd);
+        var escaped_cmd = build.escape_cmd(cmd);
 
 
-        hxpanel.default_panel().writeln("running: " + " ".join(escaped_cmd));
+        Panels.default_panel().writeln("running: " + escaped_cmd.join(" "));
 
 
         
@@ -348,7 +360,7 @@ class Project {
             cmd: cmd,
             is_check_run : type == "check",
             working_dir: build_folder,
-            file_regex : haxe_file_regex,
+            file_regex : Tools.haxe_file_regex,
             env : env
         });
 
@@ -365,26 +377,26 @@ class Project {
 
 
     // TODO rewrite this function and make it understandable
-    public function _create_default_build (view) {
+    public function _create_default_build (view:View):Build {
         var fn = view.file_name();
 
         var src_dir = Path.dirname( fn );
 
-        var src = view.substr(sublime.Region(0, view.size()));
+        var src = view.substr( new Region(0, view.size()));
     
-        var build = hxbuild.HxmlBuild(null, null);
+        var build = new HxmlBuild(null, null);
         build.target = "js";
 
         var folder = Path.dirname(fn);
         var folders = view.window().folders();
         for (f in folders) {
-            if (Lambda.has(fn, f)) {
+            if (fn.indexOf(f) > -1) {
                 folder = f;
             }
         }
 
         var pack = [];
-        for (ps in hxsrctools.package_line.findall( src )) {
+        for (ps in HxRegex.package_line.findall( src )) {
             if (ps == "") continue;
                 
             pack = ps.split(".");
@@ -392,27 +404,27 @@ class Project {
             packrev.reverse();
             for (p in packrev) {
                 var spl = Path.split( src_dir );
-                if( spl[1] == p ) {
-                    src_dir = spl[0];
+                if( spl._2 == p ) {
+                    src_dir = spl._1;
                 }
             }
         }
 
         var cl = Path.basename(fn);
         
-        cl = cl.substring(0, cl.rfind("."));
+        cl = cl.substring(0, cl.lastIndexOf("."));
 
-        var main = pack.substr(0);
+        var main = pack.copy();
         main.push( cl );
-        build.main = ".".join( main );
+        build.main = main.join( "." );
 
-        build.output = Path.join(folder,build.main.lower() + ".js");
+        build.output = Path.join(folder,build.main.toLowerCase() + ".js");
 
         build.args.push( Tup2.create("-cp" , src_dir) );
 
         build.args.push( Tup2.create("-js" , build.output ) );
 
-        build.hxml = Path.join( src_dir , "build.hxml");
+        build.setHxml(Path.join( src_dir , "build.hxml"));
         return build;
     }
 
@@ -503,14 +515,14 @@ class Project {
     }
 
 
-    static function _collect_compiler_info (haxe_exec:String, project_path:String) {
-        env = _get_compiler_info_env(project_path);
-        cmd = haxe_exec;
+    static function _collect_compiler_info (haxe_exec:Array<String>, project_path:String) {
+        var env = _get_compiler_info_env(project_path);
+        var cmd = haxe_exec;
 
-        cmd = cmd.concat(["-main", "Nothing", "-v", "--no-output"]);
+        cmd.extend(["-main", "Nothing", "-v", "--no-output"]);
 
         
-        var r = hxexecute.run_cmd( cmd, env=env );
+        var r = Execute.run_cmd( cmd, null,null,env );
         var out = r._1;
         var err = r._2;
 
@@ -526,14 +538,14 @@ class Project {
 
     static function _extract_haxe_version (out:String) {
         var ver = Re.search( _haxe_version , out );
-        return if (ver != null) Std.int(ver.group(1)) else null;
+        return if (ver != null) Std.parseInt(ver.group(1)) else null;
     }
 
 
     static function _remove_trailing_path_sep(path:String) {
         if (path.length > 1) {
             var last_pos = path.length-1;
-            var last_char = path[last_pos];
+            var last_char = path.charAt(last_pos);
             if (last_char == "/" ||  last_char == "\\" || last_char == Path.sep) {
                 path = path.substring(0,last_pos);
             }
@@ -546,16 +558,16 @@ class Project {
     }
 
     static function _extract_std_classpaths (out:String) {
-        m = _classpath_line.match(out);
+        var m = _classpath_line.match(out);
             
         var std_classpaths = [];
 
         var all_paths = m.group(1).split(";");
         var ignored_paths = [".","./"];
 
-        var std_paths = if (m != null) set(all_paths) - set(ignored_paths) else [];
+        var std_paths = if (m != null) new Set(all_paths).minus(new Set(ignored_paths)) else new Set();
         
-        for (p in std_paths) {
+        for (p in std_paths.iterator()) {
             var p = Path.normpath(p);
             
             p = _remove_trailing_path_sep(p);
@@ -569,10 +581,10 @@ class Project {
     }
 
 
-    static function _collect_std_classes_and_packs(std_cps:String) {
-        var bundle = hxsrctools.empty_type_bundle();
+    static function _collect_std_classes_and_packs(std_cps:Array<String>) {
+        var bundle = HxSrcTools.empty_type_bundle();
         for (p in std_cps) {
-            bundle1 = hxtypes.extract_types( p, [], [], 0, [], false );
+            var bundle1 = hxsublime.Types.extract_types( p, [], [], 0, [], false );
             bundle = bundle.merge(bundle1);
         }
         return bundle;

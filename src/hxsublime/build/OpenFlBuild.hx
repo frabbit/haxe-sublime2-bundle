@@ -4,6 +4,8 @@ import hxsublime.build.HxmlBuild;
 import hxsublime.project.Project;
 import sublime.View;
 
+using python.lib.ArrayTools;
+
 class OpenFlBuild extends NmeBuild 
 {
 	
@@ -14,8 +16,8 @@ class OpenFlBuild extends NmeBuild
 	
 	public function copy ()
 	{
-		var hxml_copy = if (this._hxml_build != null) this.hxml_build.copy() else null;
-		var r = new OpenFlBuild(this.project, this.title, this.nmml, this.target, hxml_copy);
+		var hxml_copy = if (this._hxml_build != null) this.hxml_build().copy() else null;
+		var r = new OpenFlBuild(this.project, this.title(), this.nmml, this.target(), hxml_copy);
 		
 		return r;
 	}
@@ -30,9 +32,9 @@ class OpenFlBuild extends NmeBuild
 		var res = [];
 		for (c in packs_or_classes) {
 			// allow only flash package
-			if (!stringtools.startswith_any(c,["native", "browser", "nme"]))
+			if (!hxsublime.tools.StringTools.startsWithAny(c,["native", "browser", "nme"]))
 			{
-				res.append(c);
+				res.push(c);
 			}
 		}
 		return res;
@@ -42,7 +44,7 @@ class OpenFlBuild extends NmeBuild
 	{
 		// out = os.path.basename(this.hxml_build.output)
 		var out = this.title;
-		var target = this.target.name;
+		var target = this.target().name;
 		return '${out} (OpenFL - ${target})';
 	}
 	
@@ -60,10 +62,10 @@ class OpenFlBuild extends NmeBuild
 		}
 
 		var pack = pack.split(".")[0];
-		var target = this.hxml_build.target;
+		var target = this.hxml_build().target;
 
-		var tp = list(config.target_packages)
-		tp.extend(["native", "browser", "nme"])
+		var tp = Config.target_packages.copy();
+		tp.extend(["native", "browser", "nme"]);
 
 		var no_target_pack = !Lambda.has(tp, pack);
 		var is_flash_pack = pack == "flash";

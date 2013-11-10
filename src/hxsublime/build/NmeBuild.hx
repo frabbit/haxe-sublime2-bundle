@@ -1,17 +1,24 @@
 package hxsublime.build;
 
 import hxsublime.build.HxmlBuild;
+import hxsublime.Config;
+import hxsublime.Config.Target;
 import hxsublime.project.Project;
+import python.lib.os.Path;
+import python.lib.Types.Tup2;
+import sublime.Sublime;
 import sublime.View;
 
 
+using StringTools;
 
+using python.lib.ArrayTools;
 
 class NmeBuild {
 
 	
 	var _title : String;
-	var _target;
+	var _target:Target;
 	var _hxml_build : HxmlBuild;
 
 	public var nmml : String;
@@ -24,6 +31,10 @@ class NmeBuild {
 		this.nmml = nmml;
 		this._hxml_build = cb;
 		this.project = project;
+	}
+
+	public function setHxml (hxml:String) {
+		this.hxml_build().setHxml(hxml);
 	}
 
 	@property
@@ -52,11 +63,11 @@ class NmeBuild {
 
 	public function _get_hxml_build_with_nme_display()
 	{
-		var view = sublime.active_window().active_view();
-		var display_cmd = list(this.get_build_command(this.project, view));
+		var view = Sublime.active_window().active_view();
+		var display_cmd = this.get_build_command(this.project, view).copy();
 		display_cmd.push("display");
 		//from haxe.build.tools import create_haxe_build_from_nmml
-		return create_haxe_build_from_nmml(this.project, this.target, this.nmml, display_cmd);
+		return Tools.create_haxe_build_from_nmml(this.project, this.target(), this.nmml, display_cmd);
 	}
 
 	@property
@@ -74,21 +85,21 @@ class NmeBuild {
 	public function to_string() 
 	{
 		var title = this.title;
-		var target = this.target.name;
+		var target = this.target().name;
 		return '${title} (NME - ${target})';
 		
 	}
 
 	public function set_std_bundle(std_bundle)
 	{
-		this.hxml_build.set_std_bundle(std_bundle);
+		this.hxml_build().set_std_bundle(std_bundle);
 	}
 
-	public function _filter_platform_specific(packs_or_classes)
+	public function _filter_platform_specific(packs_or_classes:Array<String>)
 	{
 	 	var res = [];
 	 	for (c in packs_or_classes) {
-	 		if (!c.startswith("native") && !c.startswith("browser") && !c.startswith("flash") && !c.startswith("flash9") && !c.startswith("flash8")) {
+	 		if (!c.startsWith("native") && !c.startsWith("browser") && !c.startsWith("flash") && !c.startsWith("flash9") && !c.startsWith("flash8")) {
 	 			res.push(c);
 	 		}
 	 	}
@@ -96,31 +107,31 @@ class NmeBuild {
 	}
 	public function get_types()
 	{
-		var bundle = this.hxml_build.get_types()
+		var bundle = this.hxml_build().get_types();
 		return bundle;
 	}
 
 	@property
 	public function std_bundle()
 	{
-		return this.hxml_build.std_bundle;
+		return this.hxml_build().std_bundle;
 	}
 
 	public function add_arg(arg)
 	{
-		this.hxml_build.add_arg(arg);
+		this.hxml_build().add_arg(arg);
 	}
 
 	public function copy ()
 	{
-		var hxml_copy = if (this._hxml_build != null) this.hxml_build.copy() else null;
+		var hxml_copy = if (this._hxml_build != null) this.hxml_build().copy() else null;
 
-		return new NmeBuild(this.project, this.title, this.nmml, this.target, hxml_copy);
+		return new NmeBuild(this.project, this.title(), this.nmml, this.target(), hxml_copy);
 	}
 
 	public function get_relative_path(file:String)
 	{
-		return this.hxml_build.get_relative_path(file);
+		return this.hxml_build().get_relative_path(file);
 	}
 
 	public function get_build_folder()
@@ -128,7 +139,7 @@ class NmeBuild {
 		var r = null;
 		if (this.nmml != null) 
 		{
-			r = os.path.dirname(this.nmml);
+			r = Path.dirname(this.nmml);
 		}
 		trace("build_folder: " + Std.string(r));
 		trace("nmml: " + Std.string(this.nmml));
@@ -137,27 +148,27 @@ class NmeBuild {
 
 	public function set_auto_completion(display, macro_completion)
 	{
-		this.hxml_build.set_auto_completion(display, macro_completion)
+		this.hxml_build().set_auto_completion(display, macro_completion);
 	}
 
 	public function set_times()
 	{
-		this.hxml_build.set_times();
+		this.hxml_build().set_times();
 	}
 
 	public function add_define (define:String)
 	{
-		this.hxml_build.add_define(define);
+		this.hxml_build().add_define(define);
 	}
 
 	public function add_classpath(cp:String)
 	{
-		this.hxml_build.add_classpath(cp);
+		this.hxml_build().add_classpath(cp);
 	}
 
 	public function run(project:Project, view:View, async:Bool, on_result:String->String->Void, server_mode:Null<Bool> = null)
 	{
-		this.hxml_build.run(project, view, async, on_result, server_mode);
+		this.hxml_build().run(project, view, async, on_result, server_mode);
 	}
 
 	public function _get_run_exec(project:Project, view:View)
@@ -174,8 +185,8 @@ class NmeBuild {
 	{
 		var r = this.prepare_build_cmd(project, server_mode, view);
 		var cmd = r._1, folder = r._2;
-		cmd.push("--no-output")
-		return cmd, folder
+		cmd.push("--no-output");
+		return Tup2.create(cmd, folder);
 	}
 
 	public function prepare_build_cmd(project:Project, server_mode:Bool, view:View)
@@ -193,13 +204,13 @@ class NmeBuild {
 		var cmd = this.get_build_command(project, view);
 
 		cmd.push(command);
-		cmd.push(this.build_file);
-		cmd.push(this.target.plattform);
-		cmd.extend(this.target.args);
+		cmd.push(this.build_file());
+		cmd.push(this.target().plattform);
+		cmd.extend(this.target().args);
 
 		if (server_mode) 
 		{
-			cmd.extend(["--connect", Std.parseInt(project.server.get_server_port())]);
+			cmd.extend(["--connect", Std.string(project.server.get_server_port())]);
 		}
 
 		return Tup2.create(cmd, this.get_build_folder());
@@ -207,19 +218,19 @@ class NmeBuild {
 
 	public function _prepare_run(project:Project, view, server_mode)
 	{
-		return this.hxml_build._prepare_run(project, view, server_mode);
+		return this.hxml_build()._prepare_run(project, view, server_mode);
 	}
 
 	@property
 	public function classpaths ()
 	{
-		return this.hxml_build.classpaths;
+		return this.hxml_build().classpaths;
 	}
 
 	@property
 	public function args ()
 	{
-		return this.hxml_build.args;
+		return this.hxml_build().args;
 	}
 
 	public function is_type_available (type)
@@ -237,13 +248,13 @@ class NmeBuild {
 		}
 
 		var pack = pack.split(".")[0];
-		var target = this.hxml_build.target;
+		var target = this.hxml_build().target;
 		
-		var tp = config.target_packages.copy();
-		tp.extend(["native", "browser", "nme"])
+		var tp = Config.target_packages.copy();
+		tp.extend(["native", "browser", "nme"]);
 
 		var no_target_pack = !Lambda.has(tp, pack);
-		is_nme_pack = pack == "nme";
+		var is_nme_pack = pack == "nme";
 
 		var available = target == null || no_target_pack || is_nme_pack;
 

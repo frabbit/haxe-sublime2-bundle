@@ -25,7 +25,6 @@ import hxsublime.Exceptions;
 import hxsublime.Log;
 import hxsublime.tools.HxSrcTools;
 import hxsublime.Types;
-
 import hxsublime.commands.Build;
 import hxsublime.commands.Completion;
 import hxsublime.commands.CompletionServer;
@@ -37,7 +36,6 @@ import hxsublime.commands.GotoAnything;
 import hxsublime.commands.GotoBase;
 import hxsublime.commands.GotoBuildFields;
 import hxsublime.commands.GotoBuildTypes;
-
 using Lambda;
 
 
@@ -49,6 +47,7 @@ class Main {
 	public static function main () {
 
 
+		
 	}
 
 }

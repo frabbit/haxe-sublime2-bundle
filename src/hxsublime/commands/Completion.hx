@@ -1,5 +1,8 @@
 package hxsublime.commands;
 
+import hxsublime.completion.hx.Base;
+import hxsublime.completion.hx.Constants;
+import hxsublime.completion.hx.Types.CompletionOptions;
 import sublime.Edit;
 import sublime.TextCommand;
 import sublime.View;
@@ -9,12 +12,12 @@ class HaxeAsyncTriggeredCompletionCommand extends TextCommand
 {
     override public function run( kwArgs:KwArgs) 
     {
-        var edit:Edit = kwArgs.get("edit");
+        var edit:Edit = kwArgs.get("edit", null);
         var options = new CompletionOptions(
-            hxcc.COMPLETION_TRIGGER_ASYNC, 
-            hxcc.COMPILER_CONTEXT_REGULAR, 
-            hxcc.COMPLETION_TYPE_REGULAR);
-        trigger_completion(self.view, options);
+            Constants.COMPLETION_TRIGGER_ASYNC, 
+            Constants.COMPILER_CONTEXT_REGULAR, 
+            Constants.COMPLETION_TYPE_REGULAR);
+        Base.trigger_completion(self.view, options);
     }
 
 
@@ -23,7 +26,7 @@ class HaxeDisplayCompletionCommand extends TextCommand
 {
     override public function run( kwArgs:KwArgs) 
     {
-        var edit:Edit = kwArgs.get("edit");
+        var edit:Edit = kwArgs.get("edit", null);
         var input_char:String = kwArgs.get("input_char");
         
         
@@ -37,10 +40,10 @@ class HaxeDisplayCompletionCommand extends TextCommand
         if (is_valid_completion(self.view, edit, input_char)) 
         {
             var options = new CompletionOptions(
-                hxcc.COMPLETION_TRIGGER_MANUAL, 
-                hxcc.COMPILER_CONTEXT_REGULAR, 
-                hxcc.COMPLETION_TYPE_REGULAR);
-            trigger_completion(self.view, options);
+                Constants.COMPLETION_TRIGGER_MANUAL, 
+                Constants.COMPILER_CONTEXT_REGULAR, 
+                Constants.COMPLETION_TYPE_REGULAR);
+            Base.trigger_completion(self.view, options);
         }
     }
 }
@@ -49,14 +52,14 @@ class HaxeDisplayMacroCompletionCommand extends TextCommand
 {
     override public function run( kwArgs:KwArgs) 
     {
-        var edit:Edit = kwArgs.get("edit");
+        var edit:Edit = kwArgs.get("edit", null);
         trace("RUN - HaxeDisplayMacroCompletionCommand");
         
         var options = new CompletionOptions(
-            hxcc.COMPLETION_TRIGGER_MANUAL, 
-            hxcc.COMPILER_CONTEXT_REGULAR, 
-            hxcc.COMPLETION_TYPE_REGULAR);
-        trigger_completion(self.view, options);
+            Constants.COMPLETION_TRIGGER_MANUAL, 
+            Constants.COMPILER_CONTEXT_REGULAR, 
+            Constants.COMPLETION_TYPE_REGULAR);
+        Base.trigger_completion(self.view, options);
     }
 }
 
@@ -64,14 +67,14 @@ class HaxeHintDisplayCompletionCommand extends TextCommand
 {
     override public function run( kwArgs:KwArgs) 
     {
-        var edit:Edit = kwArgs.get("edit");
+        var edit:Edit = kwArgs.get("edit", null);
         trace("RUN - HaxeHintDisplayCompletionCommand");
         
         var options = new CompletionOptions(
-            hxcc.COMPLETION_TRIGGER_MANUAL, 
-            hxcc.COMPILER_CONTEXT_REGULAR, 
-            hxcc.COMPLETION_TYPE_HINT);
-        trigger_completion(self.view, options);
+            Constants.COMPLETION_TRIGGER_MANUAL, 
+            Constants.COMPILER_CONTEXT_REGULAR, 
+            Constants.COMPLETION_TYPE_HINT);
+        Base.trigger_completion(self.view, options);
     }
 
 }
@@ -79,15 +82,15 @@ class HaxeMacroHintDisplayCompletionCommand extends TextCommand
 {
     override public function run( kwArgs:KwArgs) 
     {
-        var edit:Edit = kwArgs.get("edit");
+        var edit:Edit = kwArgs.get("edit", null);
         trace("RUN - HaxeMacroHintDisplayCompletionCommand");
         
         var options = new CompletionOptions(
-            hxcc.COMPLETION_TRIGGER_MANUAL, 
-            hxcc.COMPILER_CONTEXT_MACRO, 
-            hxcc.COMPLETION_TYPE_HINT);
+            Constants.COMPLETION_TRIGGER_MANUAL, 
+            Constants.COMPILER_CONTEXT_MACRO, 
+            Constants.COMPLETION_TYPE_HINT);
 
-        trigger_completion(self.view, options);
+        Base.trigger_completion(self.view, options);
     }
 }
 
@@ -156,7 +159,7 @@ class Helper {
 }
 /*
 
-import haxe.completion.hx.constants as hxcc
+import haxe.completion.hx.constants as Constants
 
 import sublime_plugin
 import re 

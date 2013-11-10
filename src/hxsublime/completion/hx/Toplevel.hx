@@ -1,28 +1,34 @@
 package hxsublime.completion.hx;
 
 import hxsublime.completion.hx.Types;
+import hxsublime.tools.HxSrcTools;
+import python.lib.Re;
 import python.lib.Time;
 import python.lib.Types;
 
+using python.lib.StringTools;
+
+using StringTools;
+
 class TopLevel {
-    public static var TOP_LEVEL_KEYWORDS = [Tup2.create("trace\ttoplevel","trace"),Tup2.create("this\ttoplevel","this"),Tup2.create("super\ttoplevel","super")]
+    public static var TOP_LEVEL_KEYWORDS = [Tup2.create("trace\ttoplevel","trace"),Tup2.create("this\ttoplevel","this"),Tup2.create("super\ttoplevel","super")];
 
     public static function get_toplevel_keywords (ctx:CompletionContext) 
     {
-        return if (ctx.is_new) [] else TOP_LEVEL_KEYWORDS;
+        return if (ctx.is_new()) [] else TOP_LEVEL_KEYWORDS;
     }
         
 
     public static function get_build_target(ctx:CompletionContext) 
     {
-        return if (ctx.options.macro_completion) "neko" else ctx.build.target;
+        return if (ctx.options.macro_completion()) "neko" else ctx.build().target;
     }
 
 
     public static function get_local_vars(ctx:CompletionContext) 
     {
-        var comps = []
-        for (v in hxsrctools.variables.findall(ctx.src)) {
+        var comps = [];
+        for (v in hxsublime.tools.HxSrcTools.Regex.variables.findall(ctx.src())) {
             comps.push(Tup2.create( v + "\tvar" , v ));
         }
         return comps;
@@ -31,7 +37,7 @@ class TopLevel {
     public static function get_local_functions(ctx:CompletionContext) 
     {
         var comps = [];
-        for (f in hxsrctools.named_functions.findall(ctx.src)) 
+        for (f in hxsublime.tools.HxSrcTools.Regex.named_functions.findall(ctx.src())) 
         {
             if (f != "new") 
             {
@@ -45,26 +51,26 @@ class TopLevel {
     {
         var comps = [];
         //TODO can we restrict this to local scope ?
-        for (params_text in hxsrctools.function_params.findall(ctx.src)) 
+        for (params_text in hxsublime.tools.HxSrcTools.Regex.function_params.findall(ctx.src())) 
         {
-            cleaned_params_text = Re.sub(hxsrctools.param_default,"",params_text);
-            params_list = cleaned_params_text.split(",");
+            var cleaned_params_text = Re.sub(hxsublime.tools.HxSrcTools.Regex.param_default,"",params_text);
+            var params_list = cleaned_params_text.split(",");
             for (param in params_list) 
             {
                 var a = param.strip();
-                if (a.startswith("?"))
+                if (a.startsWith("?"))
                     a = a.substr(1);
                 
-                var idx = a.find(":") 
+                var idx = a.indexOf(":");
                 if (idx > -1)
                     a = a.substring(0,idx);
 
-                var idx = a.find("=")
+                var idx = a.indexOf("=");
                 if (idx > -1)
-                    a = a.substring(0:idx);
+                    a = a.substring(0,idx);
                     
                 a = a.strip();
-                var cm = Tup2.create(a + "\tvar", a)
+                var cm = Tup2.create(a + "\tvar", a);
                 if (!Lambda.has(comps, cm))
                     comps.push( cm );
             }
@@ -83,12 +89,12 @@ class TopLevel {
 
     public static function get_imports (ctx:CompletionContext) 
     {
-        var imports = hxsrctools.import_line.findall( ctx.src );
+        var imports = hxsublime.tools.HxSrcTools.Regex.import_line.findall( ctx.src() );
         var imported = [];
         for (i in imports) 
         {
-            imp = i[1];
-            imported.append(imp);
+            var imp = i[1];
+            imported.push(imp);
         }
 
         return imported;
@@ -96,12 +102,12 @@ class TopLevel {
 
     public static function get_usings (ctx:CompletionContext) 
     {
-        var usings = hxsrctools.using_line.findall( ctx.src );
+        var usings = hxsublime.tools.HxSrcTools.Regex.using_line.findall( ctx.src() );
         var used = [];
         for (i in usings) 
         {
-            imp = i[1];
-            used.append(imp);
+            var imp = i[1];
+            used.push(imp);
         }
 
         return used;
@@ -125,12 +131,12 @@ class TopLevel {
         return Tup2.create(display, insert);
     }
 
-    public static function type_is_imported_as(import_list, type) 
+    public static function type_is_imported_as(import_list:Array<String>, type:HaxeType) 
     {
         var res = null;
         for (i in import_list) {
             res = null;
-            if (type.full_pack_with_module == i || type.full_pack_with_module_and_type == i || type.full_pack_with_optional_module_and_type  == i) {
+            if (type.full_pack_with_module() == i || type.full_pack_with_module_and_type() == i || type.full_pack_with_optional_module_and_type()  == i) {
                 if (type.is_enum_value) 
                 {
                     res = type.enum_value_name;
@@ -140,9 +146,9 @@ class TopLevel {
                     res = type.type_name_with_optional_enum_value;
                 }
             }
-            else if (type.full_pack_with_optional_module_type_and_enum_value  == i || type.full_pack_with_module_type_and_enum_value  == i) 
+            else if (type.full_pack_with_optional_module_type_and_enum_value()  == i || type.full_pack_with_module_type_and_enum_value()  == i) 
             {
-                res = type.enum_value_name
+                res = type.enum_value_name;
             }
             if (res != null) break;
         }
@@ -250,7 +256,7 @@ class TopLevel {
                     || (is_upper && id.indexOf(offset_lower) >= 0)
                     || (is_lower && id.indexOf(offset_upper) >= 0)) 
                 {
-                    comps.append(c)
+                    comps.push(c);
                 }
             }
         }
@@ -258,8 +264,8 @@ class TopLevel {
             comps = list(all_comps);
         }
 
-        log("number of top level completions (all: " + str(len(all_comps)) + ", filtered: " + str(len(comps)) + ")")
-        return comps
+        trace("number of top level completions (all: " + str(len(all_comps)) + ", filtered: " + str(len(comps)) + ")");
+        return comps;
     }
 }
 

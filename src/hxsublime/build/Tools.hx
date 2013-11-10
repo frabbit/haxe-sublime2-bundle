@@ -1,12 +1,16 @@
 package hxsublime.build;
 
 import hxsublime.build.HxmlBuild;
+import hxsublime.Config;
+import hxsublime.panel.Base.Panels;
 import hxsublime.project.Project;
+import hxsublime.tools.PathTools;
 import python.lib.Codecs;
 import python.lib.Glob;
 import python.lib.io.StringIO;
 import python.lib.Os;
 import python.lib.os.Path;
+import python.lib.Re;
 import python.lib.Types.Tup2;
 import sublime.Sublime;
 
@@ -15,13 +19,18 @@ using python.lib.ArrayTools;
 
 using python.lib.StringTools;
 
+private typedef Buffer = {
+	public function readline ():String;
+
+}
+
 class Tools {
 
 
-	static var _extract_tag = Re.compile("<([a-z0-9_-]+).*?\\s(name|main|title|file)=\"([ a-z0-9_./-]+)\"", re.I);
+	static var _extract_tag = Re.compile("<([a-z0-9_-]+).*?\\s(name|main|title|file)=\"([ a-z0-9_./-]+)\"", Re.I);
 
 	// TODO refactor this method into smaller managable chunks
-	public static function _hxml_buffer_to_builds(project:Project, hxml_buffer:StringIO, folder:String, build_path:String, build_file:String = null, hxml:String = null)
+	public static function _hxml_buffer_to_builds(project:Project, hxml_buffer:Buffer, folder:String, build_path:String, build_file:String = null, hxml:String = null)
 	{
 		var builds = [];
 
@@ -103,31 +112,31 @@ class Tools {
 					var lib = project.haxelib_manager().get( spl[1] );
 					if (lib != null)
 					{
-						trace("lib to build:" + str(lib));
+						trace("lib to build:" + Std.string(lib));
 						current_build.add_lib( lib );
 					}
 					else {
 
 						current_build.add_arg( Tup2.create("-lib", spl[1] ) );
 						//from haxe import panel
-						panel.default_panel().writeln("Error: haxelib library " + str(spl[1]) + " is not installed" );
+						Panels.default_panel().writeln("Error: haxelib library " + Std.string(spl[1]) + " is not installed" );
 					}
 				}
 				else {
-					sublime.status_message( "Invalid build.hxml : lib not found" );
+					Sublime.status_message( "Invalid build.hxml : lib not found" );
 				}
 			}
 
 			if (l.startsWith("-cmd") )
 			{
 				var spl = l.split(" ");
-				current_build.add_arg( Tup2.create( "-cmd" , spl.substr(1).join(" ") ) );
+				current_build.add_arg( Tup2.create( "-cmd" , spl.slice(1).join(" ") ) );
 			}
 			
 			if (l.startsWith("--macro"))
 			{
 				var spl = l.split(" ");
-				current_build.add_arg( Tup2.create( "--macro" , spl.substr(1).join(" ")  ) );
+				current_build.add_arg( Tup2.create( "--macro" , spl.slice(1).join(" ")  ) );
 			}
 
 			if (l.startsWith("-D"))
@@ -159,7 +168,7 @@ class Tools {
 				if (l.startsWith( "-"+flag ) )
 				{
 					var spl = l.split(" ");
-					var outp = Path.join( folder , spl.substr(1).join(" ") );
+					var outp = Path.join( folder , spl.slice(1).join(" ") );
 					current_build.add_arg( Tup2.create("-"+flag, outp) );
 					if (flag == "x")
 					{
@@ -169,7 +178,7 @@ class Tools {
 				}
 			}
 
-			for (flag in config.targets)
+			for (flag in Config.targets)
 			{
 				if (l.startsWith( "-" + flag + " " ) )
 				{
@@ -190,7 +199,7 @@ class Tools {
 				cp.shift();
 				var classpath = cp.join( " " );
 				
-				abs_classpath = pathtools.join_norm( build_path , classpath );
+				var abs_classpath = PathTools.joinNorm( build_path , classpath );
 				current_build.add_classpath( abs_classpath );
 				//current_build.add_arg( ("-cp" , abs_classpath ) )
 			}
@@ -232,14 +241,14 @@ class Tools {
 	{
 		var build_path = Path.dirname(hxml);
 		var hxml_buffer = Codecs.open( hxml , "r+" , "utf-8" , "ignore" );
-		return _hxml_buffer_to_builds(project, hxml_buffer, folder, build_path, hxml, hxml);
+		return _hxml_buffer_to_builds(project, { readline : function () return hxml_buffer.readline() }, folder, build_path, hxml, hxml);
 	}
 	
 	
 
 	public static function _find_nme_project_title(nmml_file)
 	{
-		var f = codecs.open( nmml_file , "r+", "utf-8" , "ignore" );
+		var f = Codecs.open( nmml_file , "r+", "utf-8" , "ignore" );
 		var title = null;
 		while (true) 
 		{
@@ -255,7 +264,7 @@ class Tools {
 				
 				if (tag == "meta" || tag == "app") 
 				{
-					var mFile = re.search("\\b(file|title)=\"([ a-z0-9_-]+)\"", l, re.I);
+					var mFile = Re.search("\\b(file|title)=\"([ a-z0-9_-]+)\"", l, Re.I);
 					if (mFile != null) 
 					{
 						title = mFile.group(2);
@@ -277,12 +286,12 @@ class Tools {
 		cmd.push(target.plattform);
 		cmd.extend(target.args);
 
-		nmml_dir = Path.dirname(nmml);
+		var nmml_dir = Path.dirname(nmml);
 
-		var r = run_cmd( cmd, cwd=nmml_dir );
+		var r = Execute.run_cmd( cmd, null, nmml_dir );
 		var out = r._1, err = r._2;
-
-		return _hxml_buffer_to_builds(project, new StringIO(out), nmml_dir, nmml_dir, nmml, null)[0];
+		var io = new StringIO(out);
+		return _hxml_buffer_to_builds(project, { readline : function () return io.readline() }, nmml_dir, nmml_dir, nmml, null)[0];
 	}
 	
 	public static function find_hxml_projects( project, folder ) 
@@ -309,11 +318,11 @@ class Tools {
 		var builds = [];
 		for (build in found) 
 		{
-			nmml_file = build._1;
-			title = _find_nme_project_title(nmml_file);
+			var nmml_file = build._1;
+			var title = _find_nme_project_title(nmml_file);
 			if (title != null) 
 			{
-				for (t in config.nme_targets) 
+				for (t in Config.nme_targets) 
 				{
 					builds.push(new NmeBuild(project, title, nmml_file, t));
 				}
@@ -330,10 +339,10 @@ class Tools {
 		for (build in found) 
 		{
 			var openfl_xml = build._1;
-			title = _find_nme_project_title(openfl_xml);
+			var title = _find_nme_project_title(openfl_xml);
 			if (title != null) 
 			{
-				for (t in config.openfl_targets)
+				for (t in Config.openfl_targets)
 				{
 					builds.push(new OpenFlBuild(project, title, openfl_xml, t));
 				}

@@ -1,27 +1,28 @@
 package hxsublime;
 
+import haxe.ds.StringMap;
 import python.lib.Types;
 
 class Config {
     public static var target_packages = ["flash","flash8","neko","js","php","cpp","cs","java", "sys"];
     public static var targets = ["js","cpp","swf8","swf","neko","php","java","cs", "as3"];
-    public static var target_std_packages = {
-        js : ["js"],
-        cpp : ["cpp", "sys"],
-        neko : ["neko", "sys"],
-        php : ["php", "sys"],
-        java : ["java", "sys"],
-        cs : ["cs", "sys"],
-        swf : ["flash"],
-        as3 : ["flash"],
-        swf8 : ["flash8"]
-    };
+    public static var target_std_packages:StringMap<Array<String>> = [
+        "js"   => ["js"],
+        "cpp"  => ["cpp", "sys"],
+        "neko" => ["neko", "sys"],
+        "php"  => ["php", "sys"],
+        "java" => ["java", "sys"],
+        "cs"   => ["cs", "sys"],
+        "swf"  => ["flash"],
+        "as3"  => ["flash"],
+        "swf8" => ["flash8"]
+    ];
     public static var ignored_folders_list =  [".git", ".svn"];
 
     
 
     public static function mk_ignored_folders () return {
-        var x = new Dict();
+        var x = new StringMap();
         for (p in ignored_folders_list) {
             x.set(p, true);
         }
@@ -34,7 +35,7 @@ class Config {
     
     
     public static function mk_ignored_packages () return {
-        var x = new Dict();
+        var x = new StringMap();
         for (p in ignored_folders_list) {
             x.set(p,true);
         }
@@ -91,11 +92,17 @@ class Config {
 }
 
 
+typedef Target = {
+    public var name:String;
+    public var plattform:String;
+    public var args:Array<String>;   
+}
+
 class NmeTarget 
 {
-    var name:String;
-    var plattform:String;
-    var args:Array<String>;
+    public var name:String;
+    public var plattform:String;
+    public var args:Array<String>;
 
     public function new (name:String, plattform:String, args:Array<String>)
     {
@@ -107,9 +114,9 @@ class NmeTarget
  
 class OpenFlTarget 
 {
-    var name:String;
-    var plattform:String;
-    var args:Array<String>;
+    public var name:String;
+    public var plattform:String;
+    public var args:Array<String>;
 
     public function new (name:String, plattform:String, args:Array<String>)
     {

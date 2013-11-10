@@ -2,6 +2,7 @@
 package hxsublime.tools;
 
 import haxe.ds.StringMap;
+import Map.IMap;
 import python.lib.Time;
 
 typedef CacheEntry<T> = {
@@ -9,32 +10,32 @@ typedef CacheEntry<T> = {
 	val : T,
 }
 
-class Cache<T> 
+class Cache<K, T> 
 {
 	
 	var time_driven : Bool;
 	var cache_time : Int;
-	public var data : StringMap<CacheEntry<T>>;
+	public var data : IMap<K, CacheEntry<T>>;
 
-	public function new (cache_time = -1 ) 
+	public function new (cache_time = -1, data:IMap<K, CacheEntry<T>> ) 
 	{
-		this.data = new StringMap();
+		this.data = data;
 		this.cache_time = cache_time;
 		this.time_driven = cache_time != -1;
 
 	}
 
-	public function insert (id:String, value:T) 
+	public function insert (id:K, value:T) 
 	{
 		data.set(id, { time : Time.time(), val : value});
 	}
 
-	public function exists (id:String) 
+	public function exists (id:K) 
 	{
 		return get_or_default(id, null) != null;
 	}
 	
-	public function get_or_insert (id:String, creator:Void->T) 
+	public function get_or_insert (id:K, creator:Void->T) 
 	{
 		var res = null;
 		if (data.exists(id)) {
@@ -46,23 +47,23 @@ class Cache<T>
 		return res;
 	}
 
-	function _get_val (id:String) 
+	function _get_val (id:K) 
 	{
 		return data.get(id).val;
 	}
 
-	function _cache_invalid (id:String) 
+	function _cache_invalid (id:K) 
 	{
 		return !_cache_valid(id);
 	}
 
-	function _cache_valid (id:String) 
+	function _cache_valid (id:K) 
 	{
 		var now = Time.time();
 		return now - data.get(id).time <= cache_time;
 	}
 
-	public function get_or_default (id:String, defaultVal = null) 
+	public function get_or_default (id:K, defaultVal = null) 
 	{
 		var res = defaultVal;
 		if (data.exists(id))
@@ -74,7 +75,7 @@ class Cache<T>
 		return res;
 	}
 
-	public function get_and_delete (id:String, defaultVal = null) 
+	public function get_and_delete (id:K, defaultVal = null) 
 	{
 		var val = defaultVal;
 		if (data.exists(id)) {
@@ -86,7 +87,7 @@ class Cache<T>
 		return val;
 	}
 
-	public function delete (id:String) 
+	public function delete (id:K) 
 	{
 		if (data.exists(id)) {
 			data.remove(id);

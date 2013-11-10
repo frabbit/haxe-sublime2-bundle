@@ -1,5 +1,7 @@
 package hxsublime.project;
 
+import haxe.ds.StringMap;
+import hxsublime.project.Project;
 import hxsublime.tools.Cache;
 import hxsublime.tools.SublimeTools;
 import python.lib.Builtin;
@@ -12,7 +14,7 @@ import sublime.Window;
 
 
 class Projects {
-    public static var projects = new Cache();
+    public static var projects = new Cache<String, Project>(new StringMap());
     public static var userHome = Path.expanduser("~");
 
     
@@ -69,7 +71,7 @@ class Projects {
         return win;
     }
 
-    public static function current_project(?view:View) {
+    public static function current_project(?view:View):Project {
 
 
         cleanup_projects();
@@ -89,7 +91,7 @@ class Projects {
         return res;
     }
 
-    public static function create_project (id:String, file:String, win:Window) {
+    public static function create_project (id:String, file:String, win:Window):Project {
         
         
         var p = new Project(id, file, win.id(), nextServerPort);

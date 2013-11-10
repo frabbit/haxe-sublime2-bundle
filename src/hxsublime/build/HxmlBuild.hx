@@ -1,18 +1,25 @@
 package hxsublime.build;
 
+import hxsublime.Config.Target;
 import hxsublime.Haxelib.HaxeLibLibrary;
+import hxsublime.panel.Base.Panels;
 import hxsublime.project.Project;
 
+import hxsublime.Settings;
 import hxsublime.tools.HxSrcTools;
 import python.lib.os.Path;
 import python.lib.Re;
 import python.lib.Time;
 import python.lib.Types.Tup2;
+import python.lib.Types.Tup3;
 import sublime.Sublime;
 import sublime.View;
 
 using python.lib.ArrayTools;
 
+using StringTools;
+
+using python.lib.StringTools;
 
 class HxmlBuild {
 
@@ -22,7 +29,7 @@ class HxmlBuild {
 	public var main:String;
 	public var target:String;
 	public var output:String;
-	public var hxml:String;
+	public var _hxml:String;
 	public var _build_file:String;
 	public var classpaths:Array<String>;
 	public var libs:Array<HaxeLibLibrary>;
@@ -41,7 +48,7 @@ class HxmlBuild {
 		this.main = null;
 		this.target = null;
 		this.output = "dummy.js";
-		this.hxml = hxml;
+		this._hxml = hxml;
 		this._build_file = build_file;
 		this.classpaths = [];
 		this.libs = [];
@@ -52,6 +59,7 @@ class HxmlBuild {
 		this.name = null;
 	}
 		
+	public function hxml () return _hxml;
 
 	@property
 	public function title() 
@@ -59,6 +67,9 @@ class HxmlBuild {
 		return this.output;
 	}
 
+	public function setHxml (hxml:String) {
+		this._hxml = hxml;
+	}
 	
 
 	@property
@@ -140,7 +151,7 @@ class HxmlBuild {
 
 		this.get_types();
 
-		var hb = new HxmlBuild(this.hxml, this.build_file);
+		var hb = new HxmlBuild(this._hxml, this.build_file());
 		hb.args = this.args.copy();
 		hb.main = this.main;
 		hb.name = this.name;
@@ -156,14 +167,14 @@ class HxmlBuild {
 		hb.mode_completion = this.mode_completion;
 		return hb;
 	}
-	public function add_arg(arg:String) 
+	public function add_arg(arg:Tup2<String,String>) 
 	{
 		this.args.push(arg);
 	}
 
 	public function get_build_folder () 
 	{
-		return if (this.build_file != null) Path.dirname(this.build_file) else null;
+		return if (this.build_file != null) Path.dirname(this.build_file()) else null;
 	}
 
 	public function set_build_cwd () 
@@ -203,13 +214,12 @@ class HxmlBuild {
 
 	public function get_classpath_of_file (file) 
 	{
-		var file = st2_to_unicode(file);
-		
+			
 		var file = this.align_drive_letter(file);
 		
 		var cps = this.classpaths.copy();
 
-		build_folder = this.get_build_folder();
+		var build_folder = this.get_build_folder();
 		if (build_folder != null && !Lambda.has(cps, build_folder)) 
 		{
 			trace("add build folder to classpaths: " + build_folder + ", classpaths: " + Std.string(cps));
@@ -272,19 +282,19 @@ class HxmlBuild {
 		outp += "# "+this.to_string() + "\n";
 		outp += "-main "+ this.main + "\n";
 		for (a in this.args) {
-			outp += " ".join( list(a) ) + "\n";
+			outp += a._1 + " " + a._2 + "\n";
 		}
 		
-		var d = Path.dirname( this.hxml ) + "/";
+		var d = Path.dirname( this._hxml ) + "/";
 		
 		// relative paths
 		outp = outp.replace( d , "");
-		outp = outp.replace( "-cp "+Path.dirname( this.hxml )+"\n", "");
+		outp = outp.replace( "-cp "+Path.dirname( this._hxml )+"\n", "");
 
 		outp = outp.replace("--no-output " , "");
 		outp = outp.replace("-v" , "");
 
-		outp = outp.replace("dummy" , this.main.lower() );
+		outp = outp.replace("dummy" , this.main.toLowerCase() );
 
 		return outp.strip();
 	}
@@ -304,16 +314,16 @@ class HxmlBuild {
 
 	public function set_server_mode (server_port = 6000) 
 	{
-		this.args.push(Tup2.create("--connect" , str(server_port)));
+		this.args.push(Tup2.create("--connect" , Std.string(server_port)));
 	}
 
-	public function get_command_args (haxe_path) 
+	public function get_command_args (haxe_path:Array<String>) 
 	{
-		var cmd = list(haxe_path);
+		var cmd = haxe_path.copy();
 
 		for (a in this.args)
 		{
-			cmd.extend( list(a) );
+			cmd.extend( [a._1, a._2] );
 		}
 
 		for (l in this.libs)
@@ -339,7 +349,7 @@ class HxmlBuild {
 
 		this.main = null;
 
-		function filterTargets (x) 
+		function filterTargets (x:Tup2<String,String>) 
 		{
 			return x._1 != "-cs" && x._1 != "-x" && x._1 != "-js" && x._1 != "-php" && x._1 != "-cpp" && x._1 != "-swf" && x._1 != "-java";
 		}
@@ -353,17 +363,17 @@ class HxmlBuild {
 			args = args.map(function (x) return if (x._1 == "-x") Tup2.create("-neko", x._2) else x).copy();
 		}
 
-		function filter_commands_and_dce (x) 
+		function filter_commands_and_dce (x:Tup2<String,String>) 
 		{
 			return x._1 != "-cmd" && x._1 != "-dce";
 		}
 
 
-		args = list(filter(filter_commands_and_dce, args ));
+		args = args.filter(filter_commands_and_dce );
 
 		if (!this.show_times) 
 		{
-			function filter_times (x) 
+			function filter_times (x:Tup2<String,String>) 
 			{
 				return x._1 != "--times";
 			}
@@ -392,7 +402,7 @@ class HxmlBuild {
 		// haxe.output_panel.HaxePanel.status("haxe-debug", "updating types")
 		trace("update types for classpaths:" + Std.string(this.classpaths));
 		trace("update types for libs:" + Std.string(this.libs));
-		this.type_bundle = hxtypes.find_types(this.classpaths, this.libs, this.get_build_folder(), [], [], include_private_types = false );
+		this.type_bundle = Types.find_types(this.classpaths, this.libs, this.get_build_folder(), [], [], false );
 	}
 
 		
@@ -441,13 +451,13 @@ class HxmlBuild {
 	}
 		
 
-	public function prepare_run_cmd (project, server_mode, view) 
+	public function prepare_run_cmd (project:Project, server_mode:Bool, view:View):Tup2<Array<String>, String>
 	{
 		var r = this._prepare_run(project, view, server_mode);
 		var cmd = r._1, build_folder = r._2, nekox_file = r._3;
 
 		
-		default_open_ext = hxsettings.open_with_default_app();
+		var default_open_ext = Settings.open_with_default_app();
 
 		if (nekox_file != null) 
 		{
@@ -463,19 +473,19 @@ class HxmlBuild {
 		}
 		else if (this.target == "cpp")
 		{
-			sep_index = this.main.rfind(".");
-			exe = if (sep_index > -1) this.main.substr(sep_index+1) else this.main;
-			cmd.extend(["-cmd", Path.join(this.absolute_output,exe) + "-debug"]);
+			var sep_index = this.main.lastIndexOf(".");
+			var exe = if (sep_index > -1) this.main.substr(sep_index+1) else this.main;
+			cmd.extend(["-cmd", Path.join(this.absolute_output(),exe) + "-debug"]);
 		}
-		else if (this.target == "js" && "nodejs" in this.defines)
+		else if (this.target == "js" && Lambda.has(this.defines, "nodejs"))
 		{
 			cmd.extend(["-cmd", "nodejs " + this.absolute_output]);
 		}
 		else if (this.target == "java")
 		{
-			var sep_index = this.absolute_output.rfind(Path.sep);
-			var jar = if (sep_index == -1) this.absolute_output + ".jar" else this.absolute_output.substr(sep_index+1) + ".jar";
-			cmd.extend(["-cmd", "java -jar " + Path.join(this.absolute_output, jar)]);
+			var sep_index = this.absolute_output().lastIndexOf(Path.sep);
+			var jar = if (sep_index == -1) this.absolute_output() + ".jar" else this.absolute_output().substr(sep_index+1) + ".jar";
+			cmd.extend(["-cmd", "java -jar " + Path.join(this.absolute_output(), jar)]);
 		}
 		else if (this.target == "cs") 
 		{
@@ -494,21 +504,21 @@ class HxmlBuild {
 		return Tup2.create(cmd, build_folder);
 	}
 
-	public function _prepare_run (project, view, server_mode:Null<Bool> = null) 
+	public function _prepare_run (project:Project, view:View, server_mode:Null<Bool> = null) 
 	{
 
 		server_mode = if (server_mode == null) project.is_server_mode() else server_mode;
 		
-		run_exec = this._get_run_exec(project, view);
-		b = this.copy();
+		var run_exec = this._get_run_exec(project, view);
+		var b = this.copy();
 		
-		nekox_file_name = null;
+		var nekox_file_name = null;
 		
 		for (i in 0...b.args.length) 
 		{
 			var a = b.args[i];
-			if (a[0] == "-x") {
-				nekox_file_name = a[1] + ".n";
+			if (a._1 == "-x") {
+				nekox_file_name = a._2 + ".n";
 				b.args[i] = Tup2.create("-neko", nekox_file_name);
 			}
 		}
@@ -532,8 +542,8 @@ class HxmlBuild {
 
 	public function escape_cmd(cmd:Array<String>) 
 	{
-		print_cmd = cmd.copy();
-		l = print_cmd.length;
+		var print_cmd = cmd.copy();
+		var l = print_cmd.length;
 		for (i in 0...l) 
 		{
 			var e = print_cmd[i];
@@ -554,7 +564,7 @@ class HxmlBuild {
 		for (i in 0...print_cmd.length) 
 		{
 			var e = print_cmd[i];
-			if (e == "--macro" && i < len(print_cmd)-1)
+			if (e == "--macro" && i < print_cmd.length-1)
 			{
 				print_cmd[i+1] = "'" + print_cmd[i+1] + "'";
 			}
@@ -566,7 +576,7 @@ class HxmlBuild {
 			callback(out, err);
 		}
 
-		run_cmd_async( args=cmd, input="", cwd=build_folder, env=env, callback=cb );
+		Execute.run_cmd_async( cmd, cb, "", build_folder, env );
 	}
 	
 	
@@ -579,8 +589,8 @@ class HxmlBuild {
 		var build_folder = r._2; 
 		var nekox_file_name = r._3;
 
-		trace(" ".join(cmd));
-		var r = run_cmd( args=cmd, input="", cwd=build_folder, env=env );
+		trace(cmd.join(" "));
+		var r = Execute.run_cmd( cmd, "", build_folder, env );
 		var out = r._1, err = r._2;
 		
 		this._on_run_complete(out, err, build_folder, nekox_file_name);
@@ -604,12 +614,12 @@ class HxmlBuild {
 
 	public function _run_neko_x(build_folder:String, neko_file_name:String) 
 	{
-		neko_file = Path.join(build_folder, neko_file_name);
+		var neko_file = Path.join(build_folder, neko_file_name);
 		trace("run nekox: " + neko_file) ;
-		var r = run_cmd(["neko", neko_file]);
+		var r = Execute.run_cmd(["neko", neko_file]);
 		var out = r._1, err = r._2;
-		hxpanel.default_panel().writeln(out);
-		hxpanel.default_panel().writeln(err);
+		Panels.default_panel().writeln(out);
+		Panels.default_panel().writeln(err);
 	}
 
 	public function run(project:Project, view:View, async:Bool, callback:String->String->Void, server_mode = null) 
@@ -646,11 +656,11 @@ class HxmlBuild {
 
 		var available = true;
 
-		if (pack != null && target != null && pack in config.target_packages) 
+		if (pack != null && target != null && Lambda.has(Config.target_packages, pack)) 
 		{
-			if (target in config.target_std_packages) 
+			if (Config.target_std_packages.exists(target))
 			{
-				if (!Lambda.has(config.target_std_packages[target], pack)) 
+				if (!Lambda.has(Config.target_std_packages.get(target), pack)) 
 				{
 					available = false;
 				}

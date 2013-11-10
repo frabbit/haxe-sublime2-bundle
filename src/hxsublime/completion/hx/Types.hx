@@ -1,10 +1,14 @@
 package hxsublime.completion.hx;
 
 import hxsublime.build.Build;
+import hxsublime.completion.hx.Constants;
 import hxsublime.project.Project;
+import hxsublime.Settings;
 import hxsublime.tools.StringTools;
 import hxsublime.tools.ViewTools;
 import python.lib.Builtin;
+import python.lib.Re;
+import python.lib.Time;
 import python.lib.Types.Tup2;
 import python.lib.Types.Tup4;
 import python.lib.Types.Tup5;
@@ -23,16 +27,16 @@ class CompletionResult {
 
 
     public var ret:String;
-    public var comps:Array<String>;
+    public var comps:Array<Tup2<String, String>>;
     public var status:String;
-    public var hints:Array<String>;
+    public var hints:Array<Array<String>>;
     public var ctx:CompletionContext;
 
-    public var retrieve_toplevel_comps:Void->Array<String>;
+    public var retrieve_toplevel_comps:Void->Array<Tup2<String, String>>;
 
 
 
-    public function new (ret:String, comps:Array<String>, status:String, hints:Array<String>, ctx:CompletionContext, retrieve_toplevel_comps:Void->Array<String>) 
+    public function new (ret:String, comps:Array<Tup2<String, String>>, status:String, hints:Array<Array<String>>, ctx:CompletionContext, retrieve_toplevel_comps:Void->Array<Tup2<String, String>>) 
     {
         this.ret = ret;
         this.comps = comps;
@@ -49,7 +53,7 @@ class CompletionResult {
         
 
     @lazyprop
-    public function _toplevel_comps():Array<String> {
+    public function _toplevel_comps():Array<Tup2<String, String>> {
         return retrieve_toplevel_comps();
     }
 
@@ -89,7 +93,7 @@ class CompletionResult {
             res = res.concat(_toplevel_comps());
         }
         res = res.concat(comps);
-        res.sort(function (s1, s2) return (s1 < s2) ? -1 : (s1 > s2) ? 1 : 0);
+        res.sort(function (s1, s2) return (s1._1 < s2._1) ? -1 : (s1._1 > s2._1) ? 1 : 0);
         return res;
     }
 
@@ -108,7 +112,7 @@ class CompletionBuild {
 
     public function new (ctx:CompletionContext, temp_path:String, temp_file:String)
     {
-        this.build = ctx.build.copy();
+        this.build = ctx.build().copy();
         // add the temp_path to the classpath of the build
         this.build.add_classpath(temp_path);
         // the completion context
@@ -137,7 +141,7 @@ class CompletionOptions {
     var _context:Int;
     var _trigger:Int;
 
-    public function new(trigger:Int, context = hcc.COMPILER_CONTEXT_REGULAR, types = hcc.COMPLETION_TYPE_REGULAR, toplevel = hcc.COMPLETION_TYPE_TOPLEVEL)
+    public function new(trigger:Int, context = Constants.COMPILER_CONTEXT_REGULAR, types = Constants.COMPLETION_TYPE_REGULAR, toplevel = Constants.COMPLETION_TYPE_TOPLEVEL)
     {
         this._types = new CompletionTypes(types);
         this._toplevel = new TopLevelOptions(toplevel);
@@ -147,12 +151,12 @@ class CompletionOptions {
 
     public function copy_as_manual() 
     {
-        return CompletionOptions(hcc.COMPLETION_TRIGGER_MANUAL, this._context, this.types.val, this._toplevel.val);
+        return new CompletionOptions(Constants.COMPLETION_TRIGGER_MANUAL, this._context, this.types().val(), this._toplevel.val());
     }
 
     public function copy_as_async() 
     {
-        return CompletionOptions(hcc.COMPLETION_TRIGGER_ASYNC, this._context, this.types.val, this._toplevel.val);
+        return new CompletionOptions(Constants.COMPLETION_TRIGGER_ASYNC, this._context, this.types().val(), this._toplevel.val());
     }
 
     @property
@@ -165,25 +169,25 @@ class CompletionOptions {
     @lazyprop
     public function async_trigger() 
     {
-        return this._trigger == hcc.COMPLETION_TRIGGER_ASYNC;
+        return this._trigger == Constants.COMPLETION_TRIGGER_ASYNC;
     }
 
     @lazyprop
     public function manual_completion() 
     {
-        return this._trigger == hcc.COMPLETION_TRIGGER_MANUAL;
+        return this._trigger == Constants.COMPLETION_TRIGGER_MANUAL;
     }
 
     @lazyprop
     public function macro_completion() 
     {
-        return this._context == hcc.COMPILER_CONTEXT_MACRO;
+        return this._context == Constants.COMPILER_CONTEXT_MACRO;
     }
 
     @lazyprop
     public function regular_completion() 
     {
-        return this._context == hcc.COMPILER_CONTEXT_REGULAR;
+        return this._context == Constants.COMPILER_CONTEXT_REGULAR;
     }
 
     public function eq (other:CompletionOptions) 
@@ -273,16 +277,28 @@ class TopLevelOptions {
 }
 
 
+typedef SettingsInterface = {
+    //public function smarts_hints_only_next(?view:View):Bool;
+    public function no_fuzzy_completion(?view:View):Bool;
+    public function top_level_completions_on_demand(?view:View):Bool;
+    public function is_async_completion(?view:View):Bool;
+    public function show_only_async_completions(?view:View):Bool;
+    public function get_completion_delays(?view:View):Tup2<Int, Int>;
+    public function show_completion_times(?view:View):Bool;
+}
+
 class CompletionSettings {
+    var settings:SettingsInterface;
     public function new(settings)
     {
+
         this.settings = settings;
     }
 
-    @lazyprop
-    public function smarts_hints_only_next() {
-        return settings.smarts_hints_only_next();
-    }
+    //@lazyprop
+    //public function smarts_hints_only_next() {
+    //    return settings.smarts_hints_only_next();
+    //}
 
     @lazyprop
     public function no_fuzzy_completion() {
@@ -321,6 +337,11 @@ class Types {
 
 class CompletionContext {
 
+    static function get_completion_id () {
+        // make the current time the id for this completion
+        return Time.time();
+    }
+
     public var prefix:String;
     public var view : View;
     public var view_id : Int;
@@ -353,7 +374,7 @@ class CompletionContext {
 
         this.id = get_completion_id();
 
-        this.view_pos = Viewtools.get_first_cursor_pos(view);
+        this.view_pos = ViewTools.getFirstCursorPos(view);
 
     }
    
@@ -390,18 +411,18 @@ class CompletionContext {
 
     @lazyprop
     public function in_control_struct() {
-        return control_struct.search( this.src_until_complete_offset ) != null;
+        return Types.control_struct.search( this.src_until_complete_offset() ) != null;
     }
 
     @lazyprop
     public function src_until_complete_offset() {
-        return this.src.substring(0,this.complete_offset);
+        return this.src().substring(0,this.complete_offset());
     }
 
     @lazyprop 
     public function line_after_offset() {
-        line_end = this.src.find("\n", this.offset);
-        return this.src.substring(this.offset,line_end);
+        var line_end = this.src().indexOf("\n", this.offset);
+        return this.src().substring(this.offset,line_end);
     }
 
     // src of current file
@@ -417,12 +438,12 @@ class CompletionContext {
 
     @lazyprop
     public function src_from_complete_to_offset() {
-        return src.substring(complete_offset(), offset);
+        return src().substring(complete_offset(), offset);
     }
 
     @lazyprop
     public function src_from_complete_to_prefix_end() {
-        rest = src().substring(complete_offset()+1, offset+1 + prefix.length);
+        var rest = src().substring(complete_offset()+1, offset+1 + prefix.length);
         trace("REEEEEEEEEEST:'" + rest + "'");
         return rest;
     }
@@ -440,18 +461,18 @@ class CompletionContext {
 
     @lazyprop
     public function commas() {
-        return _completion_info()[0];
+        return _completion_info()._1;
     }
 
     @lazyprop
     public function prev_symbol_is_comma() {
-        return _completion_info()[2];
+        return _completion_info()._3;
     }
 
     // position in source where compiler completion gets triggered
     @lazyprop
     public function complete_offset() {
-        return this._completion_info[1];
+        return this._completion_info()._2;
     }
 
     @lazyprop
@@ -467,13 +488,13 @@ class CompletionContext {
     @lazyprop
     public function temp_completion_src() 
     {
-        return src().substr(0,complete_offset) + "|" + src().substr(complete_offset);
+        return src().substr(0,complete_offset()) + "|" + src().substr(complete_offset());
     }
 
 
     @lazyprop
     public function prefix_is_whitespace() {
-        return StringTools.is_whitespace_or_empty(prefix);
+        return hxsublime.tools.StringTools.isWhitespaceOrEmpty(prefix);
     }
 
     public function eq (other:CompletionContext) {
@@ -481,7 +502,7 @@ class CompletionContext {
         function prefix_check() 
         {
             var prefix_same = true;
-            if (options.types.has_hint()) 
+            if (options.types().has_hint()) 
             {
                 prefix_same = this.prefix == other.prefix || (this.prefix_is_whitespace() && other.prefix_is_whitespace());
             }
@@ -492,8 +513,8 @@ class CompletionContext {
         }
 
         return 
-               this != None 
-            && other != None
+               this != null 
+            && other != null
             && this.orig_file == other.orig_file
             && this.offset == other.offset
             && this.commas == other.commas
@@ -614,7 +635,12 @@ class CompletionContext {
 
 class CompletionInfo 
 {
-    public function new(commas:Int, complete_offset:Int, toplevel_complete, is_new:Bool) 
+
+    public var commas:Int;
+    public var complete_offset:Int;
+    public var toplevel_complete:Bool;
+    public var is_new:Bool;
+    public function new(commas:Int, complete_offset:Int, toplevel_complete:Bool, is_new:Bool) 
     {
         this.commas = commas;
         this.complete_offset = complete_offset;

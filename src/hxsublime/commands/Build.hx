@@ -1,23 +1,26 @@
 package hxsublime.commands;
 
 import hxsublime.project.Base.Projects;
+import hxsublime.Settings;
+import hxsublime.tools.ViewTools;
 import python.lib.Types.KwArgs;
 import sublime.Edit;
 import sublime.EventListener;
 import sublime.TextCommand;
 import sublime.View;
 
+using StringTools;
 
 
 class HaxeSaveAllAndRunCommand extends TextCommand
 {
     override public function run ( args:KwArgs ) 
     {
-        var edit:Edit = args.get("edit");
+        var edit:Edit = args.get("edit", null);
         trace("run HaxeSaveAllAndBuildCommand");
-        var view = self.view;
-        view.window().run_command("save_all");
-        Projects.current_project(self.view).run_build( view );
+        var view = this.view;
+        view.window().run_command("save_all", {});
+        Projects.current_project(this.view).run_build( view );
     }
 }
 
@@ -25,11 +28,11 @@ class HaxeSaveAllAndCheckCommand extends TextCommand
 {
     override public function run ( args:KwArgs ) 
     {
-        var edit:Edit = args.get("edit");
+        var edit:Edit = args.get("edit", null);
         trace("run HaxeSaveAllAndBuildCommand");
-        var view = self.view;
-        view.window().run_command("save_all");
-        Projects.current_project(self.view).check_build( view );
+        var view = this.view;
+        view.window().run_command("save_all", {});
+        Projects.current_project(this.view).check_build( view );
     }
 }
 
@@ -37,11 +40,11 @@ class HaxeSaveAllAndBuildCommand extends TextCommand
 {
     override public function run ( args:KwArgs ) 
     {
-        var edit:Edit = args.get("edit");
+        var edit:Edit = args.get("edit", null);
         trace("run HaxeSaveAllAndBuildCommand");
-        var view = self.view;
-        view.window().run_command("save_all");
-        Projects.current_project(self.view).just_build( view );
+        var view = this.view;
+        view.window().run_command("save_all", {});
+        Projects.current_project(this.view).just_build( view );
     }
 }
 
@@ -49,19 +52,19 @@ class HaxeRunBuildCommand extends TextCommand
 {
     override public function run ( args:KwArgs ) 
     {
-        var edit:Edit = args.get("edit");
-        var view = self.view;
+        var edit:Edit = args.get("edit", null);
+        var view = this.view;
         trace("run HaxeRunBuildCommand");
-        var project = Projects.current_project(self.view);
+        var project = Projects.current_project(this.view);
 
         if (project.has_build()) 
         {
-            project.run_sublime_build( view );
+            project.run_build( view );
         }
         else 
         {
             trace("no builds selected");
-            project.extract_build_args(view, True);
+            project.extract_build_args(view, true);
         }
     }
 }
@@ -70,10 +73,10 @@ class HaxeSelectBuildCommand extends TextCommand
 {
     override public function run ( args:KwArgs ) 
     {
-        var edit:Edit = args.get("edit");
+        var edit:Edit = args.get("edit", null);
         trace("run HaxeSelectBuildCommand");
-        var view = self.view;
-        Projects.current_project(self.view).select_build( view );
+        var view = this.view;
+        Projects.current_project(this.view).select_build( view );
     }
 }
 
@@ -83,9 +86,9 @@ class HaxeBuildOnSaveListener extends EventListener {
         trace("on_post_save");
         if (view != null && view.file_name() != null) 
         {
-            if (viewtools.is_supported(view) || view.file_name().endswith(".erazor.html"))
+            if (ViewTools.isSupported(view) || view.file_name().endsWith(".erazor.html"))
             {
-                if (settings.check_on_save()) 
+                if (Settings.check_on_save()) 
                 {
                     var project = Projects.current_project(view);
                 

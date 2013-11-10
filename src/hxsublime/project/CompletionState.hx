@@ -1,5 +1,6 @@
 package hxsublime.project;
 
+import haxe.ds.IntMap;
 import hxsublime.compiler.Output.CompilerError;
 import hxsublime.completion.hx.Types.CompletionContext;
 import hxsublime.completion.hx.Types.CompletionOptions;
@@ -11,27 +12,29 @@ import sublime.View;
 //from haxe.log import log
 //from haxe.tools.cache import Cache
 
+typedef CompletionCache = {
+    input : CompletionContext,
+    output : CompletionResult,
+}
+
 
 class ProjectCompletionState {
 
 
-    public var running:Cache<Tup2<Int,Int>>;
-    public var trigger:Cache<CompletionOptions>;
+    public var running:Cache<Int, Tup2<Int,Int>>;
+    public var trigger:Cache<Int, CompletionOptions>;
     public var current_id:Int;
     public var errors:Array<CompilerError>;
-    public var async:Cache<CompletionResult>;
-    public var current:{
-        input : CompletionContext,
-        output : CompletionResult
-    };
+    public var async:Cache<Int, CompletionResult>;
+    public var current:CompletionCache;
 
     public function new() {
         
-        this.running = Cache();
-        this.trigger = Cache(1000);
+        this.running = new Cache(new IntMap());
+        this.trigger = new Cache(1000, new IntMap());
         this.current_id = null;   
         this.errors = [];
-        this.async = Cache(1000);
+        this.async = new Cache(1000, new IntMap());
         this.current = {
             input : null,
             output : null
@@ -50,7 +53,7 @@ class ProjectCompletionState {
 
         var last_completion_id = current_id;
         var running_completion = running.get_or_default(last_completion_id, null);
-        return running_completion != null && running_completion._1 == complete_offset && running_completion_2 == view_id;
+        return running_completion != null && running_completion._1 == complete_offset() && running_completion._2 == view_id;
     }
 
     public function run_if_still_up_to_date (comp_id:Int, run:Void->Void) {
@@ -62,7 +65,7 @@ class ProjectCompletionState {
 
     public function set_new_completion (ctx:CompletionContext) {
         // store current completion id and properties
-        running.insert(ctx.id, Tup2.create(ctx.complete_offset, ctx.view_id));
+        running.insert(ctx.id, Tup2.create(ctx.complete_offset(), ctx.view_id));
         current_id = ctx.id;
 
         set_errors([]);
