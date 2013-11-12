@@ -18,9 +18,9 @@ import StringTools in ST;
 
 class CompletionEntry {
 
-	var hint:String;
-	var insert:String;
-	var doc:String;
+	public var hint:String;
+	public var insert:String;
+	public var doc:String;
 	
 	public function new(hint, insert, doc)
 	{

@@ -1,9 +1,13 @@
 package hxsublime.commands;
 
 import haxe.ds.StringMap;
+import hxsublime.project.Base.Projects;
 import hxsublime.tools.HxSrcTools.HaxeType;
+import hxsublime.tools.ViewTools;
 import python.lib.Types.Tup2;
+import sublime.Edit;
 import sublime.EventListener;
+import sublime.Region;
 import sublime.Sublime;
 import sublime.TextCommand;
 import python.lib.Types;
@@ -23,21 +27,21 @@ class HaxeGotoBaseCommand<T> extends TextCommand
 
     public function get_entries (types:StringMap<HaxeType>):Array<Array<String>>
     {
-        throw "abstract method";
+        return throw "abstract method";
     }
     public function get_data (types:StringMap<HaxeType>):Array<Tup2<String, T>>
     {
-        throw "abstract method";
+        return throw "abstract method";
     }
 
     public function get_file(data_entry:T):String
     {
-        throw "abstract method";
+        return throw "abstract method";
     }
 
     public function get_src_pos(data_entry:T):Int
     {
-        throw "abstract method";
+        return throw "abstract method";
     }
 
     override public function run( kwArgs:KwArgs ) 
@@ -48,7 +52,7 @@ class HaxeGotoBaseCommand<T> extends TextCommand
 
         var view = this.view;
 
-        var project = hxproject.current_project(view);
+        var project = Projects.current_project(view);
         
 
         if (!project.has_build()) 
@@ -72,9 +76,9 @@ class HaxeGotoBaseCommand<T> extends TextCommand
 
         var filtered_types = new StringMap();
         
-        for (k in bundle_types)
+        for (k in bundle_types.keys())
         {
-            var t = bundle_types[k];
+            var t = bundle_types.get(k);
             if (build.is_type_available(t)) 
             {
                 filtered_types.set(k, t);
@@ -88,11 +92,11 @@ class HaxeGotoBaseCommand<T> extends TextCommand
 
         trace(Std.string(function_list));
 
-        trace(Std.string(len(function_list)));
+        trace(Std.string(function_list.length));
 
         
         this.selecting_build = true;
-        sublime.status_message("Please select a type");
+        Sublime.status_message("Please select a type");
         
         var win = view.window();
 
@@ -100,12 +104,12 @@ class HaxeGotoBaseCommand<T> extends TextCommand
 
         if (sel.length == 1 && sel[0].begin() != sel[0].end()) 
         {
-            State._init_text = viewtools.get_content(view).substring(sel[0].begin(), sel[0].end());
+            State._init_text = ViewTools.getContent(view).substring(sel[0].begin(), sel[0].end());
         }
         else if (sel.length == 1)
         {
-            reg = view.word(sel[0].begin());
-            State._init_text = viewtools.get_content(view).substring(reg.begin(), reg.end());
+            var reg = view.word(sel[0].begin());
+            State._init_text = ViewTools.getContent(view).substring(reg.begin(), reg.end());
         }
         else
         {
@@ -120,11 +124,11 @@ class HaxeGotoBaseCommand<T> extends TextCommand
             if (i >= 0)
             {
                 var selected_type = function_list_data[i];
-                trace("selected field: " + Std.string(selected_type[0]));
+                trace("selected field: " + Std.string(selected_type._1));
                 
-                var src_pos = this.get_src_pos(selected_type[1]);
+                var src_pos = this.get_src_pos(selected_type._2);
 
-                var goto_file = this.get_file(selected_type[1]);
+                var goto_file = this.get_file(selected_type._2);
 
                 State._find_decl_file = goto_file;
 
@@ -145,7 +149,7 @@ class HaxeGotoBaseCommand<T> extends TextCommand
                     win.open_file(goto_file);
                 }
 
-                sublime.set_timeout(show, 130);
+                Sublime.set_timeout(show, 130);
             }
         }
         State._is_open = true;    
@@ -176,7 +180,7 @@ class HaxeGotoBaseListener extends EventListener
         {
             State._is_open = false;
 
-            viewtools.insert_at_cursor(view, State._init_text);
+            ViewTools.insertAtCursor(view, State._init_text);
             State._init_text = "";
         }
                         
@@ -190,9 +194,9 @@ class HaxeGotoBaseListener extends EventListener
                 trace("show at Y");
                 view.sel().clear();
 
-                min = find_pos;
+                var min = find_pos;
 
-                view.sel().add(sublime.Region(min));
+                view.sel().add(new Region(min));
 
                 trace("show at:" + Std.string(min));
                 // move to line is delayed, seems to work better
@@ -200,9 +204,9 @@ class HaxeGotoBaseListener extends EventListener
                 function show ()
                 {
                     trace("show at:" + Std.string(min));
-                    view.show_at_center(sublime.Region(min));
+                    view.show_at_center(new Region(min));
                 }
-                sublime.set_timeout(show, 100);
+                Sublime.set_timeout(show, 100);
                 State._find_decl_file = null;
                 State._find_decl_pos = null;
             }

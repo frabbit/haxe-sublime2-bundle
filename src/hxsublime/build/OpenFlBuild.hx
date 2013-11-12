@@ -14,7 +14,7 @@ class OpenFlBuild extends NmeBuild
 		super(project, title, openfl_xml, target, cb);
 	}
 	
-	public function copy ()
+	override public function copy ()
 	{
 		var hxml_copy = if (this._hxml_build != null) this.hxml_build().copy() else null;
 		var r = new OpenFlBuild(this.project, this.title(), this.nmml, this.target(), hxml_copy);
@@ -22,7 +22,7 @@ class OpenFlBuild extends NmeBuild
 		return r;
 	}
 	
-	public function _get_run_exec(project:Project, view:View)
+	override public function _get_run_exec(project:Project, view:View)
 	{
 		return project.openfl_exec(view);
 	}
@@ -40,7 +40,7 @@ class OpenFlBuild extends NmeBuild
 		return res;
 	}
 	
-	public function to_string() 
+	override public function to_string() 
 	{
 		// out = os.path.basename(this.hxml_build.output)
 		var out = this.title;
@@ -48,13 +48,13 @@ class OpenFlBuild extends NmeBuild
 		return '${out} (OpenFL - ${target})';
 	}
 	
-	public function is_type_available (type)
+	override public function is_type_available (type)
 	{
 		var pack = type.toplevel_pack;
 		return pack == null || this.is_pack_available(pack);
 	}
 	
-	public function is_pack_available (pack:String)
+	override public function is_pack_available (pack:String)
 	{
 		if (pack == "")
 		{

@@ -61,17 +61,7 @@ class View {
 	
 	// Window	Returns a reference to the window containing the view.
 	public function window():Window;
-	#end
-	// Runs the named TextCommand with the (optional) given arguments.
-	//public static function run_command(string:String, args:NamedArgs):Void;	
-
-	macro public function run_command(ethis:haxe.macro.Expr, string:haxe.macro.Expr.ExprOf<String>, args:haxe.macro.Expr.ExprOf<{}>):haxe.macro.Expr 
-	{
-		return return macro @:pos(string.pos) 
-			untyped __named__(untyped __field__($ethis, $string), $args);
-	}	
-
-	#if !macro
+	
 	// int	Returns the number of character in the file.
 	public function size():Int;
 	
@@ -313,4 +303,16 @@ class View {
 	*/
 	public function show_popup_menu(items:Array<String>, on_done:Int->Void, ?flags:Int):Void;
 	#end
+
+
+	// Runs the named TextCommand with the (optional) given arguments.
+	//public static function run_command(string:String, args:NamedArgs):Void;	
+
+	macro public function run_command(ethis:haxe.macro.Expr, string:haxe.macro.Expr.ExprOf<String>, args:haxe.macro.Expr.ExprOf<{}>):haxe.macro.Expr 
+	{
+		return return macro @:pos(string.pos) 
+			untyped __named__(untyped __field__($ethis, $string), $args);
+	}	
+
+	
 }

@@ -1,13 +1,21 @@
 package hxsublime.commands;
 
+import haxe.ds.StringMap;
 import hxsublime.project.Base.Projects;
+import hxsublime.tools.HxSrcTools;
+import hxsublime.tools.ViewTools;
 import python.lib.Os;
+import python.lib.os.Path;
+import python.lib.Types.KwArgs;
 import sublime.Edit;
 import sublime.EventListener;
 import sublime.Region;
+import sublime.Sublime;
 import sublime.View;
 import sublime.Window;
 import sublime.WindowCommand;
+
+using StringTools;
 
 // stores the info for file creation, this data is shared between command && listener instances.
 private class State {
@@ -28,8 +36,13 @@ class HaxeCreateTypeCommand extends WindowCommand
     }
 
 
-    public function run( paths = [] , t = "class" ) 
+    override public function run( kwArgs:KwArgs ) 
     {
+
+        var paths = kwArgs.get("paths", null);
+        var t = kwArgs.get("t", "class");
+        if (paths == null) paths = [];
+
         trace("createtype");
         
         var win = this.win;
@@ -55,16 +68,16 @@ class HaxeCreateTypeCommand extends WindowCommand
 
         if (paths.length == 0 && view != null)
         {
-            fn = view.file_name();
+            var fn = view.file_name();
             paths.push(fn);
         }
 
         for (path in paths)
         {
 
-            if (os.path.isfile( path ))
+            if (Path.isfile( path ))
             {
-                path = os.path.dirname( path );
+                path = Path.dirname( path );
             }
 
             if (this.classpath == null)
@@ -80,7 +93,7 @@ class HaxeCreateTypeCommand extends WindowCommand
                 {
                     trace("class path: " + cp);
                     trace("path: " + path);
-                    if (path.startswith( cp )) 
+                    if (path.startsWith( cp )) 
                     {
                         
                         this.classpath = path.substring(0,cp.length);
@@ -94,11 +107,11 @@ class HaxeCreateTypeCommand extends WindowCommand
                         }
                         else
                         {
-                            sub_packs = rel_path.split(Os.sep);
+                            var sub_packs = rel_path.split(Os.sep);
                             trace("subpacks:" + Std.string(sub_packs));
                             for (p in sub_packs) 
                             {
-                                if ("." in p)
+                                if (p.indexOf(".") > -1)
                                 { 
                                     break;
                                 }
@@ -137,8 +150,8 @@ class HaxeCreateTypeCommand extends WindowCommand
             pack.push("");
         }
 
-        sublime.status_message( "Current classpath : " + this.classpath );
-        win.show_input_panel("Enter "+t+" name : " , ".".join(pack) , function (inp) this.on_done(inp, t) , this.on_change , this.on_cancel );
+        Sublime.status_message( "Current classpath : " + this.classpath );
+        win.show_input_panel("Enter "+t+" name : " , pack.join(".") , function (inp) this.on_done(inp, t) , this.on_change , this.on_cancel );
     }
 
     public function on_done( inp:String, cur_type:String ) 
@@ -148,12 +161,15 @@ class HaxeCreateTypeCommand extends WindowCommand
         var parts = inp.split(".");
         var pack = [];
 
+        var cl = null;
+
         while( parts.length > 0 )
         {
-            p = parts.shift();
+            var p = parts.shift();
             
-            fn = Path.join( fn , p );
-            if (hxsrctools.is_type.match( p ))
+            var fn = Path.join( fn , p );
+
+            if (hxsublime.tools.HxSrcTools.Regex.is_type.match( p ) != null)
             {
                 cl = p;
                 break;
@@ -171,14 +187,14 @@ class HaxeCreateTypeCommand extends WindowCommand
 
         fn += ".hx";
 
-        src = "\npackage " + pack.join(".") + ";\n\n"+cur_type+" "+cl+" ";
+        var src = "\npackage " + pack.join(".") + ";\n\n"+cur_type+" "+cl+" ";
         if (cur_type == "typedef")
         {
             src += "= ";
         }
         src += "{\n\n\t\n\n}";
 
-        State.current_create_type_info[fn] = src;
+        State.current_create_type_info.set(fn, src);
 
         Sublime.active_window().open_file( fn );
     }
@@ -216,14 +232,13 @@ class HaxeCreateTypeListener extends EventListener
         function run_edit(v:View, edit:Edit)
         {
             v.insert(edit,0,data);
-            v.end_edit(edit);
             var sel = v.sel();
             sel.clear();
             var pt = v.text_point(5,1);
             sel.add( new Region(pt,pt) );
         }
 
-        viewtools.async_edit(view, run_edit);
+        ViewTools.asyncEdit(view, run_edit);
     }
 }
 

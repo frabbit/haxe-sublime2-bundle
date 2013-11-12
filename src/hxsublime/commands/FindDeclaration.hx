@@ -1,14 +1,28 @@
 package hxsublime.commands;
 
+import hxsublime.build.Build;
+import hxsublime.panel.Base.Panels;
 import hxsublime.Plugin;
+import hxsublime.project.Base.Projects;
 import hxsublime.project.Project;
+import hxsublime.Temp;
+import hxsublime.tools.HxSrcTools;
+import hxsublime.tools.PathTools;
+import hxsublime.tools.ViewTools;
+import python.lib.Codecs;
+import python.lib.Json;
 import python.lib.os.Path;
+import python.lib.Re;
 import sublime.EventListener;
 import sublime.Region;
+import sublime.Sublime;
 import sublime.TextCommand;
 import sublime.View;
 import python.lib.Types;
 
+import hxsublime.tools.HxSrcTools.Regex in HxRegex;
+
+using python.lib.StringTools;
 
 class HaxeFindDeclarationCommand extends TextCommand 
 {
@@ -36,7 +50,7 @@ class HaxeFindDeclarationCommand extends TextCommand
             return;
         }
 
-        var project = hxproject.current_project(view);
+        var project = Projects.current_project(view);
         
 
         if (!project.has_build())
@@ -54,11 +68,11 @@ class HaxeFindDeclarationCommand extends TextCommand
 
         var helper_method = this.helper_method();
         
-        var src = viewtools.get_content(view);
+        var src = ViewTools.getContent(view);
 
-        var file_name = os.path.basename(view.file_name());
+        var file_name = Path.basename(view.file_name());
 
-        var package_match = Re.match(hxsrctools.package_line, src);
+        var package_match = Re.match(HxRegex.package_line, src);
 
         var using_pos = if (package_match == null) 0 else package_match.end(0);
 
@@ -81,14 +95,14 @@ class HaxeFindDeclarationCommand extends TextCommand
             var word_str = r._1, word_start = r._2, word_end = r._3;
 
             var chars = ["{", "+", "-", "(", "[", "*", "/", "=", ";", ":"];
-            var res = hxsrctools.reverse_search_next_char_on_same_nesting_level(src, chars, word_end-1);
+            var res = HxSrcTools.reverse_search_next_char_on_same_nesting_level(src, chars, word_end-1);
             
-            res = hxsrctools.skip_whitespace_or_comments(src, res[0]+1);
+            res = HxSrcTools.skip_whitespace_or_comments(src, res._1+1);
 
 
 
             expr_end = word_end;
-            expr_start = res[0];
+            expr_start = res._1;
         }
         else 
         {
@@ -121,7 +135,7 @@ class HaxeFindDeclarationCommand extends TextCommand
 
         function cb (out:String, err:String)
         {
-            hxtemp.remove_path(temp_path);
+            Temp.remove_path(temp_path);
 
             var file_pos = Re.compile("\\|\\|\\|\\|\\|([^|]+)\\|\\|\\|\\|\\|", Re.I);
 
@@ -130,11 +144,11 @@ class HaxeFindDeclarationCommand extends TextCommand
             {
                 //we've got a proper response
                 var json_str = res.group(1);
-                var json_res = json.loads(json_str);
+                var json_res = Json.loads(json_str);
 
-                if ("error" in json_res) 
+                if (json_res.hasKey("error")) 
                 {
-                    var error = json_res["error"];
+                    var error = json_res.get("error", null);
                     trace("nothing found (1), cannot find declaration");
                     if (order == 1 && use_display)
                     {
@@ -167,7 +181,7 @@ class HaxeFindDeclarationCommand extends TextCommand
                 }
                 else 
                 {
-                    panel.default_panel().writeln("Cannot find declaration for expression " + expr_string.strip());
+                    Panels.default_panel().writeln("Cannot find declaration for expression " + expr_string.strip());
                     trace("nothing found (3), cannot find declaration");
                 }
             }
@@ -176,33 +190,33 @@ class HaxeFindDeclarationCommand extends TextCommand
         build.run(project, view, false, cb);
     }
 
-    public function handle_successfull_result(view:View, json_res, using_insert, insert_before, insert_after, expr_end, build, temp_path, temp_file)
+    public function handle_successfull_result(view:View, json_res:Dict<String, Dynamic>, using_insert:String, insert_before:String, insert_after:String, expr_end:Int, build:Build, temp_path:String, temp_file:String)
     {
-        var file = json_res["file"];
-        var min = json_res["min"];
-        var max = json_res["max"];
+        var file = json_res.get("file", null);
+        var min = json_res.get("min", 0);
+        var max = json_res.get("max", 0);
 
         // abs_path = abs_path.replace(build.get_relative_path(temp_file), build.get_relative_path(view.file_name())
         
-        var abs_path = pathtools.join_norm(build.get_build_folder(), file);
-        var abs_path_temp = pathtools.join_norm(build.get_build_folder(), build.get_relative_path(os.path.join(temp_path, temp_file)));
+        var abs_path = PathTools.joinNorm(build.get_build_folder(), file);
+        var abs_path_temp = PathTools.joinNorm(build.get_build_folder(), build.get_relative_path(Path.join(temp_path, temp_file)));
 
 
         if (abs_path == temp_file)
         {
             if (min > expr_end)
             {
-                min -= len(insert_after);
-                min -= len(insert_before);
+                min -= insert_after.length;
+                min -= insert_before.length;
             }
-            min -= len(using_insert);
+            min -= using_insert.length;
             // we have manually stored a temp file with only \n line endings
             // so we don't have to adjust the real file position and the sublime
             // text position
         }
         else 
         {
-            var f = codecs.open(abs_path, "r", "utf-8");
+            var f = Codecs.open(abs_path, "r", "utf-8");
             var real_source = f.read();
             f.close();
             // line endings could be \r\n, but sublime text has only \n after
@@ -212,7 +226,7 @@ class HaxeFindDeclarationCommand extends TextCommand
             var offset = 0;
             for (i in 0...min) 
             {
-                if (real_source[i] == "\r") 
+                if (real_source.charAt(i) == "\r") 
                 {
                     offset += 1;
                 }
@@ -275,7 +289,7 @@ private class Helper
         var build = project.get_build(view).copy();
         build.args.push(Tup2.create("-D", "no-inline"));
 
-        var r = hxtemp.create_temp_path_and_file(build, view.file_name(), new_src);
+        var r = Temp.create_temp_path_and_file(build, view.file_name(), new_src);
         var temp_path = r._1, temp_file = r._2;
 
         build.add_classpath(temp_path);
@@ -295,7 +309,7 @@ private class Helper
 
 class HaxeFindDeclarationListener extends EventListener
 {
-    public function on_activated(view:View) 
+    override public function on_activated(view:View) 
     {
         //global find_decl_pos, find_decl_file
         if (view != null && view.file_name() != null) 
@@ -304,7 +318,7 @@ class HaxeFindDeclarationListener extends EventListener
             {
                 view.sel().clear();
 
-                min = State.find_decl_pos;
+                var min = State.find_decl_pos;
 
                 view.sel().add(new Region(min));
                 // move to line is delayed, seems to work better
@@ -337,7 +351,9 @@ from haxe.plugin import plugin_base_dir
 
 from haxe.tools import viewtools
 from haxe.tools import pathtools
-from haxe.tools import hxsrctools
+from haxe.tools import 
+
+tools
 
 from haxe import panel
 

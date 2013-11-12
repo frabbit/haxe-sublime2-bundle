@@ -1,6 +1,7 @@
 
 package hxsublime.build;
 
+import hxsublime.completion.hx.Types.CompletionContext;
 import hxsublime.Config.Target;
 import hxsublime.project.Project;
 import hxsublime.tools.HxSrcTools.HaxeType;
@@ -26,6 +27,14 @@ typedef Build = {
 	public function is_type_available(t:HaxeType):Bool;
 	public function is_pack_available(p:String):Bool;
 	public function get_types():HaxeTypeBundle;
+	public function get_build_folder():String;
+	public function set_auto_completion(display:String, ?macro_completion:Bool, ?no_output:Bool):Void;
+	public function set_times():Void;
+	public function run(project:Project, view:View, async:Bool, onResult:String->String->Void, ?serverMode:Null<Bool>):Void;
 	public var std_bundle:HaxeTypeBundle;
 	public var target:String;
+	public var classpaths:Array<String>;
+	public var args:Array<Tup2<String, String>>;
+	public function add_arg(a:Tup2<String, String>):Void;
+	//public var ctx:CompletionContext;
 }

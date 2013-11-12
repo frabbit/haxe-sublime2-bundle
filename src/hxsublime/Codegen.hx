@@ -1,27 +1,38 @@
 package hxsublime;
 
+import hxsublime.panel.Base.Panels;
+import hxsublime.panel.Panel;
+import python.lib.Builtin;
+import python.lib.Re;
 import python.lib.Re.Regex;
+import python.lib.Types.Tup3;
 import sublime.Edit;
+import sublime.Region;
+import sublime.Sublime;
 import sublime.View;
 
+import hxsublime.tools.HxSrcTools.Regex in HxRegex;
+
+using python.lib.StringTools;
 
 class HaxeImportGenerator {
 	public static function generate_using (view:View, edit:Edit) {
-		var p = HaxeImportGenerator(hxpanel.default_panel(), view);
-		return p.generate_statement(edit, "using", hxsrctools.using_line);
+		var p = new HaxeImportGenerator(Panels.default_panel(), view);
+		return p.generate_statement(edit, "using", HxRegex.using_line);
 	}
 
 	public static function generate_import (view:View, edit:Edit) {
-		var p = HaxeImportGenerator(hxpanel.default_panel(), view);
-		return p.generate_statement(edit, "import", hxsrctools.import_line);
+		var p = new HaxeImportGenerator(Panels.default_panel(), view);
+		return p.generate_statement(edit, "import", HxRegex.import_line);
 	}
 
-	var panel;
-	var start;
-	var size;
-	var cname:Array<String>;
+	var panel:Panel;
+	var start:Int;
+	var size:Int;
+	var cname:Tup3<String, String, String>;
+	public var view : View;
 
-	public function new (panel, view){
+	public function new (panel, view:View){
 		trace( "construct");
 		this.view = view;
 		trace(Std.string(this.view));
@@ -32,26 +43,26 @@ class HaxeImportGenerator {
 	}
 		
 	public function _get_end( src:String, offset:Int ) {
-		var end = len(src);
+		var end = src.length;
 		while (offset < end) {
 			var c = src.charAt(offset);
 			offset += 1;
-			if (!hxsrctools.word_chars.match(c)) break;
+			if (HxRegex.word_chars.match(c) == null) break;
 		}
 		return offset - 1;
 	}
 
-	public function _get_start( src, offset ) {
+	public function _get_start( src:String, offset:Int ) {
 		var found_word = 0;
 		offset -= 1;
 		while (offset > 0) {
 			var c = src.charAt(offset);
 			offset -= 1;
 			if (found_word == 0) {
-				if (hxsrctools.space_chars.match(c)) continue;
+				if (HxRegex.space_chars.match(c) != null) continue;
 				found_word = 1;
 			}
-			if (!hxsrctools.word_chars.match(c)) break;
+			if (HxRegex.word_chars.match(c) == null) break;
 		}
 
 		return offset + 2;
@@ -67,7 +78,7 @@ class HaxeImportGenerator {
 	public function _get_classname( view:View, src:String ) 
 	{
 		var loc = view.sel()[0];
-		var end = max(loc.a, loc.b);
+		var end = Builtin.max(loc.a, loc.b);
 		this.size = loc.size();
 		if (this.size == 0) {
 			end = this._get_end(src, end);
@@ -78,11 +89,11 @@ class HaxeImportGenerator {
 			this.start = end - this.size;
 		}
 
-		this.cname = view.substr(sublime.Region(this.start, end)).rpartition(".");
+		this.cname = view.substr( new Region(this.start, end)).rpartition(".");
 
-		while (!this.cname[0] == "" && this._is_membername(this.cname[2])) {
-			this.size -= 1 + this.cname[2].length;
-			this.cname = this.cname[0].rpartition(".");
+		while (!(this.cname._1 == "") && this._is_membername(this.cname._3)) {
+			this.size -= 1 + this.cname._3.length;
+			this.cname = this.cname._1.rpartition(".");
 		}
 
 		return this.cname;
@@ -90,27 +101,27 @@ class HaxeImportGenerator {
 
 	public function _compact_classname( edit:Edit, view:View ) 
 	{
-		view.replace(edit, sublime.Region(this.start, this.start+this.size), this.cname[2]);
+		view.replace(edit, new Region(this.start, this.start+this.size), this.cname._3);
 		view.sel().clear();
-		loc = this.start + len(this.cname[2]);
-		view.sel().add(sublime.Region(loc, loc));
+		var loc = this.start + this.cname._3.length;
+		view.sel().add( new Region(loc, loc));
 	}
 
 	public function _get_indent( src:String, index:Int ):Int {
 	
-		if (src[index] == "\n") return index + 1;
+		if (src.charAt(index) == "\n") return index + 1;
 		return index;
 	}
 
-	public function _insert_statement( edit, view, src, statement, regex) 
+	public function _insert_statement( edit, view, src, statement, regex:Regex) 
 	{
-		var cname = "".join(this.cname);
-		var clow = cname.lower();
+		var cname = this.cname._1 + this.cname._2 + this.cname._3;
+		var clow = cname.toLowerCase();
 		var last = null;
 
 		for (imp in regex.finditer(src)) {
-			if (clow < imp.group(2).lower()) {
-				ins = "{0}{1} {2};\n".format(imp.group(1), statement, cname);
+			if (clow < imp.group(2).toLowerCase()) {
+				var ins = "{0}{1} {2};\n".format([imp.group(1), statement, cname]);
 				view.insert(edit, this._get_indent(src, imp.start(0)), ins);
 				return;
 			}
@@ -118,17 +129,17 @@ class HaxeImportGenerator {
 		}
 
 		if (last != null) {
-			ins = ";\n{0}{1} {2}".format(last.group(1), statement, cname);
+			var ins = ";\n{0}{1} {2}".format([last.group(1), statement, cname]);
 			view.insert(edit, last.end(2), ins);
 		}
 		else {
-			var pkg = hxsrctools.package_line.search(src);
+			var pkg = HxRegex.package_line.search(src);
 			if (pkg != null) {
-				ins = "\n\n{0} {1};".format(statement, cname);
+				var ins = "\n\n{0} {1};".format([statement, cname]);
 				view.insert(edit, pkg.end(0), ins);
 			}
 			else {
-				ins = "{0} {1};\n\n".format(statement, cname);
+				var ins = "{0} {1};\n\n".format([statement, cname]);
 				view.insert(edit, 0, ins);
 			}
 		}
@@ -138,20 +149,21 @@ class HaxeImportGenerator {
 	public function generate_statement( edit:Edit, statement:String, regex:Regex ) 
 	{
 		var view = this.view;
-		var src = view.substr(sublime.Region(0, view.size()));
+		var src = view.substr( new Region(0, view.size()));
 		var cname = this._get_classname(view, src);
 		
-		if (cname[1] == "" && statement == "import") {
-			sublime.status_message("Nothing to " + statement);
+		if (cname._2 == "" && statement == "import") {
+			Sublime.status_message("Nothing to " + statement);
 			this.panel.writeln("Nothing to " + statement);
 			return;
 		}
 
 		this._compact_classname(edit, view);
 
-		if (re.search((statement + "\\s+{0};").format("".join(cname)), src)) {
-			info = if (statement == "import") "imported" else "used";
-			sublime.status_message("Already " + info);
+		var fcname = cname._1 + cname._2 + cname._3;
+		if (Re.search((statement + "\\s+${fcname};"), src) != null) {
+			var info = if (statement == "import") "imported" else "used";
+			Sublime.status_message("Already " + info);
 			this.panel.writeln("Already " + info);
 			return;
 		}

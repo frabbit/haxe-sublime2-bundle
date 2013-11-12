@@ -1,5 +1,7 @@
 package hxsublime.completion.hx;
 
+import hxsublime.build.Build;
+import hxsublime.compiler.Output;
 import hxsublime.completion.hx.Constants;
 import hxsublime.completion.hx.Toplevel.TopLevel;
 import hxsublime.completion.hx.Types.CompletionBuild;
@@ -7,6 +9,7 @@ import hxsublime.completion.hx.Types.CompletionContext;
 import hxsublime.completion.hx.Types.CompletionOptions;
 import hxsublime.completion.hx.Types.CompletionResult;
 import hxsublime.completion.hx.Types.CompletionSettings;
+import hxsublime.panel.Base.Panels;
 import hxsublime.project.Base.Projects;
 import hxsublime.project.CompletionState.CompletionCache;
 import hxsublime.project.Project;
@@ -14,7 +17,9 @@ import hxsublime.Settings;
 import hxsublime.Temp;
 import hxsublime.tools.ViewTools;
 import python.lib.Re;
+import python.lib.Time;
 import python.lib.Types.Tup2;
+import sublime.Region;
 import sublime.Sublime;
 import sublime.View;
 
@@ -195,10 +200,10 @@ class Base {
                 }
                 else {
 
-                    comp_result = CompletionResult.empty_result(ctx, function () get_toplevel_completions(ctx));
+                    var comp_result = CompletionResult.empty_result(ctx, function () return get_toplevel_completions(ctx));
                     update_completion_cache(cache, comp_result);
                     project.completion_context.add_completion_result(comp_result);
-                    res = cancel_completion(view);
+                    var res = cancel_completion(view);
                     trigger_async_completion(view, ctx.options, comp_result.show_top_level_snippets());
                     //res = combine_hints_and_comps(comp_result)
                 }
@@ -208,9 +213,9 @@ class Base {
     }
 
     public static function create_completion_build (ctx:CompletionContext) {
-        var tmp_src = ctx.temp_completion_src;
+        var tmp_src = ctx.temp_completion_src();
 
-        var r = Temp.create_temp_path_and_file(ctx.build(), ctx.orig_file, tmp_src);
+        var r = Temp.create_temp_path_and_file(ctx.build(), ctx.orig_file(), tmp_src);
         var temp_path = r._1, temp_file = r._2;
 
         var temp_creation_success = temp_path != null && temp_file != null;
@@ -219,8 +224,8 @@ class Base {
        {
             var comp_build = new CompletionBuild(ctx, temp_path, temp_file);
             var build =comp_build.build;
-            var display = comp_build.display;
-            var macro_completion = ctx.options.macro_completion;
+            var display = comp_build.display();
+            var macro_completion = ctx.options.macro_completion();
             // prepare build options
             build.set_auto_completion(display, macro_completion);
             if (ctx.settings.show_completion_times(comp_build.ctx.view)) 
@@ -235,22 +240,22 @@ class Base {
     }
 
 
-    public static function run_compiler_completion(comp_build, callback) {
+    public static function run_compiler_completion(comp_build:CompletionBuild, callback) {
         
-        start_time = time.time();
-        ctx = comp_build.ctx;
-        project = ctx.project;
-        build = comp_build.build;
-        view = ctx.view;
+        var start_time = Time.time();
+        var ctx = comp_build.ctx;
+        var project = ctx.project;
+        var build = comp_build.build;
+        var view = ctx.view;
 
-        async = ctx.settings.is_async_completion;
+        var async = ctx.settings.is_async_completion();
 
         function in_main (out, err) {
             
             function run () {
-                run_time = time.time() - start_time;
+                var run_time = Time.time() - start_time;
                 trace("completion time: " + Std.string(run_time));
-                hxtemp.remove_path(comp_build.temp_path);
+                Temp.remove_path(comp_build.temp_path);
                 callback(out, err);
             }
                 
@@ -260,7 +265,7 @@ class Base {
             project.completion_context.run_if_still_up_to_date(ctx.id, run);
         }   
         function on_result(out, err) {
-            sublime.set_timeout(function () in_main(out, err), 2);
+            Sublime.set_timeout(function () in_main(out, err), 2);
         }
 
         // store the data of the currently running completion operation in cache to fetch it later
@@ -269,25 +274,25 @@ class Base {
         build.run(project, view, async, on_result);
     }
 
-    public static function completion_finished(ctx:CompletionContext, comp_build, out, err) {
+    public static function completion_finished(ctx:CompletionContext, comp_build:CompletionBuild, out:String, err:String) {
         
-        ctx = comp_build.ctx;
-        temp_file = comp_build.temp_file;
+        var ctx = comp_build.ctx;
+        var temp_file = comp_build.temp_file;
         
-        cache = comp_build.cache;
+        var cache = comp_build.cache;
 
-        project = ctx.project;
-        view = ctx.view;
+        var project = ctx.project;
+        var view = ctx.view;
         
 
-        comp_result = output_to_result(ctx, temp_file, err, out, function () get_toplevel_completions(ctx));
+        var comp_result = output_to_result(ctx, temp_file, err, out, function () return get_toplevel_completions(ctx));
 
-        has_results = comp_result.has_results();
+        var has_results = comp_result.has_results();
         
         if (has_results) {
             update_completion_cache(cache, comp_result);
             project.completion_context.add_completion_result(comp_result);
-            show_top_level_snippets = comp_result.show_top_level_snippets();
+            var show_top_level_snippets = comp_result.show_top_level_snippets();
             trigger_async_completion(view, ctx.options, show_top_level_snippets);
         }
         else {
@@ -468,21 +473,21 @@ class Base {
                 trace(status);
             }
             else {
-                hxpanel.default_panel().writeln( status );
+                Panels.default_panel().writeln( status );
             }
         }
     }
 
 
     public static function output_to_result (ctx:CompletionContext, temp_file, err, ret, retrieve_tl_comps) {
-        var r = get_completion_output(temp_file, ctx.orig_file, err, ctx.commas);
+        var r = Output.get_completion_output(temp_file, ctx.orig_file(), err, ctx.commas());
         var hints = r._1, comps1 = r._2, status = r._3, errors = r._4;
         // we don't need doc here
-        comps1 = [for (t in comps1) Tup2.create(t.hint, t.insert)];
+        var comps2 = [for (t in comps1) Tup2.create(t.hint, t.insert)];
         ctx.project.completion_context.set_errors(errors);
         highlight_errors( errors, ctx.view );
         // top level completions are empty until they are really required
-        return new CompletionResult(ret, comps1, status, hints, ctx, retrieve_tl_comps );
+        return new CompletionResult(ret, comps2, status, hints, ctx, retrieve_tl_comps );
     }
 
     public static function use_completion_cache (last_input:CompletionContext, current_input:CompletionContext) 
@@ -496,18 +501,18 @@ class Base {
 
 
 
-    public static function highlight_errors( errors , view:View ):Void  {
-        regions = [];
+    public static function highlight_errors( errors:Array<CompilerError> , view:View ):Void  {
+        var regions = [];
         
         for (e in errors) {
-            l = e["line"];
-            left = e["from"];
-            right = e["to"];
-            a = view.text_point(l,left);
-            b = view.text_point(l,right);
-            regions.append( sublime.Region(a,b));
+            var l = e.line;
+            var left = e.from;
+            var right = e.to;
+            var a = view.text_point(l,left);
+            var b = view.text_point(l,right);
+            regions.append( new Region(a,b));
             
-            hxpanel.default_panel().status( "Error" , e["file"] + ":" + Std.string(l) + ": characters " + Std.string(left) + "-" + Std.string(right) + ": " + e["message"]);
+            Panels.default_panel().status( "Error" , e.file + ":" + Std.string(l) + ": characters " + Std.string(left) + "-" + Std.string(right) + ": " + e.message);
         }
                 
         view.add_regions("haxe-error" , regions , "invalid" , "dot" );

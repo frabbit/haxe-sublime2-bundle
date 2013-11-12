@@ -3,7 +3,7 @@ package sublime;
 
 extern class Region {
 	//	Creates a Region with initial values a and b.
-	public function new (a:Int, b:Int):Void;
+	public function new (a:Int, ?b:Int):Void;
 
 	
 	// 	int	The first end of the region.

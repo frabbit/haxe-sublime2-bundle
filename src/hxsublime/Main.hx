@@ -39,15 +39,15 @@ import hxsublime.commands.GotoBuildTypes;
 using Lambda;
 
 
+
 class Main {
 
-
+	//static var x = ["a" => "b"];
 
 
 	public static function main () {
-
-
 		
+
 	}
 
 }

@@ -183,7 +183,7 @@ class TopLevel {
 
         function filter_privates(t:HaxeType) 
         {
-            return !t.is_private || t.file == ctx.orig_file();
+            return !t.is_private || t.file() == ctx.orig_file();
         }
 
         var merged_bundle = std_bundle.merge(build_bundle).filter(filter_privates);

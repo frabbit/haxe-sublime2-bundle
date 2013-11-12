@@ -17,7 +17,7 @@ class Cache<K, T>
 	var cache_time : Int;
 	public var data : IMap<K, CacheEntry<T>>;
 
-	public function new (cache_time = -1, data:IMap<K, CacheEntry<T>> ) 
+	public function new (cache_time = -1, data:IMap<K, CacheEntry<T>> = null ) 
 	{
 		this.data = data;
 		this.cache_time = cache_time;

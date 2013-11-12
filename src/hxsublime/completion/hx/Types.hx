@@ -21,7 +21,7 @@ using python.lib.StringTools;
 
 class CompletionResult {
     
-    public static function empty_result (ctx, retrieve_toplevel_comps = null) {
+    public static function empty_result (ctx:CompletionContext, retrieve_toplevel_comps = null) {
         return new CompletionResult("", [], "", [], ctx, retrieve_toplevel_comps);
     }
 
@@ -493,7 +493,8 @@ class CompletionContext {
 
 
     @lazyprop
-    public function prefix_is_whitespace() {
+    public function prefix_is_whitespace() 
+    {
         return hxsublime.tools.StringTools.isWhitespaceOrEmpty(prefix);
     }
 

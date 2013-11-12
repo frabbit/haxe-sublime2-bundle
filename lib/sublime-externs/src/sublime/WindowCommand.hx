@@ -2,8 +2,11 @@
 package sublime;
 
 import python.lib.Types;
+import sublime.Window;
 
 extern class WindowCommand {
+
+	var window:Window;
 
 	static function __init__ ():Void 
 	{

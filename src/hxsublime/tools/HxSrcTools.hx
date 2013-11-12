@@ -766,7 +766,7 @@ class HaxeTypeBundle
 		var res = new StringMap();
 		for (k in _types.keys()) {
 			var t = _types.get(k);
-			res.set(t.full_pack_with_module(), new HaxeModule(t.pack, t.module, t.file));
+			res.set(t.full_pack_with_module(), new HaxeModule(t.pack, t.module, t.file()));
 		}
 			
 		return res;
@@ -845,7 +845,7 @@ class EnumConstructor
 	{
 		for (i in import_list) 
 		{
-			if (enumType.file == insert_file ||
+			if (enumType.file() == insert_file ||
 				i == enumType.full_qualified_name_with_optional_module() ||
 				i == enumType.full_pack_with_module() ||
 				i == enumType.full_qualified_name_with_optional_module() + "." + name) 
@@ -920,7 +920,7 @@ class HaxeField
 	@property
 	public function file () 
 	{
-		return type.file;
+		return type.file();
 	}
 
 	@lazyprop
@@ -945,7 +945,7 @@ class HaxeField
 class HaxeType 
 {
 
-	public var src:String;
+	public var _src:String;
 	public var src_with_comments:String;
 	public var match_decl:MatchObject;
 	public var is_private:Bool;
@@ -956,12 +956,15 @@ class HaxeType
 	public var is_module_type:Bool;
 	public var is_std_type:Bool;
 	public var is_extern:Bool;
-	public var file:String;
+	public var _file:String;
 	public var _enum_constructors:Array<String>;
+
+	public function src () return _src;
+	public function file () return _file;
 
 	public function new(pack, module, name, kind, is_private, is_module_type, is_std_type, is_extern, file, src, src_with_comments, match_decl) 
 	{
-		this.src = src; // src without comments
+		this._src = src; // src without comments
 		this.src_with_comments = src_with_comments;
 		this.match_decl = match_decl;
 		this.is_private = is_private;
@@ -972,7 +975,7 @@ class HaxeType
 		this.is_module_type = is_module_type;
 		this.is_std_type = is_std_type;
 		this.is_extern = is_extern;
-		this.file = file;
+		this._file = file;
 		this._enum_constructors = null;
 	}
 
@@ -993,7 +996,7 @@ class HaxeType
 		}
 		else 
 		{
-			res = this.src.substring(this.stripped_start_decl_pos(), this.stripped_end_decl_pos());
+			res = this.src().substring(this.stripped_start_decl_pos(), this.stripped_end_decl_pos());
 		}
 
 		return res;
@@ -1063,7 +1066,7 @@ class HaxeType
 	{
 		var start = match_decl.start(0);
 		if (is_abstract() || is_class()) {
-			return HxSrcTools.search_next_char_on_same_nesting_level(src, ["{"], start);
+			return HxSrcTools.search_next_char_on_same_nesting_level(src(), ["{"], start);
 		}
 		return null;
 	}
@@ -1077,7 +1080,7 @@ class HaxeType
 		if (class_body_start != null) 
 		{
 			trace("have class_body_start:" + Std.string(class_body_start._1));
-			var class_body_end = HxSrcTools.search_next_char_on_same_nesting_level(src, ["}"], class_body_start._1+1);
+			var class_body_end = HxSrcTools.search_next_char_on_same_nesting_level(src(), ["}"], class_body_start._1+1);
 			if (class_body_end != null) 
 			{
 				trace("have class_body_end:" + Std.string(class_body_end._1));
@@ -1139,7 +1142,7 @@ class HaxeType
 	{
 		for (i in import_list) 
 		{
-			if (file == insert_file ||
+			if (_file == insert_file ||
 				i == full_pack_with_module() ||
 				i == full_qualified_name_with_optional_module() || 
 				i == full_qualified_name()) 
@@ -1258,7 +1261,7 @@ class HaxeType
 		var path_append = [for (_ in pack_list()) ".."];
 
 		
-		var mod_dir = python.lib.os.Path.dirname(file);
+		var mod_dir = python.lib.os.Path.dirname(_file);
 		var fp = [mod_dir];
 		fp = fp.concat(path_append);
 
