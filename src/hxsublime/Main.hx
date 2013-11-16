@@ -50,25 +50,14 @@ import hxsublime.compiler.Output;
 using Lambda;
 
 
-class Hui {
-	public function new () {
-
-	}
-	public function foo () {
-		return 1;
-	}
-
-	public static function doIt () {}
-}
 
 
 class Main {
 
 	public static function main () {
 
-
-		
-		
 		
 	}
+
+
 }

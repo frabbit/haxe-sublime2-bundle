@@ -1414,13 +1414,7 @@ class haxe_ds_BalancedTree:
 		
 		c = self.compare(k, node.key)
 		if c == 0:
-			def _hx_local_1():
-				def _hx_local_0():
-					return 0 if node is None else node._height
-				return haxe_ds_BalancedTree_TreeNode(node.left, k, v, node.right, _hx_local_0())
-			
-			return _hx_local_1()
-		
+			return haxe_ds_BalancedTree_TreeNode(node.left, k, v, node.right, 0 if (node is None) else node._height)
 		elif c < 0:
 			nl = self.setLoop(k, v, node.left)
 			return self.balance(nl, node.key, node.value, node.right)
@@ -1501,61 +1495,35 @@ class haxe_ds_BalancedTree:
 		else:
 			hr = r._height
 		if hl > hr + 2:
-			def _hx_local_3():
+			def _hx_local_1():
 				_this = l.left
-				def _hx_local_5():
-					def _hx_local_4():
-						return 0 if _this is None else _this._height
-					return _hx_local_4()
-				
-				return _hx_local_5()
+				return 0 if (_this is None) else _this._height
 			
 			def _hx_local_0():
 				_this = l.right
-				def _hx_local_2():
-					def _hx_local_1():
-						return 0 if _this is None else _this._height
-					return _hx_local_1()
-				
-				return _hx_local_2()
+				return 0 if (_this is None) else _this._height
 			
-			if _hx_local_3() >= _hx_local_0():
+			if _hx_local_1() >= _hx_local_0():
 				return haxe_ds_BalancedTree_TreeNode(l.left, l.key, l.value, haxe_ds_BalancedTree_TreeNode(l.right, k, v, r))
 			else:
 				return haxe_ds_BalancedTree_TreeNode(haxe_ds_BalancedTree_TreeNode(l.left, l.key, l.value, l.right.left), l.right.key, l.right.value, haxe_ds_BalancedTree_TreeNode(l.right.right, k, v, r))
 		
 		elif hr > hl + 2:
-			def _hx_local_9():
+			def _hx_local_3():
 				_this = r.right
-				def _hx_local_11():
-					def _hx_local_10():
-						return 0 if _this is None else _this._height
-					return _hx_local_10()
-				
-				return _hx_local_11()
+				return 0 if (_this is None) else _this._height
 			
-			def _hx_local_6():
+			def _hx_local_2():
 				_this = r.left
-				def _hx_local_8():
-					def _hx_local_7():
-						return 0 if _this is None else _this._height
-					return _hx_local_7()
-				
-				return _hx_local_8()
+				return 0 if (_this is None) else _this._height
 			
-			if _hx_local_9() > _hx_local_6():
+			if _hx_local_3() > _hx_local_2():
 				return haxe_ds_BalancedTree_TreeNode(haxe_ds_BalancedTree_TreeNode(l, k, v, r.left), r.key, r.value, r.right)
 			else:
 				return haxe_ds_BalancedTree_TreeNode(haxe_ds_BalancedTree_TreeNode(l, k, v, r.left.left), r.left.key, r.left.value, haxe_ds_BalancedTree_TreeNode(r.left.right, r.key, r.value, r.right))
 		
 		else:
-			def _hx_local_13():
-				def _hx_local_12():
-					return hl if hl > hr else hr
-				return haxe_ds_BalancedTree_TreeNode(l, k, v, r, (_hx_local_12()) + 1)
-			
-			return _hx_local_13()
-		
+			return haxe_ds_BalancedTree_TreeNode(l, k, v, r, (hl if (hl > hr) else hr) + 1)
 	
 
 	def compare(self,k1,k2):
@@ -1592,46 +1560,26 @@ class haxe_ds_BalancedTree_TreeNode:
 		self.value = v
 		self.right = r
 		if h == -1:
-			def _hx_local_12():
-				def _hx_local_3():
+			def _hx_local_4():
+				def _hx_local_1():
 					_this = self.left
-					def _hx_local_5():
-						def _hx_local_4():
-							return 0 if _this is None else _this._height
-						return _hx_local_4()
-					
-					return _hx_local_5()
+					return 0 if (_this is None) else _this._height
 				
 				def _hx_local_0():
 					_this = self.right
-					def _hx_local_2():
-						def _hx_local_1():
-							return 0 if _this is None else _this._height
-						return _hx_local_1()
-					
-					return _hx_local_2()
+					return 0 if (_this is None) else _this._height
 				
-				def _hx_local_6():
+				def _hx_local_2():
 					_this = self.left
-					def _hx_local_8():
-						def _hx_local_7():
-							return 0 if _this is None else _this._height
-						return _hx_local_7()
-					
-					return _hx_local_8()
+					return 0 if (_this is None) else _this._height
 				
-				def _hx_local_9():
+				def _hx_local_3():
 					_this = self.right
-					def _hx_local_11():
-						def _hx_local_10():
-							return 0 if _this is None else _this._height
-						return _hx_local_10()
-					
-					return _hx_local_11()
+					return 0 if (_this is None) else _this._height
 				
-				return _hx_local_6() if _hx_local_3() > _hx_local_0() else _hx_local_9()
+				return _hx_local_2() if _hx_local_1() > _hx_local_0() else _hx_local_3()
 			
-			self._height = (_hx_local_12()) + 1
+			self._height = (_hx_local_4()) + 1
 		
 		else:
 			self._height = h
@@ -1642,15 +1590,7 @@ class haxe_ds_BalancedTree_TreeNode:
 	# var value
 	# var _height
 	def toString(self):
-		def _hx_local_2():
-			def _hx_local_1():
-				return "" if self.left is None else self.left.toString() + ", "
-			def _hx_local_0():
-				return "" if self.right is None else ", " + self.right.toString()
-			return (_hx_local_1()) + ("" + Std.string(self.key) + "=" + Std.string(self.value)) + (_hx_local_0())
-		
-		return _hx_local_2()
-	
+		return ("" if (self.left is None) else self.left.toString() + ", ") + ("" + Std.string(self.key) + "=" + Std.string(self.value)) + ("" if (self.right is None) else ", " + self.right.toString())
 
 
 
@@ -3378,33 +3318,6 @@ hxsublime_Log._hx_props = []
 hxsublime_Log._hx_methods = []
 hxsublime_Log._hx_statics = ["debug","log"]
 hxsublime_Log._hx_interfaces = []
-
-# print hxsublime.Main.Hui
-class hxsublime_Main_Hui:
-
-
-	def __init__(self):
-		None
-	def foo(self):
-		return 1
-
-
-
-
-
-def Hui_statics_doIt():
-	None
-hxsublime_Main_Hui.doIt = Hui_statics_doIt
-
-
-hxsublime_Main_Hui._hx_class = hxsublime_Main_Hui
-hxsublime_Main_Hui._hx_class_name = "hxsublime.Hui"
-_hx_classes['hxsublime.Hui'] = hxsublime_Main_Hui
-hxsublime_Main_Hui._hx_fields = []
-hxsublime_Main_Hui._hx_props = []
-hxsublime_Main_Hui._hx_methods = ["foo"]
-hxsublime_Main_Hui._hx_statics = ["doIt"]
-hxsublime_Main_Hui._hx_interfaces = []
 
 # print hxsublime.Main.Main
 class hxsublime_Main:
@@ -12036,13 +11949,7 @@ class hxsublime_tools_HxSrcTools_HaxeField:
 	
 
 	def toString(self):
-		def _hx_local_1():
-			def _hx_local_0():
-				return "::" if self.is_static or self.name == "new" else "."
-			return self.type.full_qualified_name_with_optional_module() + (_hx_local_0()) + self.name
-		
-		return _hx_local_1()
-	
+		return self.type.full_qualified_name_with_optional_module() + ("::" if (self.is_static or self.name == "new") else ".") + self.name
 
 	def to_expression(self):
 		return self.type.full_qualified_name_with_optional_module() + "." + self.name
