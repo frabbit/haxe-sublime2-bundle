@@ -898,20 +898,14 @@ def StringTools_statics_htmlUnescape(s):
 	
 StringTools.htmlUnescape = StringTools_statics_htmlUnescape
 def StringTools_statics_startsWith(s,start):
-	def _hx_local_3():
-		def _hx_local_2():
-			def _hx_local_1():
-				def _hx_local_0():
-					len = __builtin__.len(start)
-					return python_Tools.substr(s, 0, len)
-				
-				return _hx_local_0() == start
-			
-			return __builtin__.len(s) >= __builtin__.len(start) and _hx_local_1()
+	def _hx_local_1():
+		def _hx_local_0():
+			len = __builtin__.len(start)
+			return python_Tools.substr(s, 0, len)
 		
-		return _hx_local_2()
+		return __builtin__.len(s) >= __builtin__.len(start) and _hx_local_0() == start
 	
-	return _hx_local_3()
+	return _hx_local_1()
 	
 StringTools.startsWith = StringTools_statics_startsWith
 def StringTools_statics_endsWith(s,end):
@@ -1507,69 +1501,60 @@ class haxe_ds_BalancedTree:
 		else:
 			hr = r._height
 		if hl > hr + 2:
-			def _hx_local_6():
-				def _hx_local_3():
-					_this = l.left
-					def _hx_local_5():
-						def _hx_local_4():
-							return 0 if _this is None else _this._height
-						return _hx_local_4()
-					
-					return _hx_local_5()
+			def _hx_local_3():
+				_this = l.left
+				def _hx_local_5():
+					def _hx_local_4():
+						return 0 if _this is None else _this._height
+					return _hx_local_4()
 				
-				def _hx_local_0():
-					_this = l.right
-					def _hx_local_2():
-						def _hx_local_1():
-							return 0 if _this is None else _this._height
-						return _hx_local_1()
-					
-					return _hx_local_2()
-				
-				return _hx_local_3() >= _hx_local_0()
+				return _hx_local_5()
 			
-			if _hx_local_6():
+			def _hx_local_0():
+				_this = l.right
+				def _hx_local_2():
+					def _hx_local_1():
+						return 0 if _this is None else _this._height
+					return _hx_local_1()
+				
+				return _hx_local_2()
+			
+			if _hx_local_3() >= _hx_local_0():
 				return haxe_ds_BalancedTree_TreeNode(l.left, l.key, l.value, haxe_ds_BalancedTree_TreeNode(l.right, k, v, r))
 			else:
 				return haxe_ds_BalancedTree_TreeNode(haxe_ds_BalancedTree_TreeNode(l.left, l.key, l.value, l.right.left), l.right.key, l.right.value, haxe_ds_BalancedTree_TreeNode(l.right.right, k, v, r))
 		
 		elif hr > hl + 2:
-			def _hx_local_13():
-				def _hx_local_10():
-					_this = r.right
-					def _hx_local_12():
-						def _hx_local_11():
-							return 0 if _this is None else _this._height
-						return _hx_local_11()
-					
-					return _hx_local_12()
+			def _hx_local_9():
+				_this = r.right
+				def _hx_local_11():
+					def _hx_local_10():
+						return 0 if _this is None else _this._height
+					return _hx_local_10()
 				
-				def _hx_local_7():
-					_this = r.left
-					def _hx_local_9():
-						def _hx_local_8():
-							return 0 if _this is None else _this._height
-						return _hx_local_8()
-					
-					return _hx_local_9()
-				
-				return _hx_local_10() > _hx_local_7()
+				return _hx_local_11()
 			
-			if _hx_local_13():
+			def _hx_local_6():
+				_this = r.left
+				def _hx_local_8():
+					def _hx_local_7():
+						return 0 if _this is None else _this._height
+					return _hx_local_7()
+				
+				return _hx_local_8()
+			
+			if _hx_local_9() > _hx_local_6():
 				return haxe_ds_BalancedTree_TreeNode(haxe_ds_BalancedTree_TreeNode(l, k, v, r.left), r.key, r.value, r.right)
 			else:
 				return haxe_ds_BalancedTree_TreeNode(haxe_ds_BalancedTree_TreeNode(l, k, v, r.left.left), r.left.key, r.left.value, haxe_ds_BalancedTree_TreeNode(r.left.right, r.key, r.value, r.right))
 		
 		else:
-			def _hx_local_16():
-				def _hx_local_15():
-					def _hx_local_14():
-						return hl if hl > hr else hr
-					return (_hx_local_14()) + 1
-				
-				return haxe_ds_BalancedTree_TreeNode(l, k, v, r, _hx_local_15())
+			def _hx_local_13():
+				def _hx_local_12():
+					return hl if hl > hr else hr
+				return haxe_ds_BalancedTree_TreeNode(l, k, v, r, (_hx_local_12()) + 1)
 			
-			return _hx_local_16()
+			return _hx_local_13()
 		
 	
 
@@ -1607,52 +1592,46 @@ class haxe_ds_BalancedTree_TreeNode:
 		self.value = v
 		self.right = r
 		if h == -1:
-			def _hx_local_14():
-				def _hx_local_13():
-					def _hx_local_6():
-						def _hx_local_3():
-							_this = self.left
-							def _hx_local_5():
-								def _hx_local_4():
-									return 0 if _this is None else _this._height
-								return _hx_local_4()
-							
-							return _hx_local_5()
-						
-						def _hx_local_0():
-							_this = self.right
-							def _hx_local_2():
-								def _hx_local_1():
-									return 0 if _this is None else _this._height
-								return _hx_local_1()
-							
-							return _hx_local_2()
-						
-						return _hx_local_3() > _hx_local_0()
+			def _hx_local_12():
+				def _hx_local_3():
+					_this = self.left
+					def _hx_local_5():
+						def _hx_local_4():
+							return 0 if _this is None else _this._height
+						return _hx_local_4()
 					
-					def _hx_local_7():
-						_this = self.left
-						def _hx_local_9():
-							def _hx_local_8():
-								return 0 if _this is None else _this._height
-							return _hx_local_8()
-						
-						return _hx_local_9()
-					
-					def _hx_local_10():
-						_this = self.right
-						def _hx_local_12():
-							def _hx_local_11():
-								return 0 if _this is None else _this._height
-							return _hx_local_11()
-						
-						return _hx_local_12()
-					
-					return _hx_local_7() if _hx_local_6() else _hx_local_10()
+					return _hx_local_5()
 				
-				return (_hx_local_13()) + 1
+				def _hx_local_0():
+					_this = self.right
+					def _hx_local_2():
+						def _hx_local_1():
+							return 0 if _this is None else _this._height
+						return _hx_local_1()
+					
+					return _hx_local_2()
+				
+				def _hx_local_6():
+					_this = self.left
+					def _hx_local_8():
+						def _hx_local_7():
+							return 0 if _this is None else _this._height
+						return _hx_local_7()
+					
+					return _hx_local_8()
+				
+				def _hx_local_9():
+					_this = self.right
+					def _hx_local_11():
+						def _hx_local_10():
+							return 0 if _this is None else _this._height
+						return _hx_local_10()
+					
+					return _hx_local_11()
+				
+				return _hx_local_6() if _hx_local_3() > _hx_local_0() else _hx_local_9()
 			
-			self._height = _hx_local_14()
+			self._height = (_hx_local_12()) + 1
 		
 		else:
 			self._height = h
@@ -1663,20 +1642,14 @@ class haxe_ds_BalancedTree_TreeNode:
 	# var value
 	# var _height
 	def toString(self):
-		def _hx_local_4():
-			def _hx_local_3():
-				def _hx_local_2():
-					def _hx_local_1():
-						return "" if self.left is None else self.left.toString() + ", "
-					return (_hx_local_1()) + ("" + Std.string(self.key) + "=" + Std.string(self.value))
-				
-				def _hx_local_0():
-					return "" if self.right is None else ", " + self.right.toString()
-				return _hx_local_2() + (_hx_local_0())
-			
-			return _hx_local_3()
+		def _hx_local_2():
+			def _hx_local_1():
+				return "" if self.left is None else self.left.toString() + ", "
+			def _hx_local_0():
+				return "" if self.right is None else ", " + self.right.toString()
+			return (_hx_local_1()) + ("" + Std.string(self.key) + "=" + Std.string(self.value)) + (_hx_local_0())
 		
-		return _hx_local_4()
+		return _hx_local_2()
 	
 
 
@@ -2624,17 +2597,11 @@ class hxsublime_Codegen_HaxeImportGenerator:
 		self.cname = s.rpartition(".")
 		
 		while not (self.cname[0] == "") and self._is_membername(self.cname[2]):
-			def _hx_local_2():
-				def _hx_local_1():
-					def _hx_local_0():
-						_this = self.cname[2]
-						return __builtin__.len(_this)
-					
-					return 1 + _hx_local_0()
-				
-				return self.size - _hx_local_1()
+			def _hx_local_0():
+				_this = self.cname[2]
+				return __builtin__.len(_this)
 			
-			self.size = _hx_local_2()
+			self.size = self.size - 1 + _hx_local_0()
 			s = self.cname[0]
 			self.cname = s.rpartition(".")
 			
@@ -2646,14 +2613,11 @@ class hxsublime_Codegen_HaxeImportGenerator:
 		view.replace(edit, sublime_Region(self.start, self.start + self.size), self.cname[2])
 		view.sel().clear()
 		loc = None
-		def _hx_local_1():
-			def _hx_local_0():
-				_this = self.cname[2]
-				return __builtin__.len(_this)
-			
-			return self.start + _hx_local_0()
+		def _hx_local_0():
+			_this = self.cname[2]
+			return __builtin__.len(_this)
 		
-		loc = _hx_local_1()
+		loc = self.start + _hx_local_0()
 		view.sel().add(sublime_Region(loc, loc))
 	
 
@@ -2675,14 +2639,11 @@ class hxsublime_Codegen_HaxeImportGenerator:
 		_it = _hx_local_0()
 		while _it.hasNext():
 			imp = _it.next()
-			def _hx_local_2():
-				def _hx_local_1():
-					_this = imp.group(2)
-					return _this.lower()
-				
-				return clow < _hx_local_1()
+			def _hx_local_1():
+				_this = imp.group(2)
+				return _this.lower()
 			
-			if _hx_local_2():
+			if clow < _hx_local_1():
 				ins = python_lib_StringTools.format("{0}{1} {2};\n", [imp.group(1), statement, cname])
 				view.insert(edit, self._get_indent(src, imp.start(0)), ins)
 				return
@@ -4001,17 +3962,11 @@ def Types_statics_extract_types_from_file(file,module_name = None,include_privat
 		include_private_types = True
 	
 	mtime = python_lib_os_Path.getmtime(file)
-	def _hx_local_2():
-		def _hx_local_1():
-			def _hx_local_0():
-				_this = hxsublime_Types.file_type_cache.get(file)
-				return _this[0]
-			
-			return _hx_local_0() == mtime
-		
-		return hxsublime_Types.file_type_cache.exists(file) and _hx_local_1()
+	def _hx_local_0():
+		_this = hxsublime_Types.file_type_cache.get(file)
+		return _this[0]
 	
-	if _hx_local_2():
+	if hxsublime_Types.file_type_cache.exists(file) and _hx_local_0() == mtime:
 		_this = hxsublime_Types.file_type_cache.get(file)
 		return _this[1]
 	
@@ -4188,17 +4143,11 @@ class hxsublime_build_HxmlBuild:
 			reg = python_lib_Re.compile("^([a-z]):(.*)$")
 			match = python_lib_Re.match(reg, path)
 			if match is not None:
-				def _hx_local_2():
-					def _hx_local_1():
-						def _hx_local_0():
-							_this = match.group(1)
-							return _this.upper()
-						
-						return _hx_local_0() + ":"
-					
-					return _hx_local_1() + match.group(2)
+				def _hx_local_0():
+					_this = match.group(1)
+					return _this.upper()
 				
-				path = _hx_local_2()
+				path = _hx_local_0() + ":" + match.group(2)
 			
 			
 		
@@ -4547,14 +4496,11 @@ class hxsublime_build_HxmlBuild:
 			if sep_index == -1:
 				jar = self.absolute_output() + ".jar"
 			else:
-				def _hx_local_1():
-					def _hx_local_0():
-						_this = self.absolute_output()
-						return python_Tools.substr(_this, sep_index + 1, None)
-					
-					return _hx_local_0() + ".jar"
+				def _hx_local_0():
+					_this = self.absolute_output()
+					return python_Tools.substr(_this, sep_index + 1, None)
 				
-				jar = _hx_local_1()
+				jar = _hx_local_0() + ".jar"
 			
 			x = ["-cmd", "java -jar " + python_lib_os_Path.join(self.absolute_output(), jar)]
 			cmd.extend(x)
@@ -6302,14 +6248,11 @@ class hxsublime_commands_Execute_HaxeExecCommand(sublime_WindowCommand):
 					else:
 						a1 = a1
 					if StringTools.endsWith(a1, "\\\""):
-						def _hx_local_2():
-							def _hx_local_1():
-								endIndex = __builtin__.len(a1) - 2
-								return python_Tools.substring(a1, 0, endIndex)
-							
-							return _hx_local_1() + "\""
+						def _hx_local_1():
+							endIndex = __builtin__.len(a1) - 2
+							return python_Tools.substring(a1, 0, endIndex)
 						
-						a1 = _hx_local_2()
+						a1 = _hx_local_1() + "\""
 					
 					else:
 						a1 = a1
@@ -6318,23 +6261,20 @@ class hxsublime_commands_Execute_HaxeExecCommand(sublime_WindowCommand):
 				return a1
 			
 			escape_arg = _hx_local_0
-			def _hx_local_4():
-				def _hx_local_3():
-					_this = __builtin__.list(__builtin__.map(escape_arg, cmd))
-					return " ".join(_this)
-				
-				return "Running Command : " + _hx_local_3()
+			def _hx_local_2():
+				_this = __builtin__.list(__builtin__.map(escape_arg, cmd))
+				return " ".join(_this)
 			
-			haxe_Log.trace(_hx_local_4(), _Hx_AnonObject(fileName = "Execute.hx" ,lineNumber = 135 ,className = "hxsublime.commands.HaxeExecCommand" ,methodName = "run" ))
+			haxe_Log.trace("Running Command : " + _hx_local_2(), _Hx_AnonObject(fileName = "Execute.hx" ,lineNumber = 135 ,className = "hxsublime.commands.HaxeExecCommand" ,methodName = "run" ))
 			sublime_Sublime.status_message("Building")
 		
 		
 		show_panel_on_build = sublime_Sublime.load_settings("Preferences.sublime-settings").get("show_panel_on_build", True)
 		if show_panel_on_build:
-			def _hx_local_5():
+			def _hx_local_3():
 				x = _Hx_AnonObject(panel = "output.exec" )
-				def _hx_local_7():
-					def _hx_local_6():
+				def _hx_local_5():
+					def _hx_local_4():
 						d = python_lib_Types_Dict()
 						_g = 0
 						_g1 = Reflect.fields(x)
@@ -6360,11 +6300,11 @@ class hxsublime_commands_Execute_HaxeExecCommand(sublime_WindowCommand):
 						
 						return d
 					
-					return _hx_local_6()
+					return _hx_local_4()
 				
-				return _hx_local_7()
+				return _hx_local_5()
 			
-			self.window.run_command("show_panel", _hx_local_5())
+			self.window.run_command("show_panel", _hx_local_3())
 		
 		
 		merged_env = env.copy()
@@ -6404,17 +6344,11 @@ class hxsublime_commands_Execute_HaxeExecCommand(sublime_WindowCommand):
 				python_lib_Types_DictImpl.remove(d, "cmd")
 			
 			self.proc = sublime_def_exec_AsyncProcess(cmd, None, merged_env, self, **kwArgs)
-			def _hx_local_10():
-				def _hx_local_9():
-					def _hx_local_8():
-						_this = hxsublime_commands_Execute_Helper.escape_cmd(cmd)
-						return " ".join(_this)
-					
-					return "Running Command: " + _hx_local_8()
-				
-				return _hx_local_9() + "\n"
+			def _hx_local_6():
+				_this = hxsublime_commands_Execute_Helper.escape_cmd(cmd)
+				return " ".join(_this)
 			
-			self.append_data(self.proc, python_lib_StringTools.encode(_hx_local_10(), "utf-8"))
+			self.append_data(self.proc, python_lib_StringTools.encode("Running Command: " + _hx_local_6() + "\n", "utf-8"))
 		
 		except Exception as _hx_e:
 			_hx_e1 = _hx_e.val if isinstance(_hx_e, _HxException) else _hx_e
@@ -7704,22 +7638,19 @@ def Output_statics_collect_completion_fields(li):
 hxsublime_compiler_Output.collect_completion_fields = Output_statics_collect_completion_fields
 def Output_statics_extract_errors(str):
 	errors = []
-	def _hx_local_1():
-		def _hx_local_0():
-			_this = python_lib_Re_RegexHelper.findallDynamic(hxsublime_compiler_Output.no_classes_found, str, None, None)
-			return __builtin__.len(_this)
-		
-		return _hx_local_0() > 0
+	def _hx_local_0():
+		_this = python_lib_Re_RegexHelper.findallDynamic(hxsublime_compiler_Output.no_classes_found, str, None, None)
+		return __builtin__.len(_this)
 	
-	if _hx_local_1():
+	if _hx_local_0() > 0:
 		errors = []
 	else:
 		_g = 0
 		_g1 = None
 		_this = python_lib_Re_RegexHelper.findallDynamic(hxsublime_compiler_Output.compiler_output, str, None, None)
-		def _hx_local_2(t):
+		def _hx_local_1(t):
 			return __builtin__.list(t)
-		_g1 = __builtin__.list(__builtin__.map(_hx_local_2, _this))
+		_g1 = __builtin__.list(__builtin__.map(_hx_local_1, _this))
 		
 		while _g < len(_g1):
 			infos = _g1[_g]
@@ -7727,21 +7658,18 @@ def Output_statics_extract_errors(str):
 			infos1 = __builtin__.list(infos)
 			f = infos1.pop(0)
 			l = None
-			def _hx_local_6():
-				def _hx_local_3():
-					x = infos1.pop(0)
-					def _hx_local_5():
-						def _hx_local_4():
-							x1 = float(x)
-							return int(x1)
-						
-						return _hx_local_4()
+			def _hx_local_2():
+				x = infos1.pop(0)
+				def _hx_local_4():
+					def _hx_local_3():
+						x1 = float(x)
+						return int(x1)
 					
-					return _hx_local_5()
+					return _hx_local_3()
 				
-				return _hx_local_3() - 1
+				return _hx_local_4()
 			
-			l = _hx_local_6()
+			l = _hx_local_2() - 1
 			left = None
 			x = infos1.pop(0)
 			x1 = float(x)
@@ -7828,14 +7756,11 @@ def Output_statics_parse_completion_output(temp_file,orig_file,output):
 		hints = []
 		comps = []
 	
-	def _hx_local_1():
-		def _hx_local_0():
-			_this = hxsublime_compiler_Output.no_classes_found_in_trace.findall(output, 0)
-			return __builtin__.len(_this)
-		
-		return _hx_local_0() > 0
+	def _hx_local_0():
+		_this = hxsublime_compiler_Output.no_classes_found_in_trace.findall(output, 0)
+		return __builtin__.len(_this)
 	
-	if _hx_local_1():
+	if _hx_local_0() > 0:
 		smart_snippets = hxsublime_Settings.smart_snippets_on_completion()
 		insert = None
 		if smart_snippets:
@@ -8318,17 +8243,11 @@ def Base_statics_completion_result_with_smart_snippets(view,comps,result,options
 	line_after_offset = s.strip(None)
 	
 	really_insert = None
-	def _hx_local_2():
-		def _hx_local_1():
-			def _hx_local_0():
-				str = line_after_offset[0]
-				return "),".find(str)
-			
-			return _hx_local_0() > -1
-		
-		return __builtin__.len(line_after_offset) == 0 or _hx_local_1()
+	def _hx_local_0():
+		str = line_after_offset[0]
+		return "),".find(str)
 	
-	really_insert = _hx_local_2()
+	really_insert = __builtin__.len(line_after_offset) == 0 or _hx_local_0() > -1
 	if really_insert and prefix_is_whitespace and use_snippets and has_one_hint and same_cursor_pos:
 		only_hint = comps[0]
 		hxsublime_tools_ViewTools.insertSnippet(view, only_hint[1])
@@ -8620,20 +8539,14 @@ def Base_statics_is_after_int_iterator(src,offset):
 hxsublime_completion_hx_Base.is_after_int_iterator = Base_statics_is_after_int_iterator
 def Base_statics_is_hint_completion(ctx):
 	whitespace_re = python_lib_Re.compile("^\\s*$")
-	def _hx_local_3():
-		def _hx_local_2():
-			def _hx_local_1():
-				def _hx_local_0():
-					str = ctx.complete_char()
-					return "(,".find(str)
-				
-				return _hx_local_0() > -1
-			
-			return _hx_local_1() and python_lib_Re.match(whitespace_re, ctx.prefix) is not None
+	def _hx_local_1():
+		def _hx_local_0():
+			str = ctx.complete_char()
+			return "(,".find(str)
 		
-		return _hx_local_2()
+		return _hx_local_0() > -1 and python_lib_Re.match(whitespace_re, ctx.prefix) is not None
 	
-	return _hx_local_3()
+	return _hx_local_1()
 	
 hxsublime_completion_hx_Base.is_hint_completion = Base_statics_is_hint_completion
 def Base_statics_is_equivalent_completion_already_running(ctx):
@@ -8642,20 +8555,11 @@ hxsublime_completion_hx_Base.is_equivalent_completion_already_running = Base_sta
 def Base_statics_should_include_top_level_completion(ctx):
 	haxe_Log.trace("complete Char: '" + ctx.complete_char() + "'", _Hx_AnonObject(fileName = "Base.hx" ,lineNumber = 445 ,className = "hxsublime.completion.hx.Base" ,methodName = "should_include_top_level_completion" ))
 	toplevel_complete = None
-	def _hx_local_3():
-		def _hx_local_2():
-			def _hx_local_1():
-				def _hx_local_0():
-					str = ctx.complete_char()
-					return ":(,{;})".find(str)
-				
-				return _hx_local_0() > -1
-			
-			return _hx_local_1() or ctx.in_control_struct()
-		
-		return _hx_local_2() or ctx.is_new()
+	def _hx_local_0():
+		str = ctx.complete_char()
+		return ":(,{;})".find(str)
 	
-	toplevel_complete = _hx_local_3()
+	toplevel_complete = _hx_local_0() > -1 or ctx.in_control_struct() or ctx.is_new()
 	haxe_Log.trace("should include: " + Std.string(toplevel_complete), _Hx_AnonObject(fileName = "Base.hx" ,lineNumber = 448 ,className = "hxsublime.completion.hx.Base" ,methodName = "should_include_top_level_completion" ))
 	return toplevel_complete
 	
@@ -9153,23 +9057,14 @@ class hxsublime_completion_hx_Types_CompletionResult:
 		return __builtin__.len(self.comps) > 0
 
 	def has_results(self):
-		def _hx_local_4():
-			def _hx_local_3():
-				def _hx_local_2():
-					def _hx_local_1():
-						def _hx_local_0():
-							_this = self._toplevel_comps()
-							return __builtin__.len(_this)
-						
-						return _hx_local_0() > 0
-					
-					return self.requires_toplevel_comps() and _hx_local_1()
-				
-				return __builtin__.len(self.comps) > 0 or __builtin__.len(self.hints) > 0 or _hx_local_2()
+		def _hx_local_1():
+			def _hx_local_0():
+				_this = self._toplevel_comps()
+				return __builtin__.len(_this)
 			
-			return _hx_local_3()
+			return __builtin__.len(self.comps) > 0 or __builtin__.len(self.hints) > 0 or self.requires_toplevel_comps() and _hx_local_0() > 0
 		
-		return _hx_local_4()
+		return _hx_local_1()
 	
 
 	def show_top_level_snippets(self):
@@ -9639,26 +9534,20 @@ class hxsublime_completion_hx_Types_CompletionContext:
 	
 
 	def temp_completion_src(self):
-		def _hx_local_4():
-			def _hx_local_3():
-				def _hx_local_2():
-					def _hx_local_1():
-						_this = self.src()
-						len = self.complete_offset()
-						return python_Tools.substr(_this, 0, len)
-					
-					return _hx_local_1() + "|"
-				
-				def _hx_local_0():
-					_this = self.src()
-					pos = self.complete_offset()
-					return python_Tools.substr(_this, pos, None)
-				
-				return _hx_local_2() + _hx_local_0()
+		def _hx_local_2():
+			def _hx_local_1():
+				_this = self.src()
+				len = self.complete_offset()
+				return python_Tools.substr(_this, 0, len)
 			
-			return _hx_local_3()
+			def _hx_local_0():
+				_this = self.src()
+				pos = self.complete_offset()
+				return python_Tools.substr(_this, pos, None)
+			
+			return _hx_local_1() + "|" + _hx_local_0()
 		
-		return _hx_local_4()
+		return _hx_local_2()
 	
 
 	def prefix_is_whitespace(self):
@@ -12045,14 +11934,11 @@ class hxsublime_tools_HxSrcTools_EnumConstructor:
 
 	def to_snippet(self,insert_file,import_list):
 		location = None
-		def _hx_local_1():
-			def _hx_local_0():
-				_this = self.enumType.full_pack_with_optional_module()
-				return __builtin__.len(_this)
-			
-			return _hx_local_0() > 0
+		def _hx_local_0():
+			_this = self.enumType.full_pack_with_optional_module()
+			return __builtin__.len(_this)
 		
-		if _hx_local_1():
+		if _hx_local_0() > 0:
 			location = " (" + self.enumType.full_pack_with_optional_module() + ")"
 		else:
 			location = ""
@@ -12150,18 +12036,12 @@ class hxsublime_tools_HxSrcTools_HaxeField:
 	
 
 	def toString(self):
-		def _hx_local_3():
-			def _hx_local_2():
-				def _hx_local_1():
-					def _hx_local_0():
-						return "::" if self.is_static or self.name == "new" else "."
-					return self.type.full_qualified_name_with_optional_module() + (_hx_local_0())
-				
-				return _hx_local_1() + self.name
-			
-			return _hx_local_2()
+		def _hx_local_1():
+			def _hx_local_0():
+				return "::" if self.is_static or self.name == "new" else "."
+			return self.type.full_qualified_name_with_optional_module() + (_hx_local_0()) + self.name
 		
-		return _hx_local_3()
+		return _hx_local_1()
 	
 
 	def to_expression(self):
@@ -12309,14 +12189,11 @@ class hxsublime_tools_HxSrcTools_HaxeType:
 					if name == "WAIT_END_RET":
 						haxe_Log.trace(modifiers, _Hx_AnonObject(fileName = "HxSrcTools.hx" ,lineNumber = 1082 ,className = "hxsublime.tools.HaxeType" ,methodName = "all_fields" ))
 					
-					def _hx_local_2():
-						def _hx_local_1():
-							_this = self.class_body_start()
-							return _this[0]
-						
-						return is_private or is_public or is_static or self.is_extern or hxsublime_tools_HxSrcTools.is_same_nesting_level_at_pos(self.class_body(), decl.start(0), _hx_local_1())
+					def _hx_local_1():
+						_this = self.class_body_start()
+						return _this[0]
 					
-					if _hx_local_2():
+					if is_private or is_public or is_static or self.is_extern or hxsublime_tools_HxSrcTools.is_same_nesting_level_at_pos(self.class_body(), decl.start(0), _hx_local_1()):
 						res.set(name, hxsublime_tools_HxSrcTools_HaxeField(self, name, kind, is_static, is_public, is_inline, is_private, decl))
 					
 					
@@ -12462,14 +12339,11 @@ class hxsublime_tools_HxSrcTools_HaxeType:
 
 	def to_snippet(self,insert_file,import_list):
 		location = None
-		def _hx_local_1():
-			def _hx_local_0():
-				_this = self.full_pack_with_optional_module()
-				return __builtin__.len(_this)
-			
-			return _hx_local_0() > 0
+		def _hx_local_0():
+			_this = self.full_pack_with_optional_module()
+			return __builtin__.len(_this)
 		
-		if _hx_local_1():
+		if _hx_local_0() > 0:
 			location = " (" + self.full_pack_with_optional_module() + ")"
 		else:
 			location = ""
@@ -12691,82 +12565,19 @@ class hxsublime_tools_HxSrcTools_HaxeType:
 	
 
 	def toString(self):
-		def _hx_local_24():
-			def _hx_local_23():
-				def _hx_local_22():
-					def _hx_local_21():
-						def _hx_local_20():
-							def _hx_local_19():
-								def _hx_local_18():
-									def _hx_local_17():
-										def _hx_local_16():
-											def _hx_local_15():
-												def _hx_local_14():
-													def _hx_local_13():
-														def _hx_local_12():
-															def _hx_local_11():
-																def _hx_local_10():
-																	def _hx_local_9():
-																		def _hx_local_8():
-																			def _hx_local_7():
-																				def _hx_local_6():
-																					def _hx_local_5():
-																						def _hx_local_4():
-																							def _hx_local_3():
-																								def _hx_local_0():
-																									_this = self.enum_constructors()
-																									def _hx_local_2():
-																										def _hx_local_1(ec):
-																											return ec.toString()
-																										return __builtin__.list(__builtin__.map(_hx_local_1, _this))
-																									
-																									return _hx_local_2()
-																								
-																								return "{" + " pack:" + Std.string(self.pack) + ", " + " module:" + Std.string(self.module) + ", " + " name:" + Std.string(self.name) + ", " + " kind:" + Std.string(self.kind) + ", " + " enum_constructors:" + Std.string(_hx_local_0())
-																							
-																							return _hx_local_3() + ", "
-																						
-																						return _hx_local_4() + " is_private:"
-																					
-																					return _hx_local_5() + Std.string(self.is_private)
-																				
-																				return _hx_local_6() + ", "
-																			
-																			return _hx_local_7() + " is_module_type:"
-																		
-																		return _hx_local_8() + Std.string(self.is_module_type)
-																	
-																	return _hx_local_9() + ", "
-																
-																return _hx_local_10() + " is_std_type:"
-															
-															return _hx_local_11() + Std.string(self.is_std_type)
-														
-														return _hx_local_12() + ", "
-													
-													return _hx_local_13() + " is_extern:"
-												
-												return _hx_local_14() + Std.string(self.is_extern)
-											
-											return _hx_local_15() + ", "
-										
-										return _hx_local_16() + " file:'"
-									
-									return _hx_local_17() + Std.string(self.file())
-								
-								return _hx_local_18() + "'"
-							
-							return _hx_local_19() + " classpath:'"
-						
-						return _hx_local_20() + Std.string(self.classpath())
-					
-					return _hx_local_21() + "'"
+		def _hx_local_3():
+			def _hx_local_0():
+				_this = self.enum_constructors()
+				def _hx_local_2():
+					def _hx_local_1(ec):
+						return ec.toString()
+					return __builtin__.list(__builtin__.map(_hx_local_1, _this))
 				
-				return _hx_local_22() + " }"
+				return _hx_local_2()
 			
-			return _hx_local_23()
+			return "{" + " pack:" + Std.string(self.pack) + ", " + " module:" + Std.string(self.module) + ", " + " name:" + Std.string(self.name) + ", " + " kind:" + Std.string(self.kind) + ", " + " enum_constructors:" + Std.string(_hx_local_0()) + ", " + " is_private:" + Std.string(self.is_private) + ", " + " is_module_type:" + Std.string(self.is_module_type) + ", " + " is_std_type:" + Std.string(self.is_std_type) + ", " + " is_extern:" + Std.string(self.is_extern) + ", " + " file:'" + Std.string(self.file()) + "'" + " classpath:'" + Std.string(self.classpath()) + "'" + " }"
 		
-		return _hx_local_24()
+		return _hx_local_3()
 	
 
 
@@ -13354,23 +13165,20 @@ def Boot_statics___string_rec(o,s):
 				while _g1 < len(fields):
 					f = fields[_g1]
 					_g1 = _g1 + 1
-					def _hx_local_2():
-						def _hx_local_1():
-							v = None
-							try:
-								v = __builtin__.getattr(o, f)
-							except Exception as _hx_e:
-								_hx_e1 = _hx_e.val if isinstance(_hx_e, _HxException) else _hx_e
-								if True:
-									e = _hx_e1
-									None
-								else:
-									raise _hx_e
-							return v
-						
-						return "" + f + " : " + python_Boot.__string_rec(_hx_local_1(), s + "\t")
+					def _hx_local_1():
+						v = None
+						try:
+							v = __builtin__.getattr(o, f)
+						except Exception as _hx_e:
+							_hx_e1 = _hx_e.val if isinstance(_hx_e, _HxException) else _hx_e
+							if True:
+								e = _hx_e1
+								None
+							else:
+								raise _hx_e
+						return v
 					
-					x = _hx_local_2()
+					x = "" + f + " : " + python_Boot.__string_rec(_hx_local_1(), s + "\t")
 					_g.append(x)
 					__builtin__.len(_g)
 					
@@ -13400,14 +13208,14 @@ def Boot_statics___string_rec(o,s):
 				paramsStr = ""
 				_g = 0
 				while _g < l:
-					def _hx_local_3():
+					def _hx_local_2():
 						nonlocal _g
 						_hx_r = _g
 						_g = _g + 1
 						return _hx_r
 						
 					
-					i = _hx_local_3()
+					i = _hx_local_2()
 					prefix = ""
 					if i > 0:
 						prefix = ","
@@ -13429,23 +13237,20 @@ def Boot_statics___string_rec(o,s):
 			while _g1 < len(fields):
 				f = fields[_g1]
 				_g1 = _g1 + 1
-				def _hx_local_5():
-					def _hx_local_4():
-						v = None
-						try:
-							v = __builtin__.getattr(o, f)
-						except Exception as _hx_e:
-							_hx_e1 = _hx_e.val if isinstance(_hx_e, _HxException) else _hx_e
-							if True:
-								e = _hx_e1
-								None
-							else:
-								raise _hx_e
-						return v
-					
-					return "" + f + " : " + python_Boot.__string_rec(_hx_local_4(), s + "\t")
+				def _hx_local_3():
+					v = None
+					try:
+						v = __builtin__.getattr(o, f)
+					except Exception as _hx_e:
+						_hx_e1 = _hx_e.val if isinstance(_hx_e, _HxException) else _hx_e
+						if True:
+							e = _hx_e1
+							None
+						else:
+							raise _hx_e
+					return v
 				
-				x = _hx_local_5()
+				x = "" + f + " : " + python_Boot.__string_rec(_hx_local_3(), s + "\t")
 				_g.append(x)
 				__builtin__.len(_g)
 				
@@ -13465,23 +13270,20 @@ def Boot_statics___string_rec(o,s):
 			while _g1 < len(fields):
 				f = fields[_g1]
 				_g1 = _g1 + 1
-				def _hx_local_7():
-					def _hx_local_6():
-						v = None
-						try:
-							v = __builtin__.getattr(o, f)
-						except Exception as _hx_e:
-							_hx_e1 = _hx_e.val if isinstance(_hx_e, _HxException) else _hx_e
-							if True:
-								e = _hx_e1
-								None
-							else:
-								raise _hx_e
-						return v
-					
-					return "" + f + " : " + python_Boot.__string_rec(_hx_local_6(), s + "\t")
+				def _hx_local_4():
+					v = None
+					try:
+						v = __builtin__.getattr(o, f)
+					except Exception as _hx_e:
+						_hx_e1 = _hx_e.val if isinstance(_hx_e, _HxException) else _hx_e
+						if True:
+							e = _hx_e1
+							None
+						else:
+							raise _hx_e
+					return v
 				
-				x = _hx_local_7()
+				x = "" + f + " : " + python_Boot.__string_rec(_hx_local_4(), s + "\t")
 				_g.append(x)
 				__builtin__.len(_g)
 				
@@ -13509,9 +13311,9 @@ def Boot_statics___string_rec(o,s):
 	
 	else:
 		try:
-			def _hx_local_8(_):
+			def _hx_local_5(_):
 				return True
-			python_lib_Inspect.getmembers(o, _hx_local_8)
+			python_lib_Inspect.getmembers(o, _hx_local_5)
 			return __builtin__.str(o)
 	
 		except Exception as _hx_e:
