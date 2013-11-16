@@ -18,7 +18,7 @@ typedef Build = {
 	public function copy():Build;
 	public function build_file():String;
 	public function add_classpath(cp:String):Void;
-	public function hxml():String;
+	//public function hxml():String;
 	public function make_hxml():String;
 	public function prepare_check_cmd(project:Project, server_mode:Bool, view:View):Tup2<Array<String>, String>; 
 	public function prepare_build_cmd(project:Project, server_mode:Bool, view:View):Tup2<Array<String>, String>;
@@ -31,10 +31,10 @@ typedef Build = {
 	public function set_auto_completion(display:String, ?macro_completion:Bool, ?no_output:Bool):Void;
 	public function set_times():Void;
 	public function run(project:Project, view:View, async:Bool, onResult:String->String->Void, ?serverMode:Null<Bool>):Void;
-	public var std_bundle:HaxeTypeBundle;
-	public var target:String;
-	public var classpaths:Array<String>;
-	public var args:Array<Tup2<String, String>>;
+	public function std_bundle():HaxeTypeBundle;
+	public function target():Target;
+	public function classpaths():Array<String>;
+	public function args():Array<Tup2<String, String>>;
 	public function add_arg(a:Tup2<String, String>):Void;
 	//public var ctx:CompletionContext;
 }

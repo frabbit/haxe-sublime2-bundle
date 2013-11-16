@@ -68,7 +68,7 @@ private class State
 
         var build = project.get_build(view);
 
-        var bundle = build.get_types().merge(build.std_bundle);
+        var bundle = build.get_types().merge(build.std_bundle());
 
 
 
@@ -187,11 +187,10 @@ private class State
 
         if (view != null && view.file_name() != null)
         {
-            trace("show at X");
-            trace("decl file: " + Std.string(find_file));
+        
             if (view.file_name() == find_file)
             {
-                trace("show at Y");
+        
                 view.sel().clear();
 
                 var min = find_pos;

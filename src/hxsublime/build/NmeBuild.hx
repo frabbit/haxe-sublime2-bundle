@@ -4,6 +4,7 @@ import hxsublime.build.HxmlBuild;
 import hxsublime.Config;
 import hxsublime.Config.Target;
 import hxsublime.project.Project;
+import hxsublime.tools.HxSrcTools.HaxeType;
 import python.lib.os.Path;
 import python.lib.Types.Tup2;
 import sublime.Sublime;
@@ -37,6 +38,10 @@ class NmeBuild {
 		this.hxml_build().setHxml(hxml);
 	}
 
+	public function make_hxml()  {
+		return this.hxml_build().make_hxml();
+	}
+
 	@property
 	public function title()
 	{
@@ -67,12 +72,13 @@ class NmeBuild {
 		var display_cmd = this.get_build_command(this.project, view).copy();
 		display_cmd.push("display");
 		//from haxe.build.tools import create_haxe_build_from_nmml
-		return Tools.create_haxe_build_from_nmml(this.project, this.target(), this.nmml, display_cmd);
+		return Tools.create_haxe_build_from_nmml(this.project, this._target, this.nmml, display_cmd);
 	}
 
 	@property
 	public function hxml_build ()
 	{
+		trace("create hxml build");
 		if (this._hxml_build == null) 
 		{
 			this._hxml_build = this._get_hxml_build_with_nme_display();
@@ -84,7 +90,7 @@ class NmeBuild {
 
 	public function to_string() 
 	{
-		var title = this.title;
+		var title = this.title();
 		var target = this.target().name;
 		return '${title} (NME - ${target})';
 		
@@ -114,7 +120,7 @@ class NmeBuild {
 	@property
 	public function std_bundle()
 	{
-		return this.hxml_build().std_bundle;
+		return this.hxml_build().std_bundle();
 	}
 
 	public function add_arg(arg)
@@ -126,7 +132,7 @@ class NmeBuild {
 	{
 		var hxml_copy = if (this._hxml_build != null) this.hxml_build().copy() else null;
 
-		return new NmeBuild(this.project, this.title(), this.nmml, this.target(), hxml_copy);
+		return new NmeBuild(this.project, this.title(), this.nmml, this._target, hxml_copy);
 	}
 
 	public function get_relative_path(file:String)
@@ -146,9 +152,9 @@ class NmeBuild {
 		return r;
 	}
 
-	public function set_auto_completion(display, macro_completion)
+	public function set_auto_completion(display:String, macro_completion = false, no_output = true)
 	{
-		this.hxml_build().set_auto_completion(display, macro_completion);
+		this.hxml_build().set_auto_completion(display, macro_completion, no_output);
 	}
 
 	public function set_times()
@@ -179,6 +185,10 @@ class NmeBuild {
 	public function get_build_command(project:Project, view:View)
 	{
 		return this._get_run_exec(project, view).copy();
+	}
+
+	public function escape_cmd(cmd:Array<String>) {
+		return this.hxml_build().escape_cmd(cmd);
 	}
 
 	public function prepare_check_cmd(project:Project, server_mode:Bool, view:View)
@@ -224,18 +234,18 @@ class NmeBuild {
 	@property
 	public function classpaths ()
 	{
-		return this.hxml_build().classpaths;
+		return this.hxml_build().classpaths();
 	}
 
 	@property
 	public function args ()
 	{
-		return this.hxml_build().args;
+		return this.hxml_build().args();
 	}
 
-	public function is_type_available (type)
+	public function is_type_available (type:HaxeType)
 	{
-		var pack = type.toplevel_pack;
+		var pack = type.toplevel_pack();
 		return pack == null || this.is_pack_available(pack);
 	}
 

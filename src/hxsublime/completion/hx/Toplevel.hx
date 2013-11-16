@@ -22,7 +22,7 @@ class TopLevel {
 
     public static function get_build_target(ctx:CompletionContext) 
     {
-        return if (ctx.options.macro_completion()) "neko" else ctx.build().target;
+        return if (ctx.options.macro_completion()) "neko" else ctx.build().target().plattform;
     }
 
 
@@ -179,7 +179,7 @@ class TopLevel {
 
         var run_time2 = Time.time() - start_time;
 
-        var std_bundle = ctx.build().std_bundle;
+        var std_bundle = ctx.build().std_bundle();
 
         
 

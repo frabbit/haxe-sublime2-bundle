@@ -90,7 +90,7 @@ private class State {
             {
                 trace("build file: " + b.build_file);
                 var found = false;
-                for (cp in b.classpaths)
+                for (cp in b.classpaths())
                 {
                     trace("class path: " + cp);
                     trace("path: " + path);
@@ -143,7 +143,7 @@ private class State {
         {
             if (builds.length > 0)
             {
-                this.classpath = builds[0].classpaths[0];
+                this.classpath = builds[0].classpaths()[0];
             }
         }
 

@@ -2,6 +2,7 @@ package hxsublime.build;
 
 import hxsublime.build.HxmlBuild;
 import hxsublime.project.Project;
+import hxsublime.tools.HxSrcTools.HaxeType;
 import sublime.View;
 
 using python.lib.ArrayTools;
@@ -43,14 +44,14 @@ class OpenFlBuild extends NmeBuild
 	override public function to_string() 
 	{
 		// out = os.path.basename(this.hxml_build.output)
-		var out = this.title;
+		var out = this.title();
 		var target = this.target().name;
 		return '${out} (OpenFL - ${target})';
 	}
 	
-	override public function is_type_available (type)
+	override public function is_type_available (type:HaxeType)
 	{
-		var pack = type.toplevel_pack;
+		var pack = type.toplevel_pack();
 		return pack == null || this.is_pack_available(pack);
 	}
 	

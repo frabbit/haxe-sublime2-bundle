@@ -288,7 +288,7 @@ private class Helper
     public static function prepare_build(view:View, project:Project, use_display:Bool, new_src:String)
     {
         var build = project.get_build(view).copy();
-        build.args.push(Tup2.create("-D", "no-inline"));
+        build.add_arg(Tup2.create("-D", "no-inline"));
 
         var r = Temp.create_temp_path_and_file(build, view.file_name(), new_src);
         var temp_path = r._1, temp_file = r._2;

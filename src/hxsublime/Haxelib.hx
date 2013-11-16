@@ -112,7 +112,6 @@ class HaxeLibManager {
 	{
 		scanned = true;
 		var env = project.haxe_env();
-		trace("do scan");
 		var cmd = project.haxelib_exec();
 		cmd.push("config");
 		var r = Execute.run_cmd( cmd, env );
@@ -128,22 +127,27 @@ class HaxeLibManager {
 		var r = Execute.run_cmd( cmd, env );
 		var hlout = r._1;
 		var hlerr = r._2;
-		trace("haxelib output: " + hlout);
-		trace("haxelib error: " + hlerr);
-		for (l in hlout.split("\n")) {
+		//trace("haxelib output: " + hlout);
+		//trace("haxelib error: " + hlerr);
+		for (l in hlout.split("\n")) 
+		{
 			var found = libLine.match( l );
 			if (found != null) 
 			{
-				var g:Tup3<String,String,String> = found.groups();
-				var name = g._1, dev = g._2, version = g._3;
-				var lib = new HaxeLibLibrary( this, name , dev != null , version );
+				var g:Tup3<String,String,String> = found.groups(null);
+				if (g != null) 
+				{
+					var name = g._1, dev = g._2, version = g._3;
+					var lib = new HaxeLibLibrary( this, name , dev != null , version );
 
-				_available.set( name , lib);
+					_available.set( name , lib);
+				}
 			}
 		}
 	}
 
-	public function install_lib(lib:String){
+	public function install_lib(lib:String)
+	{
 		var cmd = project.haxelib_exec();
 		var env = project.haxe_env();
 		cmd.push("install");
@@ -153,7 +157,8 @@ class HaxeLibManager {
 		scan();
 	}
 
-	public function remove_lib(lib:String){
+	public function remove_lib(lib:String)
+	{
 		var cmd = project.haxelib_exec();
 		var env = project.haxe_env();
 		cmd.push("remove");
@@ -163,7 +168,8 @@ class HaxeLibManager {
 		scan();
 	}
 
-	public function upgrade_all(){
+	public function upgrade_all()
+	{
 		var cmd = project.haxelib_exec();
 		var env = project.haxe_env();
 		cmd.push("upgrade");
@@ -172,7 +178,8 @@ class HaxeLibManager {
 		scan();
 	}
 
-	public function self_update(){
+	public function self_update()
+	{
 		var cmd = project.haxelib_exec();
 		var env = project.haxe_env();
 		cmd.push("thisupdate");
@@ -181,30 +188,34 @@ class HaxeLibManager {
 		scan();
 	}
 
-	public function search_libs(){
+	public function search_libs()
+	{
 		var cmd = project.haxelib_exec();
 		var env = project.haxe_env();
 		cmd.push("search");
 		cmd.push("_");
-		trace(Std.string(cmd));
+		//trace(Std.string(cmd));
 		var res = Execute.run_cmd(cmd, null, null, env);
 		var out = res._1;
 		var err = res._2;
 		return _collect_libraries(out);
 	}
 
-	public function _collect_libraries(out:String){
-		trace(out);
+	public function _collect_libraries(out:String)
+	{
+		
 		var x = out.split("\n").filter(function (x) return x != "" && x.indexOf("libraries found") == -1);
 		x.reverse();
 		return x;
 	}
 
-	public function is_lib_installed(lib:String){
+	public function is_lib_installed(lib:String)
+	{
 		return available().exists(lib);
 	}
 	
-	public function get_lib(lib:String) {
+	public function get_lib(lib:String) 
+	{
 		return available().get(lib);
 	}
 

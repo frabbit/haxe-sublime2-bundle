@@ -129,7 +129,7 @@ class Project {
         
         var is_hxml_build = function () return Std.is(this.current_build, HxmlBuild);
 
-        if (current_build != null && is_hxml_build() && fn == current_build.hxml() && view.size() == 0) {
+        if (current_build != null && is_hxml_build() && fn == current_build.build_file() && view.size() == 0) {
             function run_edit(v:View, e:Edit) {
                 var hxml_src = current_build.make_hxml();
                 v.insert(e,0,hxml_src);
@@ -159,14 +159,15 @@ class Project {
 
 
         var folders = _get_folders(view);
-        trace(folders);
+        
         
         this.builds = _find_builds_in_folders(folders);
+        
         
         var num_builds = builds.length;
 
         var view_build_id:Int = view.settings().get("haxe-current-build-id");
-        trace("view_build_id:" + Std.string(view_build_id));
+        
 
         if (view_build_id != null && view_build_id < num_builds && !force_panel) 
         {
@@ -235,15 +236,13 @@ class Project {
     public function _find_builds_in_folders(folders:Array<String>):Array<Build> {
         var builds:Array<Build> = [];
         trace("find builds start");
-        for (f in folders) {
-            trace("0");
-            builds.extend(cast hxsublime.build.Tools.find_hxml_projects(this, f));
-            trace("1");
-            builds.extend(cast hxsublime.build.Tools.find_nme_projects(this, f));
-            trace("2");
-            builds.extend(cast hxsublime.build.Tools.find_openfl_projects(this, f));
-            trace("3");
+        for (f in folders) 
+        {
+            builds.extend(hxsublime.build.Tools.find_hxml_projects(this, f).map(function (x):Build return x));
+            builds.extend(hxsublime.build.Tools.find_nme_projects(this, f).map(function (x):Build return x));
+            builds.extend(hxsublime.build.Tools.find_openfl_projects(this, f).map(function (x):Build return x));
         }
+        
         trace("find builds end");
         return builds;
     }
@@ -285,18 +284,19 @@ class Project {
 
     public function _show_build_selection_panel(view:View) {
         
-        var buildsView = [for (b in builds) Tup2.create(b.to_string(), Path.basename(b.build_file()))];
+        var buildsView = [for (b in builds) [b.to_string(), Path.basename(b.build_file())]];
 
         
         this.selecting_build = true;
         Sublime.status_message("Please select your build");
         
-        function on_selected (i) {
+        function on_selected (i:Int) {
             this.selecting_build = false;
             this._set_current_build(view, i);
         }
 
         var win = Sublime.active_window();
+        
         win.show_quick_panel( buildsView , on_selected  , Sublime.MONOSPACE_FONT );
     }
 
@@ -392,7 +392,7 @@ class Project {
         var src = view.substr( new Region(0, view.size()));
     
         var build = new HxmlBuild(null, null);
-        build.target = "js";
+        build._target = "js";
 
         var folder = Path.dirname(fn);
         var folders = view.window().folders();
@@ -427,9 +427,9 @@ class Project {
 
         build.output = Path.join(folder,build.main.toLowerCase() + ".js");
 
-        build.args.push( Tup2.create("-cp" , src_dir) );
+        build.add_arg( Tup2.create("-cp" , src_dir) );
 
-        build.args.push( Tup2.create("-js" , build.output ) );
+        build.add_arg( Tup2.create("-js" , build.output ) );
 
         build.setHxml(Path.join( src_dir , "build.hxml"));
         return build;
@@ -511,7 +511,7 @@ class Project {
         }
 
         
-        trace(Std.string(env));
+        //trace(Std.string(env));
         return env;
     }
 
@@ -530,9 +530,9 @@ class Project {
 
         
         var r = Execute.run_cmd( cmd, null,null,env );
-        trace(r);
-        trace(r._1);
-        trace(r._2);
+        //trace(r);
+        //trace(r._1);
+        //trace(r._2);
         var out = r._1;
         var err = r._2;
 
@@ -572,7 +572,7 @@ class Project {
             
         var std_classpaths = [];
 
-        trace(out);
+        //trace(out);
 
         var all_paths = m.group(1).split(";");
         var ignored_paths = [".","./"];

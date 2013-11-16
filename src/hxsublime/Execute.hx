@@ -45,7 +45,7 @@ class Execute {
 			
 			var env = base_env;
 
-			trace(env);
+			//trace(env);
 
 			for (k in env.keys().iter().toHaxeIterator()) 
 			{
@@ -57,17 +57,16 @@ class Execute {
 			// safely remove empty strings from args
 			var encoded_args = args.filter(function (s) return s != "");
 			
-			trace("pre popen");
+			
 			
 			var p = Popen.create(encoded_args, { cwd : cwd, stdout : Subprocess.PIPE, stderr : Subprocess.PIPE, stdin :Subprocess.PIPE, startupinfo : Plugin.startupInfo(), env : env});
-			trace("post popen");
+			
 			var inputBytes = input != null ? input.encode("utf-8") : null;
 			//print("INPUT:" + str(input))
-			trace("pre communicate");
 			var r = p.communicate(inputBytes);
 			var out = r._1, err = r._2;
 
-			trace("pre decode");
+			
 			return Tup2.create(out.decode("utf-8"), err.decode("utf-8"));
 		}
 		catch (e:Dynamic) 

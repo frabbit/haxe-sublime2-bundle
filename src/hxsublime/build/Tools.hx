@@ -68,7 +68,7 @@ class Tools {
 
 			if (l.startsWith("--next")) 
 			{
-				if (current_build.classpaths.length == 0) 
+				if (current_build._classpaths.length == 0) 
 				{
 					trace("no classpaths");
 					current_build.add_classpath( build_path );
@@ -115,7 +115,7 @@ class Tools {
 					var lib = project.haxelib_manager().get( spl[1] );
 					if (lib != null)
 					{
-						trace("lib to build:" + Std.string(lib));
+						//trace("lib to build:" + Std.string(lib));
 						current_build.add_lib( lib );
 					}
 					else {
@@ -145,6 +145,7 @@ class Tools {
 			if (l.startsWith("-D"))
 			{
 				var x = l.split(" ");
+				
 				var tup = Tup2.create(x[0], x[1]);
 				current_build.add_arg( tup );
 				current_build.add_define(tup._2);
@@ -160,7 +161,9 @@ class Tools {
 				if (l.startsWith( "-"+flag ) )
 				{	
 					var x = l.split(" ");
-					current_build.add_arg( Tup2.create(x[0], x[1]) );
+					
+					var p2 = if (x.length == 1) "" else x[1];
+					current_build.add_arg( Tup2.create(x[0], p2) );
 					
 					break;
 				}
@@ -175,7 +178,7 @@ class Tools {
 					current_build.add_arg( Tup2.create("-"+flag, outp) );
 					if (flag == "x")
 					{
-						current_build.target = "neko";
+						current_build._target = "neko";
 					}
 					break;
 				}
@@ -188,10 +191,10 @@ class Tools {
 					var spl = l.split(" ");
 					spl.shift();
 					var outp = spl.join(" ");
-					trace(outp);
+					
 					current_build.add_arg( Tup2.create("-"+flag, outp) );
 					
-					current_build.target = flag;
+					current_build._target = flag;
 					current_build.output = outp;
 					break;
 				}
@@ -209,9 +212,9 @@ class Tools {
 			}
 		}
 
-		if (current_build.classpaths.length == 0)
+		if (current_build._classpaths.length == 0)
 		{
-			trace("no classpaths");
+			
 			current_build.add_classpath( build_path );
 			//current_build.args.push( ("-cp" , build_path ) )
 		}
@@ -225,22 +228,22 @@ class Tools {
 	
 	public static function _find_build_files_in_folder(folder:String, extension:String)
 	{
-		trace("a");
+		
 		if (!Path.isdir(folder) )
 		{
 			return [];
 		}
 		
 		var files = Glob.glob( Path.join( folder , "*."+extension ) ).map(function (x) return Tup2.create(x, folder));
-		trace("b");
-		trace(files);	
+		
+		
 		for (dir in Os.listdir(folder)) 
 		{
 			var f = Path.join(folder, dir);
 			var x = Glob.glob( Path.join( f , "*."+extension ) ).map(function (x) return Tup2.create(x, f));
 			files.extend( x );
 		}
-		trace("c");
+		
 		return files;
 	}
 	
@@ -307,12 +310,12 @@ class Tools {
 		var builds = [];
 		var found = _find_build_files_in_folder(folder, "hxml");
 		for (build in found) {
-			trace("check " + build);
+			
 			var hxml_file = build._1;
 			var hxml_folder = build._2;
-			trace("hxml to builds");
+			
 			var b = _hxml_to_builds(project, hxml_file, hxml_folder);
-			trace("builds in hxml " + Std.string(hxml_file) + ":" + Std.string(b.length));
+			
 			builds.extend(b);
 		}
 
