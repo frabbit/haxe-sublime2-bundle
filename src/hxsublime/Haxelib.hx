@@ -134,7 +134,7 @@ class HaxeLibManager {
 			var found = libLine.match( l );
 			if (found != null) 
 			{
-				var g:Tup3<String,String,String> = found.groups(null);
+				var g:Tup3<String,String,String> = cast found.groups(null);
 				if (g != null) 
 				{
 					var name = g._1, dev = g._2, version = g._3;

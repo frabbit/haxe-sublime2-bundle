@@ -599,75 +599,68 @@ class Reflect:
 
 
 def Reflect_statics_hasField(o,field):
-	return __builtin__.hasattr(o, field)
+	field1 = python_internal_KeywordHandler.handleKeywords(field)
+	return __builtin__.hasattr(o, field1)
+	
 Reflect.hasField = Reflect_statics_hasField
 def Reflect_statics_field(o,field):
-	v = None
-	try:
-		v = __builtin__.getattr(o, field)
-	except Exception as _hx_e:
-		_hx_e1 = _hx_e.val if isinstance(_hx_e, _HxException) else _hx_e
-		if True:
-			e = _hx_e1
-			None
-		else:
-			raise _hx_e
-	return v
+	field1 = python_internal_KeywordHandler.handleKeywords(field)
+	if __builtin__.hasattr(o, field1):
+		return __builtin__.getattr(o, field1)
+	else:
+		return None
 	
 Reflect.field = Reflect_statics_field
 def Reflect_statics_setField(o,field,value):
-	return __builtin__.setattr(o, field, value)
+	field1 = python_internal_KeywordHandler.handleKeywords(field)
+	return __builtin__.setattr(o, field1, value)
+	
 Reflect.setField = Reflect_statics_setField
 def Reflect_statics_getProperty(o,field):
+	field1 = python_internal_KeywordHandler.handleKeywords(field)
 	tmp = None
 	if o is None:
 		return None
 	else:
-		v = None
-		try:
-			v = __builtin__.getattr(o, "get_" + field)
-		except Exception as _hx_e:
-			_hx_e1 = _hx_e.val if isinstance(_hx_e, _HxException) else _hx_e
-			if True:
-				e = _hx_e1
-				None
-			else:
-				raise _hx_e
-		tmp = v
-		
+		tmp = Reflect.field(o, "get_" + field1)
 		if tmp is not None and __builtin__.callable(tmp):
 			return tmp()
 		else:
-			v = None
-			try:
-				v = __builtin__.getattr(o, field)
-			except Exception as _hx_e:
-				_hx_e1 = _hx_e.val if isinstance(_hx_e, _HxException) else _hx_e
-				if True:
-					e = _hx_e1
-					None
-				else:
-					raise _hx_e
-			return v
-		
+			return Reflect.field(o, field1)
 	
 	
 Reflect.getProperty = Reflect_statics_getProperty
 def Reflect_statics_setProperty(o,field,value):
+	field1 = python_internal_KeywordHandler.handleKeyword(field)
 	raise _HxException("not implemented")
+	
 Reflect.setProperty = Reflect_statics_setProperty
 def Reflect_statics_callMethod(o,func,args):
-	raise _HxException("not implemented")
+	args1 = [o] + args
+	if python_lib_Inspect.ismethod(o):
+		return func(args1)
+	else:
+		return None
+	
 Reflect.callMethod = Reflect_statics_callMethod
 def Reflect_statics_fields(o):
 	a = []
 	if o is not None:
 		if __builtin__.hasattr(o, "_hx_fields"):
+			haxe_Log.trace("here we go", _Hx_AnonObject(fileName = "Reflect.hx" ,lineNumber = 95 ,className = "Reflect" ,methodName = "fields" ))
 			fields = o._hx_fields
 			return __builtin__.list(fields)
 		
 		
-		if __builtin__.hasattr(o, "__dict__"):
+		if __builtin__.isinstance(o, _Hx_AnonObject):
+			d = __builtin__.getattr(o, "__dict__")
+			keys = d.keys()
+			handler = python_internal_KeywordHandler.unhandleKeywords
+			for k in keys:
+				a.append(handler(k))
+		
+		elif __builtin__.hasattr(o, "__dict__"):
+			a1 = []
 			d = __builtin__.getattr(o, "__dict__")
 			keys = d.keys()
 			for k in keys:
@@ -677,17 +670,23 @@ def Reflect_statics_fields(o):
 	
 	
 	return a
-	raise _HxException("not implemented")
 	
 Reflect.fields = Reflect_statics_fields
 def Reflect_statics_isFunction(f):
-	return __builtin__.callable(f)
+	return python_lib_Inspect.isfunction(f) or python_lib_Inspect.ismethod(f)
 Reflect.isFunction = Reflect_statics_isFunction
 def Reflect_statics_compare(a,b):
 	raise _HxException("not implemented")
 Reflect.compare = Reflect_statics_compare
 def Reflect_statics_compareMethods(f1,f2):
+	if f1 == f2:
+		return True
+	
+	if not Reflect.isFunction(f1) or not Reflect.isFunction(f2):
+		return False
+	
 	raise _HxException("not implemented")
+	
 Reflect.compareMethods = Reflect_statics_compareMethods
 def Reflect_statics_isObject(v):
 	raise _HxException("not implemented")
@@ -696,7 +695,12 @@ def Reflect_statics_isEnumValue(v):
 	raise _HxException("not implemented")
 Reflect.isEnumValue = Reflect_statics_isEnumValue
 def Reflect_statics_deleteField(o,field):
-	raise _HxException("not implemented")
+	if not Reflect.hasField(o, field):
+		return False
+	
+	del o[field]
+	return True
+	
 Reflect.deleteField = Reflect_statics_deleteField
 def Reflect_statics_copy(o):
 	raise _HxException("not implemented")
@@ -748,19 +752,7 @@ def Std_statics__hx_is(v,t):
 		loop = None
 		loop1 = None
 		def _hx_local_0(intf):
-			f = None
-			v1 = None
-			try:
-				v1 = __builtin__.getattr(intf, "_hx_interfaces")
-			except Exception as _hx_e:
-				_hx_e1 = _hx_e.val if isinstance(_hx_e, _HxException) else _hx_e
-				if True:
-					e = _hx_e1
-					None
-				else:
-					raise _hx_e
-			f = v1
-			
+			f = Reflect.field(intf, "_hx_interfaces")
 			if f is not None:
 				_g = 0
 				while _g < len(f):
@@ -1160,19 +1152,7 @@ def Type_statics_createEnum(e,constr,params = None):
 	if params is None:
 		params = None
 	
-	f = None
-	v = None
-	try:
-		v = __builtin__.getattr(e, constr)
-	except Exception as _hx_e:
-		_hx_e1 = _hx_e.val if isinstance(_hx_e, _HxException) else _hx_e
-		if True:
-			e1 = _hx_e1
-			None
-		else:
-			raise _hx_e
-	f = v
-	
+	f = Reflect.field(e, constr)
 	if f is None:
 		raise _HxException("No such constructor " + constr)
 	
@@ -1180,7 +1160,7 @@ def Type_statics_createEnum(e,constr,params = None):
 		if params is None:
 			raise _HxException("Constructor " + constr + " need parameters")
 		
-		raise _HxException("not implemented")
+		return Reflect.callMethod(e, f, params)
 	
 	
 	if params is not None and __builtin__.len(params) != 0:
@@ -1218,7 +1198,7 @@ def Type_statics_getClassFields(c):
 Type.getClassFields = Type_statics_getClassFields
 def Type_statics_getEnumConstructs(e):
 	if __builtin__.hasattr(e, "_hx_constructs"):
-		x = c._hx_constructs
+		x = e._hx_constructs
 		return __builtin__.list(x)
 	
 	else:
@@ -1266,19 +1246,7 @@ def Type_statics_allEnums(e):
 	while _g < len(ctors):
 		ctor = ctors[_g]
 		_g = _g + 1
-		v = None
-		v1 = None
-		try:
-			v1 = __builtin__.getattr(e, ctor)
-		except Exception as _hx_e:
-			_hx_e1 = _hx_e.val if isinstance(_hx_e, _HxException) else _hx_e
-			if True:
-				e1 = _hx_e1
-				None
-			else:
-				raise _hx_e
-		v = v1
-		
+		v = Reflect.field(e, ctor)
 		if Std._hx_is(v, e):
 			ret.append(v)
 			__builtin__.len(ret)
@@ -2933,55 +2901,55 @@ def Execute_statics_run_cmd(args,input = None,cwd = None,env = None):
 		encoded_args = __builtin__.list(__builtin__.filter(_hx_local_1, args))
 		p = None
 		o = _Hx_AnonObject(cwd = cwd ,stdout = python_lib_Subprocess.PIPE ,stderr = python_lib_Subprocess.PIPE ,stdin = python_lib_Subprocess.PIPE ,startupinfo = hxsublime_Plugin.startupInfo() ,env = env1 )
-		if __builtin__.hasattr(o, "bufsize"):
+		if Reflect.hasField(o, "bufsize"):
 			o.bufsize = o.bufsize
 		else:
 			o.bufsize = 0
-		if __builtin__.hasattr(o, "executable"):
+		if Reflect.hasField(o, "executable"):
 			o.executable = o.executable
 		else:
 			o.executable = None
-		if __builtin__.hasattr(o, "stdin"):
+		if Reflect.hasField(o, "stdin"):
 			o.stdin = o.stdin
 		else:
 			o.stdin = None
-		if __builtin__.hasattr(o, "stdout"):
+		if Reflect.hasField(o, "stdout"):
 			o.stdout = o.stdout
 		else:
 			o.stdout = None
-		if __builtin__.hasattr(o, "stderr"):
+		if Reflect.hasField(o, "stderr"):
 			o.stderr = o.stderr
 		else:
 			o.stderr = None
-		if __builtin__.hasattr(o, "preexec_fn"):
+		if Reflect.hasField(o, "preexec_fn"):
 			o.preexec_fn = o.preexec_fn
 		else:
 			o.preexec_fn = None
-		if __builtin__.hasattr(o, "close_fds"):
+		if Reflect.hasField(o, "close_fds"):
 			o.close_fds = o.close_fds
 		else:
 			o.close_fds = None
-		if __builtin__.hasattr(o, "shell"):
+		if Reflect.hasField(o, "shell"):
 			o.shell = o.shell
 		else:
 			o.shell = None
-		if __builtin__.hasattr(o, "cwd"):
+		if Reflect.hasField(o, "cwd"):
 			o.cwd = o.cwd
 		else:
 			o.cwd = None
-		if __builtin__.hasattr(o, "env"):
+		if Reflect.hasField(o, "env"):
 			o.env = o.env
 		else:
 			o.env = None
-		if __builtin__.hasattr(o, "universal_newlines"):
+		if Reflect.hasField(o, "universal_newlines"):
 			o.universal_newlines = o.universal_newlines
 		else:
 			o.universal_newlines = None
-		if __builtin__.hasattr(o, "startupinfo"):
+		if Reflect.hasField(o, "startupinfo"):
 			o.startupinfo = o.startupinfo
 		else:
 			o.startupinfo = None
-		if __builtin__.hasattr(o, "creationflags"):
+		if Reflect.hasField(o, "creationflags"):
 			o.creationflags = o.creationflags
 		else:
 			o.creationflags = 0
@@ -5574,19 +5542,7 @@ class hxsublime_commands_Completion_HaxeDisplayCompletionCommand(sublime_TextCom
 						while _g < len(_g1):
 							f = _g1[_g]
 							_g = _g + 1
-							val = None
-							v = None
-							try:
-								v = __builtin__.getattr(x, f)
-							except Exception as _hx_e:
-								_hx_e1 = _hx_e.val if isinstance(_hx_e, _HxException) else _hx_e
-								if True:
-									e = _hx_e1
-									None
-								else:
-									raise _hx_e
-							val = v
-							
+							val = Reflect.field(x, f)
 							python_lib_Types_DictImpl.set(d, f, val)
 							
 						
@@ -6194,19 +6150,7 @@ class hxsublime_commands_Execute_HaxeExecCommand(sublime_WindowCommand):
 						while _g < len(_g1):
 							f = _g1[_g]
 							_g = _g + 1
-							val = None
-							v = None
-							try:
-								v = __builtin__.getattr(x, f)
-							except Exception as _hx_e:
-								_hx_e1 = _hx_e.val if isinstance(_hx_e, _HxException) else _hx_e
-								if True:
-									e = _hx_e1
-									None
-								else:
-									raise _hx_e
-							val = v
-							
+							val = Reflect.field(x, f)
 							python_lib_Types_DictImpl.set(d, f, val)
 							
 						
@@ -7842,55 +7786,55 @@ class hxsublime_compiler_Server:
 				
 				haxe_Log.trace("server env:" + Std.string(full_env), _Hx_AnonObject(fileName = "Server.hx" ,lineNumber = 106 ,className = "hxsublime.compiler.Server" ,methodName = "start" ))
 				o = _Hx_AnonObject(cwd = cwd ,env = full_env ,stdin = python_lib_Subprocess.PIPE ,stdout = python_lib_Subprocess.PIPE ,startupinfo = hxsublime_Plugin.startupInfo() )
-				if __builtin__.hasattr(o, "bufsize"):
+				if Reflect.hasField(o, "bufsize"):
 					o.bufsize = o.bufsize
 				else:
 					o.bufsize = 0
-				if __builtin__.hasattr(o, "executable"):
+				if Reflect.hasField(o, "executable"):
 					o.executable = o.executable
 				else:
 					o.executable = None
-				if __builtin__.hasattr(o, "stdin"):
+				if Reflect.hasField(o, "stdin"):
 					o.stdin = o.stdin
 				else:
 					o.stdin = None
-				if __builtin__.hasattr(o, "stdout"):
+				if Reflect.hasField(o, "stdout"):
 					o.stdout = o.stdout
 				else:
 					o.stdout = None
-				if __builtin__.hasattr(o, "stderr"):
+				if Reflect.hasField(o, "stderr"):
 					o.stderr = o.stderr
 				else:
 					o.stderr = None
-				if __builtin__.hasattr(o, "preexec_fn"):
+				if Reflect.hasField(o, "preexec_fn"):
 					o.preexec_fn = o.preexec_fn
 				else:
 					o.preexec_fn = None
-				if __builtin__.hasattr(o, "close_fds"):
+				if Reflect.hasField(o, "close_fds"):
 					o.close_fds = o.close_fds
 				else:
 					o.close_fds = None
-				if __builtin__.hasattr(o, "shell"):
+				if Reflect.hasField(o, "shell"):
 					o.shell = o.shell
 				else:
 					o.shell = None
-				if __builtin__.hasattr(o, "cwd"):
+				if Reflect.hasField(o, "cwd"):
 					o.cwd = o.cwd
 				else:
 					o.cwd = None
-				if __builtin__.hasattr(o, "env"):
+				if Reflect.hasField(o, "env"):
 					o.env = o.env
 				else:
 					o.env = None
-				if __builtin__.hasattr(o, "universal_newlines"):
+				if Reflect.hasField(o, "universal_newlines"):
 					o.universal_newlines = o.universal_newlines
 				else:
 					o.universal_newlines = None
-				if __builtin__.hasattr(o, "startupinfo"):
+				if Reflect.hasField(o, "startupinfo"):
 					o.startupinfo = o.startupinfo
 				else:
 					o.startupinfo = None
-				if __builtin__.hasattr(o, "creationflags"):
+				if Reflect.hasField(o, "creationflags"):
 					o.creationflags = o.creationflags
 				else:
 					o.creationflags = 0
@@ -8103,19 +8047,7 @@ def Base_statics_trigger_completion(view,options,show_top_level_snippets = False
 						while _g < len(_g1):
 							f = _g1[_g]
 							_g = _g + 1
-							val = None
-							v = None
-							try:
-								v = __builtin__.getattr(x, f)
-							except Exception as _hx_e:
-								_hx_e1 = _hx_e.val if isinstance(_hx_e, _HxException) else _hx_e
-								if True:
-									e = _hx_e1
-									None
-								else:
-									raise _hx_e
-							val = v
-							
+							val = Reflect.field(x, f)
 							python_lib_Types_DictImpl.set(d, f, val)
 							
 						
@@ -9914,19 +9846,7 @@ class hxsublime_panel_SlidePanel:
 					while _g < len(_g1):
 						f = _g1[_g]
 						_g = _g + 1
-						val = None
-						v = None
-						try:
-							v = __builtin__.getattr(x, f)
-						except Exception as _hx_e:
-							_hx_e1 = _hx_e.val if isinstance(_hx_e, _HxException) else _hx_e
-							if True:
-								e = _hx_e1
-								None
-							else:
-								raise _hx_e
-						val = v
-						
+						val = Reflect.field(x, f)
 						python_lib_Types_DictImpl.set(d, f, val)
 						
 					
@@ -10699,19 +10619,7 @@ class hxsublime_project_Project:
 					while _g < len(_g1):
 						f = _g1[_g]
 						_g = _g + 1
-						val = None
-						v = None
-						try:
-							v = __builtin__.getattr(x, f)
-						except Exception as _hx_e:
-							_hx_e1 = _hx_e.val if isinstance(_hx_e, _HxException) else _hx_e
-							if True:
-								e = _hx_e1
-								None
-							else:
-								raise _hx_e
-						val = v
-						
+						val = Reflect.field(x, f)
 						python_lib_Types_DictImpl.set(d, f, val)
 						
 					
@@ -12815,19 +12723,7 @@ def ViewTools_statics_insertSnippet(view,snippet):
 				while _g < len(_g1):
 					f = _g1[_g]
 					_g = _g + 1
-					val = None
-					v = None
-					try:
-						v = __builtin__.getattr(x, f)
-					except Exception as _hx_e:
-						_hx_e1 = _hx_e.val if isinstance(_hx_e, _HxException) else _hx_e
-						if True:
-							e = _hx_e1
-							None
-						else:
-							raise _hx_e
-					val = v
-					
+					val = Reflect.field(x, f)
 					python_lib_Types_DictImpl.set(d, f, val)
 					
 				
@@ -12869,19 +12765,7 @@ def ViewTools_statics_asyncEdit(view,doEdit):
 					while _g < len(_g1):
 						f = _g1[_g]
 						_g = _g + 1
-						val = None
-						v = None
-						try:
-							v = __builtin__.getattr(x, f)
-						except Exception as _hx_e:
-							_hx_e1 = _hx_e.val if isinstance(_hx_e, _HxException) else _hx_e
-							if True:
-								e = _hx_e1
-								None
-							else:
-								raise _hx_e
-						val = v
-						
+						val = Reflect.field(x, f)
 						python_lib_Types_DictImpl.set(d, f, val)
 						
 					
@@ -13072,20 +12956,7 @@ def Boot_statics___string_rec(o,s):
 				while _g1 < len(fields):
 					f = fields[_g1]
 					_g1 = _g1 + 1
-					def _hx_local_1():
-						v = None
-						try:
-							v = __builtin__.getattr(o, f)
-						except Exception as _hx_e:
-							_hx_e1 = _hx_e.val if isinstance(_hx_e, _HxException) else _hx_e
-							if True:
-								e = _hx_e1
-								None
-							else:
-								raise _hx_e
-						return v
-					
-					x = "" + f + " : " + python_Boot.__string_rec(_hx_local_1(), s + "\t")
+					x = "" + f + " : " + python_Boot.__string_rec(Reflect.field(o, f), s + "\t")
 					_g.append(x)
 					__builtin__.len(_g)
 					
@@ -13115,14 +12986,14 @@ def Boot_statics___string_rec(o,s):
 				paramsStr = ""
 				_g = 0
 				while _g < l:
-					def _hx_local_2():
+					def _hx_local_1():
 						nonlocal _g
 						_hx_r = _g
 						_g = _g + 1
 						return _hx_r
 						
 					
-					i = _hx_local_2()
+					i = _hx_local_1()
 					prefix = ""
 					if i > 0:
 						prefix = ","
@@ -13144,20 +13015,7 @@ def Boot_statics___string_rec(o,s):
 			while _g1 < len(fields):
 				f = fields[_g1]
 				_g1 = _g1 + 1
-				def _hx_local_3():
-					v = None
-					try:
-						v = __builtin__.getattr(o, f)
-					except Exception as _hx_e:
-						_hx_e1 = _hx_e.val if isinstance(_hx_e, _HxException) else _hx_e
-						if True:
-							e = _hx_e1
-							None
-						else:
-							raise _hx_e
-					return v
-				
-				x = "" + f + " : " + python_Boot.__string_rec(_hx_local_3(), s + "\t")
+				x = "" + f + " : " + python_Boot.__string_rec(Reflect.field(o, f), s + "\t")
 				_g.append(x)
 				__builtin__.len(_g)
 				
@@ -13165,6 +13023,15 @@ def Boot_statics___string_rec(o,s):
 			
 			fieldsStr = _g
 			
+			_g1 = 0
+			while _g1 < len(fields):
+				f = fields[_g1]
+				_g1 = _g1 + 1
+				haxe_Log.trace(Reflect.field(o, f), _Hx_AnonObject(fileName = "Boot.hx" ,lineNumber = 119 ,className = "python.Boot" ,methodName = "__string_rec" ))
+			
+			
+			haxe_Log.trace(python_lib_Inspect.getmembers(o), _Hx_AnonObject(fileName = "Boot.hx" ,lineNumber = 123 ,className = "python.Boot" ,methodName = "__string_rec" ))
+			haxe_Log.trace(fieldsStr, _Hx_AnonObject(fileName = "Boot.hx" ,lineNumber = 125 ,className = "python.Boot" ,methodName = "__string_rec" ))
 			toStr = Std.string(o._hx_class_name) + "( " + ", ".join(fieldsStr) + " )"
 			return toStr
 		
@@ -13177,20 +13044,7 @@ def Boot_statics___string_rec(o,s):
 			while _g1 < len(fields):
 				f = fields[_g1]
 				_g1 = _g1 + 1
-				def _hx_local_4():
-					v = None
-					try:
-						v = __builtin__.getattr(o, f)
-					except Exception as _hx_e:
-						_hx_e1 = _hx_e.val if isinstance(_hx_e, _HxException) else _hx_e
-						if True:
-							e = _hx_e1
-							None
-						else:
-							raise _hx_e
-					return v
-				
-				x = "" + f + " : " + python_Boot.__string_rec(_hx_local_4(), s + "\t")
+				x = "" + f + " : " + python_Boot.__string_rec(Reflect.field(o, f), s + "\t")
 				_g.append(x)
 				__builtin__.len(_g)
 				
@@ -13218,9 +13072,9 @@ def Boot_statics___string_rec(o,s):
 	
 	else:
 		try:
-			def _hx_local_5(_):
+			def _hx_local_2(_):
 				return True
-			python_lib_Inspect.getmembers(o, _hx_local_5)
+			python_lib_Inspect.getmembers(o, _hx_local_2)
 			return __builtin__.str(o)
 	
 		except Exception as _hx_e:
@@ -13544,6 +13398,80 @@ python_internal_ArrayImpl._hx_methods = []
 python_internal_ArrayImpl._hx_statics = ["get_length","concat","copy","iterator","join","toString","pop","push","unshift","remove","shift","slice","sort","splice","map","filter","__get","__set","__unsafe_get","__unsafe_set"]
 python_internal_ArrayImpl._hx_interfaces = []
 
+# print python.internal.KeywordHandler.KeywordHandler
+class python_internal_KeywordHandler:
+
+	pass
+
+
+
+
+def _hx_init_python_internal_KeywordHandler_keywords():
+	_g = haxe_ds_StringMap()
+	_g.set("and", True)
+	_g.set("del", True)
+	_g.set("from", True)
+	_g.set("not", True)
+	_g.set("while", True)
+	_g.set("as", True)
+	_g.set("elif", True)
+	_g.set("global", True)
+	_g.set("or", True)
+	_g.set("with", True)
+	_g.set("assert", True)
+	_g.set("else", True)
+	_g.set("if", True)
+	_g.set("pass", True)
+	_g.set("yield", True)
+	_g.set("break", True)
+	_g.set("except", True)
+	_g.set("import", True)
+	_g.set("print", True)
+	_g.set("float", True)
+	_g.set("class", True)
+	_g.set("exec", True)
+	_g.set("in", True)
+	_g.set("raise", True)
+	_g.set("continue", True)
+	_g.set("finally", True)
+	_g.set("is", True)
+	_g.set("return", True)
+	_g.set("def", True)
+	_g.set("for", True)
+	_g.set("lambda", True)
+	_g.set("try", True)
+	return _g
+	
+python_internal_KeywordHandler.keywords = _hx_init_python_internal_KeywordHandler_keywords()
+def KeywordHandler_statics_handleKeywords(name):
+	if python_internal_KeywordHandler.keywords.exists(name):
+		return "_hx_" + name
+	
+	return name
+	
+python_internal_KeywordHandler.handleKeywords = KeywordHandler_statics_handleKeywords
+def KeywordHandler_statics_unhandleKeywords(name):
+	if python_Tools.substr(name, 0, 4) == "_hx_":
+		real = python_Tools.substr(name, 4, None)
+		if python_internal_KeywordHandler.keywords.exists(real):
+			return real
+		
+	
+	
+	return name
+	
+python_internal_KeywordHandler.unhandleKeywords = KeywordHandler_statics_unhandleKeywords
+
+
+python_internal_KeywordHandler._hx_class = python_internal_KeywordHandler
+python_internal_KeywordHandler._hx_class_name = "python.internal.KeywordHandler"
+_hx_classes['python.internal.KeywordHandler'] = python_internal_KeywordHandler
+python_internal_KeywordHandler._hx_fields = []
+python_internal_KeywordHandler._hx_props = []
+python_internal_KeywordHandler._hx_methods = []
+python_internal_KeywordHandler._hx_statics = ["keywords","handleKeywords","unhandleKeywords"]
+python_internal_KeywordHandler._hx_interfaces = []
+
 # print python.lib.ArrayTools.ArrayTools
 class python_lib_ArrayTools:
 
@@ -13837,19 +13765,7 @@ def DictImpl_statics_fromObject(x):
 	while _g < len(_g1):
 		f = _g1[_g]
 		_g = _g + 1
-		val = None
-		v = None
-		try:
-			v = __builtin__.getattr(x, f)
-		except Exception as _hx_e:
-			_hx_e1 = _hx_e.val if isinstance(_hx_e, _HxException) else _hx_e
-			if True:
-				e = _hx_e1
-				None
-			else:
-				raise _hx_e
-		val = v
-		
+		val = Reflect.field(x, f)
 		python_lib_Types_DictImpl.set(d, f, val)
 		
 	
