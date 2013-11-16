@@ -7,6 +7,7 @@ import hxsublime.tools.HxSrcTools.HaxeType;
 import python.lib.os.Path;
 import python.lib.Re;
 import python.lib.Types.Tup2;
+import python.lib.Types.Tup3;
 import sublime.Sublime;
 
 
@@ -93,11 +94,12 @@ class HaxeLibManager {
 		}
 	}
 
-	public function get_completions() {
+	public function get_completions():Array<Tup2<String, String>> {
 		var comps = [];
 		for (k in available().keys())
 		{
 			var lib = available().get(k);
+			trace(lib);
 			comps.push( Tup2.create( lib.name + " [" + lib.version + "]" , lib.name ) );
 		}
 
@@ -116,7 +118,7 @@ class HaxeLibManager {
 		var r = Execute.run_cmd( cmd, env );
 		var hlout = r._1;
 		var hlerr = r._2;
-		var basePath = hlout.strip();
+		basePath = hlout.strip();
 
 		_available = new StringMap();
 
@@ -132,7 +134,7 @@ class HaxeLibManager {
 			var found = libLine.match( l );
 			if (found != null) 
 			{
-				var g = found.groups();
+				var g:Tup3<String,String,String> = found.groups();
 				var name = g._1, dev = g._2, version = g._3;
 				var lib = new HaxeLibLibrary( this, name , dev != null , version );
 
@@ -141,7 +143,7 @@ class HaxeLibManager {
 		}
 	}
 
-	public function install_lib(lib){
+	public function install_lib(lib:String){
 		var cmd = project.haxelib_exec();
 		var env = project.haxe_env();
 		cmd.push("install");
@@ -151,7 +153,7 @@ class HaxeLibManager {
 		scan();
 	}
 
-	public function remove_lib(lib){
+	public function remove_lib(lib:String){
 		var cmd = project.haxelib_exec();
 		var env = project.haxe_env();
 		cmd.push("remove");
@@ -192,7 +194,8 @@ class HaxeLibManager {
 	}
 
 	public function _collect_libraries(out:String){
-		var x = out.split("\n");
+		trace(out);
+		var x = out.split("\n").filter(function (x) return x != "" && x.indexOf("libraries found") == -1);
 		x.reverse();
 		return x;
 	}

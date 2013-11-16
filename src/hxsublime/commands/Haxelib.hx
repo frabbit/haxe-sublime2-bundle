@@ -26,6 +26,7 @@ import sublime.WindowCommand;
             var libs = manager.search_libs();
             var menu = this._prepare_menu(libs, manager);
             var on_selected = this._entry_selected.bind(libs, manager);
+            trace(libs);
             this.window.show_quick_panel(menu, on_selected);
         }
     }
