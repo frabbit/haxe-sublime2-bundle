@@ -64,8 +64,6 @@ class Tools {
 				continue;
 			}
 
-
-
 			if (l.startsWith("--next")) 
 			{
 				if (current_build._classpaths.length == 0) 
@@ -73,15 +71,12 @@ class Tools {
 					trace("no classpaths");
 					current_build.add_classpath( build_path );
 				}
-					//current_build.args.push( ("-cp" , build_path ) )
-				//current_build.get_types()
+
 				builds.push( current_build );
 				current_build = new HxmlBuild(hxml, build_file);
 				continue;
 			}
-				
-			
-			
+
 			if (l.endsWith(".hxml"))
 			{
 				

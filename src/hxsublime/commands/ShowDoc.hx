@@ -1,6 +1,9 @@
 package hxsublime.commands;
 
 import hxsublime.commands.FindDeclaration.HaxeFindDeclarationCommand;
+import hxsublime.panel.Base.Panels;
+import python.lib.Types.Dict;
+import sublime.View;
 
 class HaxeShowDocCommand extends HaxeFindDeclarationCommand
 {
@@ -10,11 +13,12 @@ class HaxeShowDocCommand extends HaxeFindDeclarationCommand
         return "hxsublime.FindDeclaration.__sublimeShowDoc";
     }
 
-    override public function handle_successfull_result(view:View, json_res, using_insert, insert_before, insert_after, expr_end, build, temp_path, temp_file)
+    override public function handle_successfull_result(view:View, json_res:Dict<String,Dynamic>, using_insert, insert_before, insert_after, expr_end, build, temp_path, temp_file)
     {
-        if ("doc" in json_res.keys()) 
+        var doc = null;
+        if (json_res.hasKey("doc")) 
         {
-            doc = json_res["doc"];
+            doc = json_res.get("doc", null);
         }
         else 
         {
@@ -22,7 +26,7 @@ class HaxeShowDocCommand extends HaxeFindDeclarationCommand
         }
         trace("json: " + Std.string(json_res));
         trace("doc: " + Std.string(doc));
-        panel.slide_panel().writeln(doc, false);
+        Panels.slide_panel().writeln(doc, false);
     }
 }
 

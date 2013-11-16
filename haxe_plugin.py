@@ -1329,7 +1329,7 @@ def Log_statics_trace(v,infos = None):
 	
 	else:
 		str = v
-	print(str + "\n")
+	print(str)
 	
 haxe_Log.trace = Log_statics_trace
 def Log_statics_clear():
@@ -3010,7 +3010,6 @@ def Execute_statics_run_cmd(args,input = None,cwd = None,env = None):
 			base_env.update(env)
 		
 		env1 = base_env
-		haxe_Log.trace(env1, _Hx_AnonObject(fileName = "Execute.hx" ,lineNumber = 48 ,className = "hxsublime.Execute" ,methodName = "run_cmd" ))
 		def _hx_local_0():
 			p = None
 			_this = env1.keys()
@@ -3031,7 +3030,6 @@ def Execute_statics_run_cmd(args,input = None,cwd = None,env = None):
 		def _hx_local_1(s):
 			return s != ""
 		encoded_args = __builtin__.list(__builtin__.filter(_hx_local_1, args))
-		haxe_Log.trace("pre popen", _Hx_AnonObject(fileName = "Execute.hx" ,lineNumber = 60 ,className = "hxsublime.Execute" ,methodName = "run_cmd" ))
 		p = None
 		o = _Hx_AnonObject(cwd = cwd ,stdout = python_lib_Subprocess.PIPE ,stderr = python_lib_Subprocess.PIPE ,stdin = python_lib_Subprocess.PIPE ,startupinfo = hxsublime_Plugin.startupInfo() ,env = env1 )
 		if __builtin__.hasattr(o, "bufsize"):
@@ -3088,17 +3086,14 @@ def Execute_statics_run_cmd(args,input = None,cwd = None,env = None):
 			o.creationflags = 0
 		p = python_lib_subprocess_Popen(encoded_args, o.bufsize, o.executable, o.stdin, o.stdout, o.stderr, o.preexec_fn, o.close_fds, o.shell, o.cwd, o.env, o.universal_newlines, o.startupinfo, o.creationflags)
 		
-		haxe_Log.trace("post popen", _Hx_AnonObject(fileName = "Execute.hx" ,lineNumber = 63 ,className = "hxsublime.Execute" ,methodName = "run_cmd" ))
 		inputBytes = None
 		if input is not None:
 			inputBytes = python_lib_StringTools.encode(input, "utf-8")
 		else:
 			inputBytes = None
-		haxe_Log.trace("pre communicate", _Hx_AnonObject(fileName = "Execute.hx" ,lineNumber = 66 ,className = "hxsublime.Execute" ,methodName = "run_cmd" ))
 		r = p.communicate(inputBytes)
 		out = r[0]
 		err = r[1]
-		haxe_Log.trace("pre decode", _Hx_AnonObject(fileName = "Execute.hx" ,lineNumber = 70 ,className = "hxsublime.Execute" ,methodName = "run_cmd" ))
 		a = out.decode("utf-8")
 		b = err.decode("utf-8")
 		return (a, b)
@@ -3108,7 +3103,7 @@ def Execute_statics_run_cmd(args,input = None,cwd = None,env = None):
 		_hx_e1 = _hx_e.val if isinstance(_hx_e, _HxException) else _hx_e
 		if True:
 			e = _hx_e1
-			haxe_Log.trace(e, _Hx_AnonObject(fileName = "Execute.hx" ,lineNumber = 75 ,className = "hxsublime.Execute" ,methodName = "run_cmd" ))
+			haxe_Log.trace(e, _Hx_AnonObject(fileName = "Execute.hx" ,lineNumber = 74 ,className = "hxsublime.Execute" ,methodName = "run_cmd" ))
 			p = args[0]
 			err = "Error while running " + p + ": in " + cwd + " (" + Std.string(e) + ")"
 			return ("", err)
@@ -3221,6 +3216,7 @@ class hxsublime_Haxelib_HaxeLibManager:
 		while _it.hasNext():
 			k = _it.next()
 			lib = self.available().get(k)
+			haxe_Log.trace(lib, _Hx_AnonObject(fileName = "Haxelib.hx" ,lineNumber = 102 ,className = "hxsublime.HaxeLibManager" ,methodName = "get_completions" ))
 			x = (lib.name + " [" + lib.version + "]", lib.name)
 			comps.append(x)
 			__builtin__.len(comps)
@@ -3235,7 +3231,6 @@ class hxsublime_Haxelib_HaxeLibManager:
 	def scan(self):
 		self.scanned = True
 		env = self.project.haxe_env()
-		haxe_Log.trace("do scan", _Hx_AnonObject(fileName = "Haxelib.hx" ,lineNumber = 113 ,className = "hxsublime.HaxeLibManager" ,methodName = "scan" ))
 		cmd = self.project.haxelib_exec()
 		cmd.append("config")
 		__builtin__.len(cmd)
@@ -3243,7 +3238,7 @@ class hxsublime_Haxelib_HaxeLibManager:
 		r = hxsublime_Execute.run_cmd(cmd, None, None, env)
 		hlout = r[0]
 		hlerr = r[1]
-		basePath = hlout.strip(None)
+		self.basePath = hlout.strip(None)
 		self._available = haxe_ds_StringMap()
 		cmd1 = self.project.haxelib_exec()
 		cmd1.append("list")
@@ -3252,8 +3247,6 @@ class hxsublime_Haxelib_HaxeLibManager:
 		r1 = hxsublime_Execute.run_cmd(cmd1, None, None, env)
 		hlout1 = r1[0]
 		hlerr1 = r1[1]
-		haxe_Log.trace("haxelib output: " + hlout1, _Hx_AnonObject(fileName = "Haxelib.hx" ,lineNumber = 129 ,className = "hxsublime.HaxeLibManager" ,methodName = "scan" ))
-		haxe_Log.trace("haxelib error: " + hlerr1, _Hx_AnonObject(fileName = "Haxelib.hx" ,lineNumber = 130 ,className = "hxsublime.HaxeLibManager" ,methodName = "scan" ))
 		_g = 0
 		_g1 = hlout1.split("\n")
 		while _g < len(_g1):
@@ -3261,12 +3254,15 @@ class hxsublime_Haxelib_HaxeLibManager:
 			_g = _g + 1
 			found = hxsublime_Haxelib_HaxeLibManager.libLine.match(l)
 			if found is not None:
-				g = found.groups()
-				name = g._1
-				dev = g._2
-				version = g._3
-				lib = hxsublime_Haxelib_HaxeLibLibrary(self, name, dev is not None, version)
-				self._available.set(name, lib)
+				g = found.groups(None)
+				if g is not None:
+					name = g[0]
+					dev = g[1]
+					version = g[2]
+					lib = hxsublime_Haxelib_HaxeLibLibrary(self, name, dev is not None, version)
+					self._available.set(name, lib)
+				
+				
 			
 			
 		
@@ -3282,7 +3278,7 @@ class hxsublime_Haxelib_HaxeLibManager:
 		cmd.append(lib)
 		__builtin__.len(cmd)
 		
-		haxe_Log.trace(Std.string(cmd), _Hx_AnonObject(fileName = "Haxelib.hx" ,lineNumber = 149 ,className = "hxsublime.HaxeLibManager" ,methodName = "install_lib" ))
+		haxe_Log.trace(Std.string(cmd), _Hx_AnonObject(fileName = "Haxelib.hx" ,lineNumber = 155 ,className = "hxsublime.HaxeLibManager" ,methodName = "install_lib" ))
 		hxsublime_Execute.run_cmd(cmd, None, None, env)
 		self.scan()
 	
@@ -3296,7 +3292,7 @@ class hxsublime_Haxelib_HaxeLibManager:
 		cmd.append(lib)
 		__builtin__.len(cmd)
 		
-		haxe_Log.trace(Std.string(cmd), _Hx_AnonObject(fileName = "Haxelib.hx" ,lineNumber = 159 ,className = "hxsublime.HaxeLibManager" ,methodName = "remove_lib" ))
+		haxe_Log.trace(Std.string(cmd), _Hx_AnonObject(fileName = "Haxelib.hx" ,lineNumber = 166 ,className = "hxsublime.HaxeLibManager" ,methodName = "remove_lib" ))
 		hxsublime_Execute.run_cmd(cmd, None, None, env)
 		self.scan()
 	
@@ -3307,7 +3303,7 @@ class hxsublime_Haxelib_HaxeLibManager:
 		cmd.append("upgrade")
 		__builtin__.len(cmd)
 		
-		haxe_Log.trace(Std.string(cmd), _Hx_AnonObject(fileName = "Haxelib.hx" ,lineNumber = 168 ,className = "hxsublime.HaxeLibManager" ,methodName = "upgrade_all" ))
+		haxe_Log.trace(Std.string(cmd), _Hx_AnonObject(fileName = "Haxelib.hx" ,lineNumber = 176 ,className = "hxsublime.HaxeLibManager" ,methodName = "upgrade_all" ))
 		hxsublime_Execute.run_cmd(cmd, None, None, env)
 		self.scan()
 	
@@ -3318,7 +3314,7 @@ class hxsublime_Haxelib_HaxeLibManager:
 		cmd.append("thisupdate")
 		__builtin__.len(cmd)
 		
-		haxe_Log.trace(Std.string(cmd), _Hx_AnonObject(fileName = "Haxelib.hx" ,lineNumber = 177 ,className = "hxsublime.HaxeLibManager" ,methodName = "self_update" ))
+		haxe_Log.trace(Std.string(cmd), _Hx_AnonObject(fileName = "Haxelib.hx" ,lineNumber = 186 ,className = "hxsublime.HaxeLibManager" ,methodName = "self_update" ))
 		hxsublime_Execute.run_cmd(cmd, None, None, env)
 		self.scan()
 	
@@ -3332,7 +3328,6 @@ class hxsublime_Haxelib_HaxeLibManager:
 		cmd.append("_")
 		__builtin__.len(cmd)
 		
-		haxe_Log.trace(Std.string(cmd), _Hx_AnonObject(fileName = "Haxelib.hx" ,lineNumber = 187 ,className = "hxsublime.HaxeLibManager" ,methodName = "search_libs" ))
 		res = hxsublime_Execute.run_cmd(cmd, None, None, env)
 		out = res[0]
 		err = res[1]
@@ -3340,7 +3335,12 @@ class hxsublime_Haxelib_HaxeLibManager:
 	
 
 	def _collect_libraries(self,out):
-		x = out.split("\n")
+		x = None
+		_this = out.split("\n")
+		def _hx_local_0(x1):
+			return x1 != "" and x1.find("libraries found") == -1
+		x = __builtin__.list(__builtin__.filter(_hx_local_0, _this))
+		
 		x.reverse()
 		return x
 	
@@ -4046,14 +4046,14 @@ class hxsublime_build_HxmlBuild:
 
 	def __init__(self,hxml,build_file):
 		self.show_times = False
-		self.std_bundle = hxsublime_tools_HxSrcTools.empty_type_bundle()
-		self.args = []
+		self._std_bundle = hxsublime_tools_HxSrcTools.empty_type_bundle()
+		self._args = []
 		self.main = None
-		self.target = None
+		self._target = None
 		self.output = "dummy.js"
 		self._hxml = hxml
 		self._build_file = build_file
-		self.classpaths = []
+		self._classpaths = []
 		self.libs = []
 		self.type_bundle = None
 		self._update_time = None
@@ -4062,20 +4062,29 @@ class hxsublime_build_HxmlBuild:
 		self.name = None
 	
 	# var show_times
-	# var std_bundle
-	# var args
+	# var _std_bundle
+	# var _args
 	# var main
-	# var target
+	# var _target
 	# var output
 	# var _hxml
 	# var _build_file
-	# var classpaths
+	# var _classpaths
 	# var libs
 	# var type_bundle
 	# var _update_time
 	# var mode_completion
 	# var defines
 	# var name
+	def std_bundle(self):
+		return self._std_bundle
+
+	def target(self):
+		return _Hx_AnonObject(name = self._target ,plattform = self._target ,args = [] )
+
+	def classpaths(self):
+		return self._classpaths
+
 	def hxml(self):
 		return self._hxml
 
@@ -4110,15 +4119,22 @@ class hxsublime_build_HxmlBuild:
 	
 
 	def set_std_bundle(self,std_bundle):
-		self.std_bundle = std_bundle
+		self._std_bundle = std_bundle
+
+	def args(self):
+		return self._args
 
 	def equals(self,other):
-		return self.args == other.args and self.main == other.main and self.name == other.name and self.target == other.target and self.output == other.output and self.hxml == other.hxml and self.classpaths == other.classpaths and self.libs == other.libs and self.show_times == other.show_times and self.mode_completion == other.mode_completion and self.defines == other.defines and self._build_file == other._build_file
+		return self.args() == other._args() and self.main == other.main and self.name == other.name and self._target == other._target and self.output == other.output and self.hxml == other.hxml and self.classpaths == other.classpaths and self.libs == other.libs and self.show_times == other.show_times and self.mode_completion == other.mode_completion and self.defines == other.defines and self._build_file == other._build_file
 
 	def merge(self,other_build):
 		ob = other_build
-		self.args.extend(ob.args)
-		self.classpaths.extend(ob.classpaths)
+		x = ob.args()
+		self._args.extend(x)
+		
+		x = ob.classpaths()
+		self._classpaths.extend(x)
+		
 		self.libs.extend(ob.libs)
 		self.defines.extend(ob.defines)
 		if self.main is None:
@@ -4132,14 +4148,16 @@ class hxsublime_build_HxmlBuild:
 	def copy(self):
 		self.get_types()
 		hb = hxsublime_build_HxmlBuild(self._hxml, self.build_file())
-		hb.args = __builtin__.list(self.args)
+		_this = self.args()
+		hb._args = __builtin__.list(_this)
+		
 		hb.main = self.main
 		hb.name = self.name
-		hb.target = self.target
+		hb._target = self._target
 		hb.output = self.output
 		hb.defines = __builtin__.list(self.defines)
-		hb.std_bundle = self.std_bundle
-		hb.classpaths = __builtin__.list(self.classpaths)
+		hb._std_bundle = self._std_bundle
+		hb._classpaths = __builtin__.list(self._classpaths)
 		hb.libs = __builtin__.list(self.libs)
 		hb.type_bundle = self.type_bundle
 		hb._update_time = self._update_time
@@ -4149,7 +4167,7 @@ class hxsublime_build_HxmlBuild:
 	
 
 	def add_arg(self,arg):
-		_this = self.args
+		_this = self._args
 		_this.append(arg)
 		__builtin__.len(_this)
 		
@@ -4190,13 +4208,13 @@ class hxsublime_build_HxmlBuild:
 
 	def add_classpath(self,cp):
 		cp1 = self.align_drive_letter(cp)
-		if not Lambda.has(self.classpaths, cp1):
-			_this = self.classpaths
+		if not Lambda.has(self._classpaths, cp1):
+			_this = self._classpaths
 			_this.append(cp1)
 			__builtin__.len(_this)
 			
 			
-			_this = self.args
+			_this = self._args
 			x = ("-cp", cp1)
 			_this.append(x)
 			__builtin__.len(_this)
@@ -4217,10 +4235,10 @@ class hxsublime_build_HxmlBuild:
 
 	def get_classpath_of_file(self,file):
 		file1 = self.align_drive_letter(file)
-		cps = __builtin__.list(self.classpaths)
+		cps = __builtin__.list(self._classpaths)
 		build_folder = self.get_build_folder()
 		if build_folder is not None and not Lambda.has(cps, build_folder):
-			haxe_Log.trace("add build folder to classpaths: " + build_folder + ", classpaths: " + Std.string(cps), _Hx_AnonObject(fileName = "HxmlBuild.hx" ,lineNumber = 225 ,className = "hxsublime.build.HxmlBuild" ,methodName = "get_classpath_of_file" ))
+			haxe_Log.trace("add build folder to classpaths: " + build_folder + ", classpaths: " + Std.string(cps), _Hx_AnonObject(fileName = "HxmlBuild.hx" ,lineNumber = 230 ,className = "hxsublime.build.HxmlBuild" ,methodName = "get_classpath_of_file" ))
 			cps.append(build_folder)
 			__builtin__.len(cps)
 			
@@ -4247,13 +4265,13 @@ class hxsublime_build_HxmlBuild:
 	def get_relative_path(self,file):
 		file = self.align_drive_letter(file)
 		cp = self.get_classpath_of_file(file)
-		haxe_Log.trace(file, _Hx_AnonObject(fileName = "HxmlBuild.hx" ,lineNumber = 253 ,className = "hxsublime.build.HxmlBuild" ,methodName = "get_relative_path" ))
-		haxe_Log.trace(StringTools.replace(file, cp, ""), _Hx_AnonObject(fileName = "HxmlBuild.hx" ,lineNumber = 254 ,className = "hxsublime.build.HxmlBuild" ,methodName = "get_relative_path" ))
+		haxe_Log.trace(file, _Hx_AnonObject(fileName = "HxmlBuild.hx" ,lineNumber = 258 ,className = "hxsublime.build.HxmlBuild" ,methodName = "get_relative_path" ))
+		haxe_Log.trace(StringTools.replace(file, cp, ""), _Hx_AnonObject(fileName = "HxmlBuild.hx" ,lineNumber = 259 ,className = "hxsublime.build.HxmlBuild" ,methodName = "get_relative_path" ))
 		def _hx_local_0():
 			_this = StringTools.replace(file, cp, "")
 			return python_Tools.substr(_this, 1, None)
 		
-		haxe_Log.trace(_hx_local_0(), _Hx_AnonObject(fileName = "HxmlBuild.hx" ,lineNumber = 255 ,className = "hxsublime.build.HxmlBuild" ,methodName = "get_relative_path" ))
+		haxe_Log.trace(_hx_local_0(), _Hx_AnonObject(fileName = "HxmlBuild.hx" ,lineNumber = 260 ,className = "hxsublime.build.HxmlBuild" ,methodName = "get_relative_path" ))
 		if cp is not None:
 			_this = StringTools.replace(file, cp, "")
 			return python_Tools.substr(_this, 1, None)
@@ -4263,15 +4281,16 @@ class hxsublime_build_HxmlBuild:
 	
 
 	def target_to_string(self):
-		if self.target is None:
-			self.target = "js"
+		target = None
+		if self._target is None:
+			target = "js"
 		else:
-			target = self.target
+			target = self._target
 			if target == "js" and Lambda.has(self.defines, "nodejs"):
 				target = "node.js"
 			
 		
-		return self.target
+		return target
 	
 
 	def to_string(self):
@@ -4286,7 +4305,7 @@ class hxsublime_build_HxmlBuild:
 		outp = outp + "# " + self.to_string() + "\n"
 		outp = outp + "-main " + self.main + "\n"
 		_g = 0
-		_g1 = self.args
+		_g1 = self._args
 		while _g < len(_g1):
 			a = _g1[_g]
 			_g = _g + 1
@@ -4303,7 +4322,7 @@ class hxsublime_build_HxmlBuild:
 	
 
 	def set_cwd(self,cwd):
-		_this = self.args
+		_this = self._args
 		x = ("--cwd", cwd)
 		_this.append(x)
 		__builtin__.len(_this)
@@ -4312,19 +4331,19 @@ class hxsublime_build_HxmlBuild:
 
 	def set_times(self):
 		self.show_times = True
-		_this = self.args
+		_this = self._args
 		x = ("--times", "")
 		_this.append(x)
 		__builtin__.len(_this)
 		
 		
-		_this = self.args
+		_this = self._args
 		x = ("-D", "macro-times")
 		_this.append(x)
 		__builtin__.len(_this)
 		
 		
-		_this = self.args
+		_this = self._args
 		x = ("-D", "macro_times")
 		_this.append(x)
 		__builtin__.len(_this)
@@ -4336,7 +4355,7 @@ class hxsublime_build_HxmlBuild:
 		if server_port is None:
 			server_port = 6000
 		
-		_this = self.args
+		_this = self._args
 		x = None
 		b = Std.string(server_port)
 		x = ("--connect", b)
@@ -4349,7 +4368,7 @@ class hxsublime_build_HxmlBuild:
 	def get_command_args(self,haxe_path):
 		cmd = __builtin__.list(haxe_path)
 		_g = 0
-		_g1 = self.args
+		_g1 = self._args
 		while _g < len(_g1):
 			a = _g1[_g]
 			_g = _g + 1
@@ -4393,7 +4412,7 @@ class hxsublime_build_HxmlBuild:
 			no_output = True
 		
 		self.mode_completion = True
-		args = self.args
+		args = self._args
 		self.main = None
 		def _hx_local_0(x):
 			return x[0] != "-cs" and x[0] != "-x" and x[0] != "-js" and x[0] != "-php" and x[0] != "-cpp" and x[0] != "-swf" and x[0] != "-java"
@@ -4445,13 +4464,13 @@ class hxsublime_build_HxmlBuild:
 			
 		
 		
-		self.args = args
+		self._args = args
 	
 
 	def _update_types(self):
-		haxe_Log.trace("update types for classpaths:" + Std.string(self.classpaths), _Hx_AnonObject(fileName = "HxmlBuild.hx" ,lineNumber = 409 ,className = "hxsublime.build.HxmlBuild" ,methodName = "_update_types" ))
-		haxe_Log.trace("update types for libs:" + Std.string(self.libs), _Hx_AnonObject(fileName = "HxmlBuild.hx" ,lineNumber = 410 ,className = "hxsublime.build.HxmlBuild" ,methodName = "_update_types" ))
-		self.type_bundle = hxsublime_Types.find_types(self.classpaths, self.libs, self.get_build_folder(), [], [], False)
+		haxe_Log.trace("update types for classpaths:" + Std.string(self._classpaths), _Hx_AnonObject(fileName = "HxmlBuild.hx" ,lineNumber = 415 ,className = "hxsublime.build.HxmlBuild" ,methodName = "_update_types" ))
+		haxe_Log.trace("update types for libs:" + Std.string(self.libs), _Hx_AnonObject(fileName = "HxmlBuild.hx" ,lineNumber = 416 ,className = "hxsublime.build.HxmlBuild" ,methodName = "_update_types" ))
+		self.type_bundle = hxsublime_Types.find_types(self._classpaths, self.libs, self.get_build_folder(), [], [], False)
 	
 
 	def _should_refresh_types(self,now):
@@ -4460,7 +4479,7 @@ class hxsublime_build_HxmlBuild:
 	def get_types(self):
 		now = python_lib_Time.time()
 		if self._should_refresh_types(now):
-			haxe_Log.trace("UPDATE THE TYPES NOW", _Hx_AnonObject(fileName = "HxmlBuild.hx" ,lineNumber = 431 ,className = "hxsublime.build.HxmlBuild" ,methodName = "get_types" ))
+			haxe_Log.trace("UPDATE THE TYPES NOW", _Hx_AnonObject(fileName = "HxmlBuild.hx" ,lineNumber = 437 ,className = "hxsublime.build.HxmlBuild" ,methodName = "get_types" ))
 			self._update_time = now
 			self._update_types()
 		
@@ -4489,22 +4508,22 @@ class hxsublime_build_HxmlBuild:
 		cmd = r[0]
 		build_folder = r[1]
 		nekox_file = r[2]
-		haxe_Log.trace(self.args, _Hx_AnonObject(fileName = "HxmlBuild.hx" ,lineNumber = 465 ,className = "hxsublime.build.HxmlBuild" ,methodName = "prepare_run_cmd" ))
-		haxe_Log.trace(cmd, _Hx_AnonObject(fileName = "HxmlBuild.hx" ,lineNumber = 466 ,className = "hxsublime.build.HxmlBuild" ,methodName = "prepare_run_cmd" ))
-		haxe_Log.trace(build_folder, _Hx_AnonObject(fileName = "HxmlBuild.hx" ,lineNumber = 467 ,className = "hxsublime.build.HxmlBuild" ,methodName = "prepare_run_cmd" ))
-		haxe_Log.trace(nekox_file, _Hx_AnonObject(fileName = "HxmlBuild.hx" ,lineNumber = 468 ,className = "hxsublime.build.HxmlBuild" ,methodName = "prepare_run_cmd" ))
+		haxe_Log.trace(self.args, _Hx_AnonObject(fileName = "HxmlBuild.hx" ,lineNumber = 471 ,className = "hxsublime.build.HxmlBuild" ,methodName = "prepare_run_cmd" ))
+		haxe_Log.trace(cmd, _Hx_AnonObject(fileName = "HxmlBuild.hx" ,lineNumber = 472 ,className = "hxsublime.build.HxmlBuild" ,methodName = "prepare_run_cmd" ))
+		haxe_Log.trace(build_folder, _Hx_AnonObject(fileName = "HxmlBuild.hx" ,lineNumber = 473 ,className = "hxsublime.build.HxmlBuild" ,methodName = "prepare_run_cmd" ))
+		haxe_Log.trace(nekox_file, _Hx_AnonObject(fileName = "HxmlBuild.hx" ,lineNumber = 474 ,className = "hxsublime.build.HxmlBuild" ,methodName = "prepare_run_cmd" ))
 		default_open_ext = hxsublime_Settings.open_with_default_app()
 		if nekox_file is not None:
 			cmd.extend(["-cmd", "neko " + nekox_file])
-		elif self.target == "swf" and default_open_ext is not None:
+		elif self._target == "swf" and default_open_ext is not None:
 			x = ["-cmd", default_open_ext + " " + self.absolute_output()]
 			cmd.extend(x)
 		
-		elif self.target == "neko":
+		elif self._target == "neko":
 			x = ["-cmd", "neko " + self.absolute_output()]
 			cmd.extend(x)
 		
-		elif self.target == "cpp":
+		elif self._target == "cpp":
 			sep_index = self.main.rfind(".", None)
 			exe = None
 			if sep_index > -1:
@@ -4515,11 +4534,11 @@ class hxsublime_build_HxmlBuild:
 			cmd.extend(x)
 			
 		
-		elif self.target == "js" and Lambda.has(self.defines, "nodejs"):
+		elif self._target == "js" and Lambda.has(self.defines, "nodejs"):
 			x = ["-cmd", "nodejs " + self.absolute_output()]
 			cmd.extend(x)
 		
-		elif self.target == "java":
+		elif self._target == "java":
 			sep_index = None
 			_this = self.absolute_output()
 			sep_index = _this.rfind(python_lib_os_Path.sep, None)
@@ -4541,7 +4560,7 @@ class hxsublime_build_HxmlBuild:
 			cmd.extend(x)
 			
 		
-		elif self.target == "cs":
+		elif self._target == "cs":
 			x = ["-cmd", "cd " + self.absolute_output()]
 			cmd.extend(x)
 			
@@ -4573,7 +4592,7 @@ class hxsublime_build_HxmlBuild:
 		b = self.copy()
 		nekox_file_name = None
 		_g1 = 0
-		_g = __builtin__.len(b.args)
+		_g = __builtin__.len(b._args)
 		while _g1 < _g:
 			def _hx_local_0():
 				nonlocal _g1
@@ -4583,10 +4602,10 @@ class hxsublime_build_HxmlBuild:
 				
 			
 			i = _hx_local_0()
-			a = b.args[i]
+			a = b._args[i]
 			if a[0] == "-x":
 				nekox_file_name = a[1] + ".n"
-				b.args[i] = ("-neko", nekox_file_name)
+				b._args[i] = ("-neko", nekox_file_name)
 			
 			
 		
@@ -4673,7 +4692,7 @@ class hxsublime_build_HxmlBuild:
 		cmd = r[0]
 		build_folder = r[1]
 		nekox_file_name = r[2]
-		haxe_Log.trace(" ".join(cmd), _Hx_AnonObject(fileName = "HxmlBuild.hx" ,lineNumber = 602 ,className = "hxsublime.build.HxmlBuild" ,methodName = "_run_sync" ))
+		haxe_Log.trace(" ".join(cmd), _Hx_AnonObject(fileName = "HxmlBuild.hx" ,lineNumber = 608 ,className = "hxsublime.build.HxmlBuild" ,methodName = "_run_sync" ))
 		r1 = hxsublime_Execute.run_cmd(cmd, "", build_folder, env)
 		out = r1[0]
 		err = r1[1]
@@ -4682,10 +4701,10 @@ class hxsublime_build_HxmlBuild:
 	
 
 	def _on_run_complete(self,out,err,build_folder,nekox_file_name):
-		haxe_Log.trace("---------------cmd-------------------", _Hx_AnonObject(fileName = "HxmlBuild.hx" ,lineNumber = 614 ,className = "hxsublime.build.HxmlBuild" ,methodName = "_on_run_complete" ))
-		haxe_Log.trace("out:" + out, _Hx_AnonObject(fileName = "HxmlBuild.hx" ,lineNumber = 615 ,className = "hxsublime.build.HxmlBuild" ,methodName = "_on_run_complete" ))
-		haxe_Log.trace("err:" + err, _Hx_AnonObject(fileName = "HxmlBuild.hx" ,lineNumber = 616 ,className = "hxsublime.build.HxmlBuild" ,methodName = "_on_run_complete" ))
-		haxe_Log.trace("---------compiler-output-------------", _Hx_AnonObject(fileName = "HxmlBuild.hx" ,lineNumber = 617 ,className = "hxsublime.build.HxmlBuild" ,methodName = "_on_run_complete" ))
+		haxe_Log.trace("---------------cmd-------------------", _Hx_AnonObject(fileName = "HxmlBuild.hx" ,lineNumber = 620 ,className = "hxsublime.build.HxmlBuild" ,methodName = "_on_run_complete" ))
+		haxe_Log.trace("out:" + out, _Hx_AnonObject(fileName = "HxmlBuild.hx" ,lineNumber = 621 ,className = "hxsublime.build.HxmlBuild" ,methodName = "_on_run_complete" ))
+		haxe_Log.trace("err:" + err, _Hx_AnonObject(fileName = "HxmlBuild.hx" ,lineNumber = 622 ,className = "hxsublime.build.HxmlBuild" ,methodName = "_on_run_complete" ))
+		haxe_Log.trace("---------compiler-output-------------", _Hx_AnonObject(fileName = "HxmlBuild.hx" ,lineNumber = 623 ,className = "hxsublime.build.HxmlBuild" ,methodName = "_on_run_complete" ))
 		if nekox_file_name is not None:
 			self._run_neko_x(build_folder, nekox_file_name)
 		
@@ -4693,7 +4712,7 @@ class hxsublime_build_HxmlBuild:
 
 	def _run_neko_x(self,build_folder,neko_file_name):
 		neko_file = python_lib_os_Path.join(build_folder, neko_file_name)
-		haxe_Log.trace("run nekox: " + neko_file, _Hx_AnonObject(fileName = "HxmlBuild.hx" ,lineNumber = 628 ,className = "hxsublime.build.HxmlBuild" ,methodName = "_run_neko_x" ))
+		haxe_Log.trace("run nekox: " + neko_file, _Hx_AnonObject(fileName = "HxmlBuild.hx" ,lineNumber = 634 ,className = "hxsublime.build.HxmlBuild" ,methodName = "_run_neko_x" ))
 		r = hxsublime_Execute.run_cmd(["neko", neko_file])
 		out = r[0]
 		err = r[1]
@@ -4706,11 +4725,11 @@ class hxsublime_build_HxmlBuild:
 			server_mode = None
 		
 		if async:
-			haxe_Log.trace("RUN ASYNC COMPLETION", _Hx_AnonObject(fileName = "HxmlBuild.hx" ,lineNumber = 638 ,className = "hxsublime.build.HxmlBuild" ,methodName = "run" ))
+			haxe_Log.trace("RUN ASYNC COMPLETION", _Hx_AnonObject(fileName = "HxmlBuild.hx" ,lineNumber = 644 ,className = "hxsublime.build.HxmlBuild" ,methodName = "run" ))
 			self._run_async(project, view, callback, server_mode)
 		
 		else:
-			haxe_Log.trace("RUN SYNC COMPLETION", _Hx_AnonObject(fileName = "HxmlBuild.hx" ,lineNumber = 642 ,className = "hxsublime.build.HxmlBuild" ,methodName = "run" ))
+			haxe_Log.trace("RUN SYNC COMPLETION", _Hx_AnonObject(fileName = "HxmlBuild.hx" ,lineNumber = 648 ,className = "hxsublime.build.HxmlBuild" ,methodName = "run" ))
 			r = self._run_sync(project, view, server_mode)
 			out = r[0]
 			err = r[1]
@@ -4728,7 +4747,7 @@ class hxsublime_build_HxmlBuild:
 			return True
 		
 		pack = pack.split(".")[0]
-		target = self.target
+		target = self._target
 		available = True
 		if pack is not None and target is not None and Lambda.has(hxsublime_Config.target_packages, pack):
 			if hxsublime_Config.target_std_packages.exists(target):
@@ -4750,9 +4769,9 @@ hxsublime_build_HxmlBuild.__meta__ = _Hx_AnonObject(fields = _Hx_AnonObject(titl
 hxsublime_build_HxmlBuild._hx_class = hxsublime_build_HxmlBuild
 hxsublime_build_HxmlBuild._hx_class_name = "hxsublime.build.HxmlBuild"
 _hx_classes['hxsublime.build.HxmlBuild'] = hxsublime_build_HxmlBuild
-hxsublime_build_HxmlBuild._hx_fields = ["show_times","std_bundle","args","main","target","output","_hxml","_build_file","classpaths","libs","type_bundle","_update_time","mode_completion","defines","name"]
+hxsublime_build_HxmlBuild._hx_fields = ["show_times","_std_bundle","_args","main","_target","output","_hxml","_build_file","_classpaths","libs","type_bundle","_update_time","mode_completion","defines","name"]
 hxsublime_build_HxmlBuild._hx_props = []
-hxsublime_build_HxmlBuild._hx_methods = ["hxml","title","setHxml","build_file","add_define","set_main","get_name","set_std_bundle","equals","merge","copy","add_arg","get_build_folder","set_build_cwd","align_drive_letter","add_classpath","add_lib","get_classpath_of_file","is_file_in_classpath","get_relative_path","target_to_string","to_string","make_hxml","set_cwd","set_times","set_server_mode","get_command_args","set_auto_completion","_update_types","_should_refresh_types","get_types","prepare_check_cmd","absolute_output","prepare_run_cmd","prepare_build_cmd","_prepare_run","_get_run_exec","escape_cmd","_run_async","_run_sync","_on_run_complete","_run_neko_x","run","is_type_available","is_pack_available"]
+hxsublime_build_HxmlBuild._hx_methods = ["std_bundle","target","classpaths","hxml","title","setHxml","build_file","add_define","set_main","get_name","set_std_bundle","args","equals","merge","copy","add_arg","get_build_folder","set_build_cwd","align_drive_letter","add_classpath","add_lib","get_classpath_of_file","is_file_in_classpath","get_relative_path","target_to_string","to_string","make_hxml","set_cwd","set_times","set_server_mode","get_command_args","set_auto_completion","_update_types","_should_refresh_types","get_types","prepare_check_cmd","absolute_output","prepare_run_cmd","prepare_build_cmd","_prepare_run","_get_run_exec","escape_cmd","_run_async","_run_sync","_on_run_complete","_run_neko_x","run","is_type_available","is_pack_available"]
 hxsublime_build_HxmlBuild._hx_statics = ["__meta__"]
 hxsublime_build_HxmlBuild._hx_interfaces = []
 
@@ -4778,6 +4797,9 @@ class hxsublime_build_NmeBuild:
 	def setHxml(self,hxml):
 		self.hxml_build().setHxml(hxml)
 
+	def make_hxml(self):
+		return self.hxml_build().make_hxml()
+
 	def title(self):
 		return self._title
 
@@ -4799,10 +4821,11 @@ class hxsublime_build_NmeBuild:
 		display_cmd.append("display")
 		__builtin__.len(display_cmd)
 		
-		return hxsublime_build_Tools.create_haxe_build_from_nmml(self.project, self.target(), self.nmml, display_cmd)
+		return hxsublime_build_Tools.create_haxe_build_from_nmml(self.project, self._target, self.nmml, display_cmd)
 	
 
 	def hxml_build(self):
+		haxe_Log.trace("create hxml build", _Hx_AnonObject(fileName = "NmeBuild.hx" ,lineNumber = 81 ,className = "hxsublime.build.NmeBuild" ,methodName = "hxml_build" ))
 		if self._hxml_build is None:
 			self._hxml_build = self._get_hxml_build_with_nme_display()
 		
@@ -4810,9 +4833,9 @@ class hxsublime_build_NmeBuild:
 	
 
 	def to_string(self):
-		title = self.title
+		title = self.title()
 		target = self.target().name
-		return "" + Std.string(title) + " (NME - " + target + ")"
+		return "" + title + " (NME - " + target + ")"
 	
 
 	def set_std_bundle(self,std_bundle):
@@ -4840,7 +4863,7 @@ class hxsublime_build_NmeBuild:
 	
 
 	def std_bundle(self):
-		return self.hxml_build().std_bundle
+		return self.hxml_build().std_bundle()
 
 	def add_arg(self,arg):
 		self.hxml_build().add_arg(arg)
@@ -4851,7 +4874,7 @@ class hxsublime_build_NmeBuild:
 			hxml_copy = self.hxml_build().copy()
 		else:
 			hxml_copy = None
-		return hxsublime_build_NmeBuild(self.project, self.title(), self.nmml, self.target(), hxml_copy)
+		return hxsublime_build_NmeBuild(self.project, self.title(), self.nmml, self._target, hxml_copy)
 	
 
 	def get_relative_path(self,file):
@@ -4862,13 +4885,20 @@ class hxsublime_build_NmeBuild:
 		if self.nmml is not None:
 			r = python_lib_os_Path.dirname(self.nmml)
 		
-		haxe_Log.trace("build_folder: " + Std.string(r), _Hx_AnonObject(fileName = "NmeBuild.hx" ,lineNumber = 144 ,className = "hxsublime.build.NmeBuild" ,methodName = "get_build_folder" ))
-		haxe_Log.trace("nmml: " + Std.string(self.nmml), _Hx_AnonObject(fileName = "NmeBuild.hx" ,lineNumber = 145 ,className = "hxsublime.build.NmeBuild" ,methodName = "get_build_folder" ))
+		haxe_Log.trace("build_folder: " + Std.string(r), _Hx_AnonObject(fileName = "NmeBuild.hx" ,lineNumber = 150 ,className = "hxsublime.build.NmeBuild" ,methodName = "get_build_folder" ))
+		haxe_Log.trace("nmml: " + Std.string(self.nmml), _Hx_AnonObject(fileName = "NmeBuild.hx" ,lineNumber = 151 ,className = "hxsublime.build.NmeBuild" ,methodName = "get_build_folder" ))
 		return r
 	
 
-	def set_auto_completion(self,display,macro_completion):
-		self.hxml_build().set_auto_completion(display, macro_completion)
+	def set_auto_completion(self,display,macro_completion = False,no_output = True):
+		if macro_completion is None:
+			macro_completion = False
+		
+		if no_output is None:
+			no_output = True
+		
+		self.hxml_build().set_auto_completion(display, macro_completion, no_output)
+	
 
 	def set_times(self):
 		self.hxml_build().set_times()
@@ -4893,6 +4923,9 @@ class hxsublime_build_NmeBuild:
 		_this = self._get_run_exec(project, view)
 		return __builtin__.list(_this)
 	
+
+	def escape_cmd(self,cmd):
+		return self.hxml_build().escape_cmd(cmd)
 
 	def prepare_check_cmd(self,project,server_mode,view):
 		r = self.prepare_build_cmd(project, server_mode, view)
@@ -4938,13 +4971,13 @@ class hxsublime_build_NmeBuild:
 		return self.hxml_build()._prepare_run(project, view, server_mode)
 
 	def classpaths(self):
-		return self.hxml_build().classpaths
+		return self.hxml_build().classpaths()
 
 	def args(self):
-		return self.hxml_build().args
+		return self.hxml_build().args()
 
 	def is_type_available(self,type):
-		pack = type.toplevel_pack
+		pack = type.toplevel_pack()
 		return pack is None or self.is_pack_available(pack)
 	
 
@@ -4974,7 +5007,7 @@ hxsublime_build_NmeBuild._hx_class_name = "hxsublime.build.NmeBuild"
 _hx_classes['hxsublime.build.NmeBuild'] = hxsublime_build_NmeBuild
 hxsublime_build_NmeBuild._hx_fields = ["_title","_target","_hxml_build","nmml","project"]
 hxsublime_build_NmeBuild._hx_props = []
-hxsublime_build_NmeBuild._hx_methods = ["setHxml","title","build_file","target","plattform","_get_hxml_build_with_nme_display","hxml_build","to_string","set_std_bundle","_filter_platform_specific","get_types","std_bundle","add_arg","copy","get_relative_path","get_build_folder","set_auto_completion","set_times","add_define","add_classpath","run","_get_run_exec","get_build_command","prepare_check_cmd","prepare_build_cmd","prepare_run_cmd","_prepare_cmd","_prepare_run","classpaths","args","is_type_available","is_pack_available"]
+hxsublime_build_NmeBuild._hx_methods = ["setHxml","make_hxml","title","build_file","target","plattform","_get_hxml_build_with_nme_display","hxml_build","to_string","set_std_bundle","_filter_platform_specific","get_types","std_bundle","add_arg","copy","get_relative_path","get_build_folder","set_auto_completion","set_times","add_define","add_classpath","run","_get_run_exec","get_build_command","escape_cmd","prepare_check_cmd","prepare_build_cmd","prepare_run_cmd","_prepare_cmd","_prepare_run","classpaths","args","is_type_available","is_pack_available"]
 hxsublime_build_NmeBuild._hx_statics = ["__meta__"]
 hxsublime_build_NmeBuild._hx_interfaces = []
 
@@ -5018,13 +5051,13 @@ class hxsublime_build_OpenFlBuild(hxsublime_build_NmeBuild):
 	
 
 	def to_string(self):
-		out = self.title
+		out = self.title()
 		target = self.target().name
-		return "" + Std.string(out) + " (OpenFL - " + target + ")"
+		return "" + out + " (OpenFL - " + target + ")"
 	
 
 	def is_type_available(self,type):
-		pack = type.toplevel_pack
+		pack = type.toplevel_pack()
 		return pack is None or self.is_pack_available(pack)
 	
 
@@ -5095,8 +5128,8 @@ def Tools_statics__hxml_buffer_to_builds(project,hxml_buffer,folder,build_path,b
 			continue
 		
 		if StringTools.startsWith(l, "--next"):
-			if __builtin__.len(current_build.classpaths) == 0:
-				haxe_Log.trace("no classpaths", _Hx_AnonObject(fileName = "Tools.hx" ,lineNumber = 73 ,className = "hxsublime.build.Tools" ,methodName = "_hxml_buffer_to_builds" ))
+			if __builtin__.len(current_build._classpaths) == 0:
+				haxe_Log.trace("no classpaths", _Hx_AnonObject(fileName = "Tools.hx" ,lineNumber = 71 ,className = "hxsublime.build.Tools" ,methodName = "_hxml_buffer_to_builds" ))
 				current_build.add_classpath(build_path)
 			
 			
@@ -5108,7 +5141,7 @@ def Tools_statics__hxml_buffer_to_builds(project,hxml_buffer,folder,build_path,b
 		
 		
 		if StringTools.endsWith(l, ".hxml"):
-			haxe_Log.trace("found ref of hxml file:" + l, _Hx_AnonObject(fileName = "Tools.hx" ,lineNumber = 88 ,className = "hxsublime.build.Tools" ,methodName = "_hxml_buffer_to_builds" ))
+			haxe_Log.trace("found ref of hxml file:" + l, _Hx_AnonObject(fileName = "Tools.hx" ,lineNumber = 83 ,className = "hxsublime.build.Tools" ,methodName = "_hxml_buffer_to_builds" ))
 			path = python_lib_os_Path.dirname(hxml)
 			sub_builds = hxsublime_build_Tools._hxml_to_builds(project, path + python_lib_Os.sep + l, folder)
 			if __builtin__.len(sub_builds) == 1:
@@ -5131,9 +5164,7 @@ def Tools_statics__hxml_buffer_to_builds(project,hxml_buffer,folder,build_path,b
 			if __builtin__.len(spl) == 2:
 				lib = project.haxelib_manager().get(spl[1])
 				if lib is not None:
-					haxe_Log.trace("lib to build:" + Std.string(lib), _Hx_AnonObject(fileName = "Tools.hx" ,lineNumber = 118 ,className = "hxsublime.build.Tools" ,methodName = "_hxml_buffer_to_builds" ))
 					current_build.add_lib(lib)
-				
 				else:
 					current_build.add_arg(("-lib", spl[1]))
 					hxsublime_panel_Base_Panels.default_panel().writeln("Error: haxelib library " + Std.string(spl[1]) + " is not installed")
@@ -5182,7 +5213,12 @@ def Tools_statics__hxml_buffer_to_builds(project,hxml_buffer,folder,build_path,b
 			_g = _g + 1
 			if StringTools.startsWith(l, "-" + flag):
 				x = l.split(" ")
-				current_build.add_arg((x[0], x[1]))
+				p2 = None
+				if __builtin__.len(x) == 1:
+					p2 = ""
+				else:
+					p2 = x[1]
+				current_build.add_arg((x[0], p2))
 				break
 			
 			
@@ -5202,7 +5238,7 @@ def Tools_statics__hxml_buffer_to_builds(project,hxml_buffer,folder,build_path,b
 				outp = python_lib_os_Path.join(folder, _hx_local_2())
 				current_build.add_arg(("-" + flag, outp))
 				if flag == "x":
-					current_build.target = "neko"
+					current_build._target = "neko"
 				
 				break
 			
@@ -5218,9 +5254,8 @@ def Tools_statics__hxml_buffer_to_builds(project,hxml_buffer,folder,build_path,b
 				spl = l.split(" ")
 				spl.pop(0)
 				outp = " ".join(spl)
-				haxe_Log.trace(outp, _Hx_AnonObject(fileName = "Tools.hx" ,lineNumber = 191 ,className = "hxsublime.build.Tools" ,methodName = "_hxml_buffer_to_builds" ))
 				current_build.add_arg(("-" + flag, outp))
-				current_build.target = flag
+				current_build._target = flag
 				current_build.output = outp
 				break
 			
@@ -5236,10 +5271,8 @@ def Tools_statics__hxml_buffer_to_builds(project,hxml_buffer,folder,build_path,b
 		
 		
 	
-	if __builtin__.len(current_build.classpaths) == 0:
-		haxe_Log.trace("no classpaths", _Hx_AnonObject(fileName = "Tools.hx" ,lineNumber = 214 ,className = "hxsublime.build.Tools" ,methodName = "_hxml_buffer_to_builds" ))
+	if __builtin__.len(current_build._classpaths) == 0:
 		current_build.add_classpath(build_path)
-	
 	
 	builds.append(current_build)
 	__builtin__.len(builds)
@@ -5248,7 +5281,6 @@ def Tools_statics__hxml_buffer_to_builds(project,hxml_buffer,folder,build_path,b
 	
 hxsublime_build_Tools._hxml_buffer_to_builds = Tools_statics__hxml_buffer_to_builds
 def Tools_statics__find_build_files_in_folder(folder,extension):
-	haxe_Log.trace("a", _Hx_AnonObject(fileName = "Tools.hx" ,lineNumber = 228 ,className = "hxsublime.build.Tools" ,methodName = "_find_build_files_in_folder" ))
 	if not python_lib_os_Path.isdir(folder):
 		return []
 	
@@ -5258,8 +5290,6 @@ def Tools_statics__find_build_files_in_folder(folder,extension):
 		return (x, folder)
 	files = __builtin__.list(__builtin__.map(_hx_local_0, _this))
 	
-	haxe_Log.trace("b", _Hx_AnonObject(fileName = "Tools.hx" ,lineNumber = 235 ,className = "hxsublime.build.Tools" ,methodName = "_find_build_files_in_folder" ))
-	haxe_Log.trace(files, _Hx_AnonObject(fileName = "Tools.hx" ,lineNumber = 236 ,className = "hxsublime.build.Tools" ,methodName = "_find_build_files_in_folder" ))
 	_g = 0
 	_g1 = python_lib_Os.listdir(folder)
 	while _g < len(_g1):
@@ -5278,7 +5308,6 @@ def Tools_statics__find_build_files_in_folder(folder,extension):
 		files.extend(x)
 	
 	
-	haxe_Log.trace("c", _Hx_AnonObject(fileName = "Tools.hx" ,lineNumber = 243 ,className = "hxsublime.build.Tools" ,methodName = "_find_build_files_in_folder" ))
 	return files
 	
 hxsublime_build_Tools._find_build_files_in_folder = Tools_statics__find_build_files_in_folder
@@ -5349,12 +5378,9 @@ def Tools_statics_find_hxml_projects(project,folder):
 	while _g < len(found):
 		build = found[_g]
 		_g = _g + 1
-		haxe_Log.trace("check " + Std.string(build), _Hx_AnonObject(fileName = "Tools.hx" ,lineNumber = 310 ,className = "hxsublime.build.Tools" ,methodName = "find_hxml_projects" ))
 		hxml_file = build[0]
 		hxml_folder = build[1]
-		haxe_Log.trace("hxml to builds", _Hx_AnonObject(fileName = "Tools.hx" ,lineNumber = 313 ,className = "hxsublime.build.Tools" ,methodName = "find_hxml_projects" ))
 		b = hxsublime_build_Tools._hxml_to_builds(project, hxml_file, hxml_folder)
-		haxe_Log.trace("builds in hxml " + Std.string(hxml_file) + ":" + Std.string(__builtin__.len(b)), _Hx_AnonObject(fileName = "Tools.hx" ,lineNumber = 315 ,className = "hxsublime.build.Tools" ,methodName = "find_hxml_projects" ))
 		builds.extend(b)
 	
 	
@@ -6005,7 +6031,7 @@ class hxsublime_commands_CreateType_HaxeCreateTypeCommand(sublime_WindowCommand)
 				haxe_Log.trace("build file: " + Std.string(b.build_file), _Hx_AnonObject(fileName = "CreateType.hx" ,lineNumber = 91 ,className = "hxsublime.commands.HaxeCreateTypeCommand" ,methodName = "run" ))
 				found = False
 				_g2 = 0
-				_g3 = b.classpaths
+				_g3 = b.classpaths()
 				while _g2 < len(_g3):
 					cp = _g3[_g2]
 					_g2 = _g2 + 1
@@ -6059,7 +6085,7 @@ class hxsublime_commands_CreateType_HaxeCreateTypeCommand(sublime_WindowCommand)
 		
 		if self.classpath is None:
 			if __builtin__.len(builds) > 0:
-				self.classpath = builds[0].classpaths[0]
+				self.classpath = builds[0].classpaths()[0]
 			
 		
 		haxe_Log.trace(pack, _Hx_AnonObject(fileName = "CreateType.hx" ,lineNumber = 150 ,className = "hxsublime.commands.HaxeCreateTypeCommand" ,methodName = "run" ))
@@ -6473,9 +6499,9 @@ class hxsublime_commands_Execute_HaxeExecCommand(sublime_WindowCommand):
 			elapsed = python_lib_Time.time() - proc.start_time
 			exit_code = proc.exit_code()
 			if exit_code == 0 or exit_code is None:
-				self.append_data_str(proc, "[Finished in " + elapsed + "]")
+				self.append_data_str(proc, "[Finished in " + Std.string(elapsed) + "]")
 			else:
-				self.append_data_str(proc, "[Finished in " + elapsed + " with exit code " + exit_code + "]")
+				self.append_data_str(proc, "[Finished in " + Std.string(elapsed) + " with exit code " + exit_code + "]")
 		
 		
 		if proc != self.proc:
@@ -6606,7 +6632,6 @@ class hxsublime_commands_FindDeclaration_HaxeFindDeclarationCommand(sublime_Text
 		order_str = Std.string(order)
 		insert_after = ", " + order_str + ")" + display_str
 		new_src = src_before_using + using_insert + src_before_expr + insert_before + expr_string + insert_after + src_after_expr
-		haxe_Log.trace(new_src, _Hx_AnonObject(fileName = "FindDeclaration.hx" ,lineNumber = 132 ,className = "hxsublime.commands.HaxeFindDeclarationCommand" ,methodName = "run1" ))
 		r = hxsublime_commands_FindDeclaration_Helper.prepare_build(view, project, use_display, new_src)
 		build = r[0]
 		temp_path = r[1]
@@ -6756,12 +6781,7 @@ def Helper_statics_get_word_at(view,src,pos):
 hxsublime_commands_FindDeclaration_Helper.get_word_at = Helper_statics_get_word_at
 def Helper_statics_prepare_build(view,project,use_display,new_src):
 	build = project.get_build(view).copy()
-	_this = build.args
-	x = ("-D", "no-inline")
-	_this.append(x)
-	__builtin__.len(_this)
-	
-	
+	build.add_arg(("-D", "no-inline"))
 	r = hxsublime_Temp.create_temp_path_and_file(build, view.file_name(), new_src)
 	temp_path = r[0]
 	temp_file = r[1]
@@ -6952,7 +6972,7 @@ class hxsublime_commands_GotoBase_HaxeGotoBaseCommand(sublime_TextCommand):
 		
 		
 		build = project.get_build(view)
-		bundle = build.get_types().merge(build.std_bundle)
+		bundle = build.get_types().merge(build.std_bundle())
 		bundle_types = bundle.all_types_and_enum_constructors_with_info()
 		filtered_types = haxe_ds_StringMap()
 		_it = bundle_types.keys()
@@ -7186,25 +7206,21 @@ class hxsublime_commands_GotoBase_HaxeGotoBaseListener(sublime_EventListener):
 		
 		
 		if view is not None and view.file_name() is not None:
-			haxe_Log.trace("show at X", _Hx_AnonObject(fileName = "GotoBase.hx" ,lineNumber = 190 ,className = "hxsublime.commands.HaxeGotoBaseListener" ,methodName = "on_activated" ))
-			haxe_Log.trace("decl file: " + Std.string(find_file), _Hx_AnonObject(fileName = "GotoBase.hx" ,lineNumber = 191 ,className = "hxsublime.commands.HaxeGotoBaseListener" ,methodName = "on_activated" ))
 			if view.file_name() == find_file:
-				haxe_Log.trace("show at Y", _Hx_AnonObject(fileName = "GotoBase.hx" ,lineNumber = 194 ,className = "hxsublime.commands.HaxeGotoBaseListener" ,methodName = "on_activated" ))
 				view.sel().clear()
 				min = find_pos
 				view.sel().add(sublime_Region(min))
-				haxe_Log.trace("show at:" + Std.string(min), _Hx_AnonObject(fileName = "GotoBase.hx" ,lineNumber = 201 ,className = "hxsublime.commands.HaxeGotoBaseListener" ,methodName = "on_activated" ))
+				haxe_Log.trace("show at:" + Std.string(min), _Hx_AnonObject(fileName = "GotoBase.hx" ,lineNumber = 200 ,className = "hxsublime.commands.HaxeGotoBaseListener" ,methodName = "on_activated" ))
 				def _hx_local_0():
-					haxe_Log.trace("show at:" + Std.string(min), _Hx_AnonObject(fileName = "GotoBase.hx" ,lineNumber = 206 ,className = "hxsublime.commands.HaxeGotoBaseListener" ,methodName = "on_activated" ))
+					haxe_Log.trace("show at:" + Std.string(min), _Hx_AnonObject(fileName = "GotoBase.hx" ,lineNumber = 205 ,className = "hxsublime.commands.HaxeGotoBaseListener" ,methodName = "on_activated" ))
 					view.show_at_center(sublime_Region(min))
 				
 				show = _hx_local_0
 				sublime_Sublime.set_timeout(show, 100)
 				hxsublime_commands_GotoBase_State._find_decl_file = None
 				hxsublime_commands_GotoBase_State._find_decl_pos = None
-			
-			
 		
+			
 		
 	
 
@@ -7376,6 +7392,7 @@ class hxsublime_commands_Haxelib_HaxeInstallLibCommand(sublime_WindowCommand):
 				return f(a1, a2, i)
 			on_selected = _hx_local_0
 			
+			haxe_Log.trace(libs, _Hx_AnonObject(fileName = "Haxelib.hx" ,lineNumber = 29 ,className = "hxsublime.commands.HaxeInstallLibCommand" ,methodName = "run" ))
 			self.window.show_quick_panel(menu, on_selected)
 		
 		
@@ -7407,27 +7424,27 @@ class hxsublime_commands_Haxelib_HaxeInstallLibCommand(sublime_WindowCommand):
 	
 
 	def _entry_selected(self,libs,manager,i):
-		haxe_Log.trace("install lib command selected " + Std.string(i), _Hx_AnonObject(fileName = "Haxelib.hx" ,lineNumber = 55 ,className = "hxsublime.commands.HaxeInstallLibCommand" ,methodName = "_entry_selected" ))
+		haxe_Log.trace("install lib command selected " + Std.string(i), _Hx_AnonObject(fileName = "Haxelib.hx" ,lineNumber = 56 ,className = "hxsublime.commands.HaxeInstallLibCommand" ,methodName = "_entry_selected" ))
 		if i < 0:
 			return
 		
 		if i == __builtin__.len(libs):
-			haxe_Log.trace("upgrade all", _Hx_AnonObject(fileName = "Haxelib.hx" ,lineNumber = 61 ,className = "hxsublime.commands.HaxeInstallLibCommand" ,methodName = "_entry_selected" ))
+			haxe_Log.trace("upgrade all", _Hx_AnonObject(fileName = "Haxelib.hx" ,lineNumber = 62 ,className = "hxsublime.commands.HaxeInstallLibCommand" ,methodName = "_entry_selected" ))
 			manager.upgrade_all()
 		
 		
 		if i == __builtin__.len(libs) + 1:
-			haxe_Log.trace("self update", _Hx_AnonObject(fileName = "Haxelib.hx" ,lineNumber = 67 ,className = "hxsublime.commands.HaxeInstallLibCommand" ,methodName = "_entry_selected" ))
+			haxe_Log.trace("self update", _Hx_AnonObject(fileName = "Haxelib.hx" ,lineNumber = 68 ,className = "hxsublime.commands.HaxeInstallLibCommand" ,methodName = "_entry_selected" ))
 			manager.self_update()
 		
 		else:
 			lib = libs[i]
 			if manager.available().exists(lib):
-				haxe_Log.trace("remove " + lib, _Hx_AnonObject(fileName = "Haxelib.hx" ,lineNumber = 75 ,className = "hxsublime.commands.HaxeInstallLibCommand" ,methodName = "_entry_selected" ))
+				haxe_Log.trace("remove " + lib, _Hx_AnonObject(fileName = "Haxelib.hx" ,lineNumber = 76 ,className = "hxsublime.commands.HaxeInstallLibCommand" ,methodName = "_entry_selected" ))
 				manager.remove_lib(lib)
 			
 			else:
-				haxe_Log.trace("install " + lib, _Hx_AnonObject(fileName = "Haxelib.hx" ,lineNumber = 80 ,className = "hxsublime.commands.HaxeInstallLibCommand" ,methodName = "_entry_selected" ))
+				haxe_Log.trace("install " + lib, _Hx_AnonObject(fileName = "Haxelib.hx" ,lineNumber = 81 ,className = "hxsublime.commands.HaxeInstallLibCommand" ,methodName = "_entry_selected" ))
 				manager.install_lib(lib)
 			
 		
@@ -7448,6 +7465,42 @@ hxsublime_commands_Haxelib_HaxeInstallLibCommand._hx_methods = ["run","_prepare_
 hxsublime_commands_Haxelib_HaxeInstallLibCommand._hx_statics = []
 hxsublime_commands_Haxelib_HaxeInstallLibCommand._hx_interfaces = []
 hxsublime_commands_Haxelib_HaxeInstallLibCommand._hx_super = sublime_WindowCommand
+
+# print hxsublime.commands.ShowDoc.HaxeShowDocCommand
+class hxsublime_commands_ShowDoc_HaxeShowDocCommand(hxsublime_commands_FindDeclaration_HaxeFindDeclarationCommand):
+
+
+	def __init__(self,v):
+		super().__init__(v)
+	def helper_method(self):
+		return "hxsublime.FindDeclaration.__sublimeShowDoc"
+
+	def handle_successfull_result(self,view,json_res,using_insert,insert_before,insert_after,expr_end,build,temp_path,temp_file):
+		doc = None
+		if python_lib_Types_DictImpl.hasKey(json_res, "doc"):
+			doc = json_res.get("doc", None)
+		else:
+			doc = "No documentation found"
+		haxe_Log.trace("json: " + Std.string(json_res), _Hx_AnonObject(fileName = "ShowDoc.hx" ,lineNumber = 27 ,className = "hxsublime.commands.HaxeShowDocCommand" ,methodName = "handle_successfull_result" ))
+		haxe_Log.trace("doc: " + Std.string(doc), _Hx_AnonObject(fileName = "ShowDoc.hx" ,lineNumber = 28 ,className = "hxsublime.commands.HaxeShowDocCommand" ,methodName = "handle_successfull_result" ))
+		hxsublime_panel_Base_Panels.slide_panel().writeln(doc, None, False)
+	
+
+
+
+
+
+
+
+hxsublime_commands_ShowDoc_HaxeShowDocCommand._hx_class = hxsublime_commands_ShowDoc_HaxeShowDocCommand
+hxsublime_commands_ShowDoc_HaxeShowDocCommand._hx_class_name = "hxsublime.commands.HaxeShowDocCommand"
+_hx_classes['hxsublime.commands.HaxeShowDocCommand'] = hxsublime_commands_ShowDoc_HaxeShowDocCommand
+hxsublime_commands_ShowDoc_HaxeShowDocCommand._hx_fields = []
+hxsublime_commands_ShowDoc_HaxeShowDocCommand._hx_props = []
+hxsublime_commands_ShowDoc_HaxeShowDocCommand._hx_methods = ["helper_method","handle_successfull_result"]
+hxsublime_commands_ShowDoc_HaxeShowDocCommand._hx_statics = []
+hxsublime_commands_ShowDoc_HaxeShowDocCommand._hx_interfaces = []
+hxsublime_commands_ShowDoc_HaxeShowDocCommand._hx_super = hxsublime_commands_FindDeclaration_HaxeFindDeclarationCommand
 
 # print hxsublime.compiler.Output.CompletionEntry
 class hxsublime_compiler_Output_CompletionEntry:
@@ -8793,7 +8846,7 @@ def TopLevel_statics_get_build_target(ctx):
 	if ctx.options.macro_completion():
 		return "neko"
 	else:
-		return ctx.build().target
+		return ctx.build().target().plattform
 hxsublime_completion_hx_Toplevel_TopLevel.get_build_target = TopLevel_statics_get_build_target
 def TopLevel_statics_get_local_vars(ctx):
 	comps = []
@@ -8998,7 +9051,7 @@ def TopLevel_statics_get_toplevel_completion(ctx):
 	run_time1 = python_lib_Time.time() - start_time
 	build_bundle = ctx.build().get_types()
 	run_time2 = python_lib_Time.time() - start_time
-	std_bundle = ctx.build().std_bundle
+	std_bundle = ctx.build().std_bundle()
 	def _hx_local_0(t):
 		return not t.is_private or t.file() == ctx.orig_file()
 	filter_privates = _hx_local_0
@@ -10628,7 +10681,7 @@ class hxsublime_project_Project:
 		def _hx_local_0():
 			return Std._hx_is(_g.current_build, hxsublime_build_HxmlBuild)
 		is_hxml_build = _hx_local_0
-		if self.current_build is not None and is_hxml_build() and fn == self.current_build.hxml() and view.size() == 0:
+		if self.current_build is not None and is_hxml_build() and fn == self.current_build.build_file() and view.size() == 0:
 			def _hx_local_1(v,e):
 				hxml_src = _g.current_build.make_hxml()
 				v.insert(e, 0, hxml_src)
@@ -10658,11 +10711,9 @@ class hxsublime_project_Project:
 			view = sublime_Sublime.active_window().active_view()
 		
 		folders = self._get_folders(view)
-		haxe_Log.trace(folders, _Hx_AnonObject(fileName = "Project.hx" ,lineNumber = 162 ,className = "hxsublime.project.Project" ,methodName = "extract_build_args" ))
 		self.builds = self._find_builds_in_folders(folders)
 		num_builds = __builtin__.len(self.builds)
 		view_build_id = view.settings().get("haxe-current-build-id")
-		haxe_Log.trace("view_build_id:" + Std.string(view_build_id), _Hx_AnonObject(fileName = "Project.hx" ,lineNumber = 169 ,className = "hxsublime.project.Project" ,methodName = "extract_build_args" ))
 		if view_build_id is not None and view_build_id < num_builds and not force_panel:
 			self._set_current_build(view, view_build_id)
 		elif num_builds == 1:
@@ -10705,27 +10756,38 @@ class hxsublime_project_Project:
 
 	def _find_builds_in_folders(self,folders):
 		builds = []
-		haxe_Log.trace("find builds start", _Hx_AnonObject(fileName = "Project.hx" ,lineNumber = 237 ,className = "hxsublime.project.Project" ,methodName = "_find_builds_in_folders" ))
+		haxe_Log.trace("find builds start", _Hx_AnonObject(fileName = "Project.hx" ,lineNumber = 238 ,className = "hxsublime.project.Project" ,methodName = "_find_builds_in_folders" ))
 		_g = 0
 		while _g < len(folders):
 			f = folders[_g]
 			_g = _g + 1
-			haxe_Log.trace("0", _Hx_AnonObject(fileName = "Project.hx" ,lineNumber = 239 ,className = "hxsublime.project.Project" ,methodName = "_find_builds_in_folders" ))
-			x = hxsublime_build_Tools.find_hxml_projects(self, f)
+			x = None
+			_this = hxsublime_build_Tools.find_hxml_projects(self, f)
+			def _hx_local_0(x1):
+				return x1
+			x = __builtin__.list(__builtin__.map(_hx_local_0, _this))
+			
 			builds.extend(x)
 			
-			haxe_Log.trace("1", _Hx_AnonObject(fileName = "Project.hx" ,lineNumber = 241 ,className = "hxsublime.project.Project" ,methodName = "_find_builds_in_folders" ))
-			x = hxsublime_build_Tools.find_nme_projects(self, f)
+			x = None
+			_this = hxsublime_build_Tools.find_nme_projects(self, f)
+			def _hx_local_1(x1):
+				return x1
+			x = __builtin__.list(__builtin__.map(_hx_local_1, _this))
+			
 			builds.extend(x)
 			
-			haxe_Log.trace("2", _Hx_AnonObject(fileName = "Project.hx" ,lineNumber = 243 ,className = "hxsublime.project.Project" ,methodName = "_find_builds_in_folders" ))
-			x = hxsublime_build_Tools.find_openfl_projects(self, f)
+			x = None
+			_this = hxsublime_build_Tools.find_openfl_projects(self, f)
+			def _hx_local_2(x1):
+				return x1
+			x = __builtin__.list(__builtin__.map(_hx_local_2, _this))
+			
 			builds.extend(x)
 			
-			haxe_Log.trace("3", _Hx_AnonObject(fileName = "Project.hx" ,lineNumber = 245 ,className = "hxsublime.project.Project" ,methodName = "_find_builds_in_folders" ))
 		
 		
-		haxe_Log.trace("find builds end", _Hx_AnonObject(fileName = "Project.hx" ,lineNumber = 247 ,className = "hxsublime.project.Project" ,methodName = "_find_builds_in_folders" ))
+		haxe_Log.trace("find builds end", _Hx_AnonObject(fileName = "Project.hx" ,lineNumber = 246 ,className = "hxsublime.project.Project" ,methodName = "_find_builds_in_folders" ))
 		return builds
 	
 
@@ -10764,11 +10826,7 @@ class hxsublime_project_Project:
 		while _g11 < len(_g2):
 			b = _g2[_g11]
 			_g11 = _g11 + 1
-			x = None
-			a = b.to_string()
-			b1 = python_lib_os_Path.basename(b.build_file())
-			x = (a, b1)
-			
+			x = [b.to_string(), python_lib_os_Path.basename(b.build_file())]
 			_g.append(x)
 			__builtin__.len(_g)
 			
@@ -10878,7 +10936,7 @@ class hxsublime_project_Project:
 		src_dir = python_lib_os_Path.dirname(fn)
 		src = view.substr(sublime_Region(0, view.size()))
 		build = hxsublime_build_HxmlBuild(None, None)
-		build.target = "js"
+		build._target = "js"
 		folder = python_lib_os_Path.dirname(fn)
 		folders = view.window().folders()
 		_g = 0
@@ -10924,18 +10982,8 @@ class hxsublime_project_Project:
 		
 		build.main = ".".join(main)
 		build.output = python_lib_os_Path.join(folder, build.main.lower() + ".js")
-		_this = build.args
-		x = ("-cp", src_dir)
-		_this.append(x)
-		__builtin__.len(_this)
-		
-		
-		_this = build.args
-		x = ("-js", build.output)
-		_this.append(x)
-		__builtin__.len(_this)
-		
-		
+		build.add_arg(("-cp", src_dir))
+		build.add_arg(("-js", build.output))
 		build.setHxml(python_lib_os_Path.join(src_dir, "build.hxml"))
 		return build
 	
@@ -11032,7 +11080,6 @@ def Project_statics__haxe_build_env(project_dir):
 		python_lib_Types_DictImpl.set(env, "PATH", val)
 	
 	
-	haxe_Log.trace(Std.string(env), _Hx_AnonObject(fileName = "Project.hx" ,lineNumber = 514 ,className = "hxsublime.project.Project" ,methodName = "_haxe_build_env" ))
 	return env
 	
 hxsublime_project_Project._haxe_build_env = Project_statics__haxe_build_env
@@ -11044,9 +11091,6 @@ def Project_statics__collect_compiler_info(haxe_exec,project_path):
 	cmd = haxe_exec
 	cmd.extend(["-main", "Nothing", "-v", "--no-output"])
 	r = hxsublime_Execute.run_cmd(cmd, None, None, env)
-	haxe_Log.trace(r, _Hx_AnonObject(fileName = "Project.hx" ,lineNumber = 533 ,className = "hxsublime.project.Project" ,methodName = "_collect_compiler_info" ))
-	haxe_Log.trace(r[0], _Hx_AnonObject(fileName = "Project.hx" ,lineNumber = 534 ,className = "hxsublime.project.Project" ,methodName = "_collect_compiler_info" ))
-	haxe_Log.trace(r[1], _Hx_AnonObject(fileName = "Project.hx" ,lineNumber = 535 ,className = "hxsublime.project.Project" ,methodName = "_collect_compiler_info" ))
 	out = r[0]
 	err = r[1]
 	std_classpaths = hxsublime_project_Project._extract_std_classpaths(out)
@@ -11085,7 +11129,6 @@ hxsublime_project_Project._is_valid_classpath = Project_statics__is_valid_classp
 def Project_statics__extract_std_classpaths(out):
 	m = hxsublime_project_Project._classpath_line.match(out)
 	std_classpaths = []
-	haxe_Log.trace(out, _Hx_AnonObject(fileName = "Project.hx" ,lineNumber = 575 ,className = "hxsublime.project.Project" ,methodName = "_extract_std_classpaths" ))
 	all_paths = m.group(1).split(";")
 	ignored_paths = [".", "./"]
 	std_paths = None
@@ -11601,7 +11644,6 @@ def HxSrcTools_statics_reverse_search_next_char_on_same_nesting_level(hx_src_sec
 			continue
 		
 		
-		haxe_Log.trace(c + " in " + Std.string(chars) + ":" + Std.string(c in chars), _Hx_AnonObject(fileName = "HxSrcTools.hx" ,lineNumber = 516 ,className = "hxsublime.tools.HxSrcTools" ,methodName = "reverse_search_next_char_on_same_nesting_level" ))
 		if c == "/" and next == "/":
 			pos = pos - 2
 			cur = "//" + c
@@ -14200,6 +14242,7 @@ from datetime import tzinfo as python_lib_datetime_TzInfo
 # print python.lib.io.FileIO.FileIO
 # print python.lib.io.TextIOBase.TextIOBase
 # print python.lib.io.StringIO.StringIO
+from io import StringIO as python_lib_io_StringIO
 # print python.lib.subprocess.Popen.Popen
 from subprocess import Popen as python_lib_subprocess_Popen
 # print python.lib.xml.etree.ElementTree.XMLParser

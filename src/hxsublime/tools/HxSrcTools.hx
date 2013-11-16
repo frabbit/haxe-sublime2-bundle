@@ -513,7 +513,7 @@ class HxSrcTools {
 			}
 
 
-			trace(c + " in " + Std.string(chars) + ":" + Std.string(ArrayTools.contains(chars, c)));
+			//trace(c + " in " + Std.string(chars) + ":" + Std.string(ArrayTools.contains(chars, c)));
 
 			// single line comment
 			if (c == "/" && next == "/") 

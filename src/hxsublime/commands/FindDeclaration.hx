@@ -129,7 +129,7 @@ using python.lib.StringTools;
 
         var new_src = src_before_using + using_insert + src_before_expr + insert_before +  expr_string + insert_after + src_after_expr;
         
-        trace(new_src);
+        //trace(new_src);
 
        var r = Helper.prepare_build(view, project, use_display, new_src);
         var build = r._1, temp_path = r._2, temp_file = r._3;

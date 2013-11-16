@@ -300,11 +300,11 @@ private class Helper
             
             if (exit_code == 0 || exit_code == null) 
             {
-                this.append_data_str(proc, '[Finished in ${elapsed}]');
+                this.append_data_str(proc, '[Finished in ${Std.string(elapsed)}]');
             }
             else
             {
-                this.append_data_str(proc, '[Finished in ${elapsed} with exit code ${exit_code}]');
+                this.append_data_str(proc, '[Finished in ${Std.string(elapsed)} with exit code ${exit_code}]');
             }
         }
         if (proc != this.proc) 
