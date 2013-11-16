@@ -14,6 +14,7 @@ import hxsublime.tools.ViewTools;
 import python.lib.Os;
 import python.lib.os.Path;
 import python.lib.Re;
+import python.lib.Types.Dict;
 import python.lib.Types.Set;
 import python.lib.Types.Tup2;
 import python.lib.Types.Tup3;
@@ -143,7 +144,7 @@ class Project {
         var scopes = view.scope_name(view.sel()[0].end()).split(" ");
         
         if (Lambda.has(scopes, 'source.hxml')) {
-            view.run_command("save", {});
+            view.run_command("save");
         }
 
         extract_build_args( view , true );
@@ -233,11 +234,17 @@ class Project {
     
     public function _find_builds_in_folders(folders:Array<String>):Array<Build> {
         var builds:Array<Build> = [];
+        trace("find builds start");
         for (f in folders) {
+            trace("0");
             builds.extend(cast hxsublime.build.Tools.find_hxml_projects(this, f));
+            trace("1");
             builds.extend(cast hxsublime.build.Tools.find_nme_projects(this, f));
+            trace("2");
             builds.extend(cast hxsublime.build.Tools.find_openfl_projects(this, f));
+            trace("3");
         }
+        trace("find builds end");
         return builds;
     }
 
@@ -293,7 +300,7 @@ class Project {
         win.show_quick_panel( buildsView , on_selected  , Sublime.MONOSPACE_FONT );
     }
 
-    public function _set_current_build( view , id ) {
+    public function _set_current_build( view:View , id:Int ) {
         
         trace( "_set_current_build");
         
@@ -316,7 +323,7 @@ class Project {
             
     }
     
-    public function _build(view, type = "run") {
+    public function _build(view:View, type = "run") {
 
         if (view == null) {
             view = Sublime.active_window().active_view();
@@ -356,13 +363,13 @@ class Project {
 
 
         
-        win.run_command("haxe_exec", {
+        win.run_command("hxsublime_commands__execute__haxe_exec", Dict.fromObject({
             cmd: cmd,
             is_check_run : type == "check",
             working_dir: build_folder,
             file_regex : Tools.haxe_file_regex,
             env : env
-        });
+        }));
 
     }
 
@@ -396,7 +403,7 @@ class Project {
         }
 
         var pack = [];
-        for (ps in HxRegex.package_line.findall( src )) {
+        for (ps in HxRegex.package_line.findallString( src )) {
             if (ps == "") continue;
                 
             pack = ps.split(".");
@@ -523,6 +530,9 @@ class Project {
 
         
         var r = Execute.run_cmd( cmd, null,null,env );
+        trace(r);
+        trace(r._1);
+        trace(r._2);
         var out = r._1;
         var err = r._2;
 
@@ -561,6 +571,8 @@ class Project {
         var m = _classpath_line.match(out);
             
         var std_classpaths = [];
+
+        trace(out);
 
         var all_paths = m.group(1).split(";");
         var ignored_paths = [".","./"];

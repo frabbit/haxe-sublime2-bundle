@@ -60,7 +60,7 @@ extern class Window {
 	
 	// TODO
 
-	public function run_command(string:String, args:Dynamic):Void;
+	public function run_command(string:String, ?args:Dict<String, Dynamic>):Void;
 	/*
 	None	Shows a quick panel, to select an item in a list. on_done will be called once, with the index of the selected item. If the quick panel was cancelled, on_done will be called with an argument of -1.
 	Items may be an array of strings, or an array of string arrays. In the latter case, each entry in the quick panel will show multiple rows.

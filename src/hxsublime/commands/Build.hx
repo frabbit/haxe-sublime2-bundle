@@ -12,47 +12,45 @@ import sublime.View;
 using StringTools;
 
 
-class HaxeSaveAllAndRunCommand extends TextCommand
+@:keep class HaxeSaveAllAndRunCommand extends TextCommand
 {
-    override public function run ( args:KwArgs ) 
+    override public function run ( edit:Edit, ?args:KwArgs ) 
     {
-        var edit:Edit = args.get("edit", null);
-        trace("run HaxeSaveAllAndBuildCommand");
+        
+        trace("run HaxeSaveAllAndRunCommand");
         var view = this.view;
-        view.window().run_command("save_all", {});
+        view.window().run_command("save_all");
         Projects.current_project(this.view).run_build( view );
     }
 }
 
-class HaxeSaveAllAndCheckCommand extends TextCommand
+@:keep class HaxeSaveAllAndCheckCommand extends TextCommand
 {
-    override public function run ( args:KwArgs ) 
+    override public function run ( edit:Edit, ?args:KwArgs ) 
     {
         var edit:Edit = args.get("edit", null);
-        trace("run HaxeSaveAllAndBuildCommand");
+        trace("run HaxeSaveAllAndCheckCommand");
         var view = this.view;
-        view.window().run_command("save_all", {});
+        view.window().run_command("save_all");
         Projects.current_project(this.view).check_build( view );
     }
 }
 
-class HaxeSaveAllAndBuildCommand extends TextCommand
+@:keep class HaxeSaveAllAndBuildCommand extends TextCommand
 {
-    override public function run ( args:KwArgs ) 
+    override public function run ( edit:Edit, ?args:KwArgs ) 
     {
-        var edit:Edit = args.get("edit", null);
         trace("run HaxeSaveAllAndBuildCommand");
         var view = this.view;
-        view.window().run_command("save_all", {});
+        view.window().run_command("save_all");
         Projects.current_project(this.view).just_build( view );
     }
 }
 
-class HaxeRunBuildCommand extends TextCommand
+@:keep class HaxeRunBuildCommand extends TextCommand
 {
-    override public function run ( args:KwArgs ) 
+    override public function run ( edit:Edit, ?args:KwArgs ) 
     {
-        var edit:Edit = args.get("edit", null);
         var view = this.view;
         trace("run HaxeRunBuildCommand");
         var project = Projects.current_project(this.view);
@@ -69,18 +67,17 @@ class HaxeRunBuildCommand extends TextCommand
     }
 }
 
-class HaxeSelectBuildCommand extends TextCommand
+@:keep class HaxeSelectBuildCommand extends TextCommand
 {
-    override public function run ( args:KwArgs ) 
+    override public function run ( edit:Edit, ?args:KwArgs ) 
     {
-        var edit:Edit = args.get("edit", null);
         trace("run HaxeSelectBuildCommand");
         var view = this.view;
         Projects.current_project(this.view).select_build( view );
     }
 }
 
-class HaxeBuildOnSaveListener extends EventListener {
+@:keep class HaxeBuildOnSaveListener extends EventListener {
     override public function on_post_save(view:View) 
     {
         trace("on_post_save");

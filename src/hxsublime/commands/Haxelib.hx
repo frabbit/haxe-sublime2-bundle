@@ -1,14 +1,16 @@
 package hxsublime.commands;
 
 
+import hxsublime.Haxelib.HaxeLibLibrary;
 import python.lib.Types;
 
 import hxsublime.Haxelib.HaxeLibManager;
 import hxsublime.project.Base.Projects;
+import sublime.Sublime;
 import sublime.WindowCommand;
 
 
-class HaxeInstallLibCommand extends WindowCommand
+@:keep class HaxeInstallLibCommand extends WindowCommand
 {
 
 
@@ -20,7 +22,7 @@ class HaxeInstallLibCommand extends WindowCommand
 
         if (project != null) 
         {
-            var manager = project.haxelib_manager;
+            var manager = project.haxelib_manager();
             var libs = manager.search_libs();
             var menu = this._prepare_menu(libs, manager);
             var on_selected = this._entry_selected.bind(libs, manager);
@@ -28,7 +30,7 @@ class HaxeInstallLibCommand extends WindowCommand
         }
     }
 
-    public function _prepare_menu (libs, manager:HaxeLibManager) 
+    public function _prepare_menu (libs:Array<String>, manager:HaxeLibManager) 
     {
         var menu = [];
         for (l in libs) {
@@ -48,9 +50,9 @@ class HaxeInstallLibCommand extends WindowCommand
         return menu;
     }
 
-    public function _entry_selected( libs, manager, i )
+    public function _entry_selected( libs:Array<String>, manager:HaxeLibManager, i:Int )
     {
-        trace("install lib command selected " + Std.string(i))
+        trace("install lib command selected " + Std.string(i));
         if (i < 0) {
             return;
         }
@@ -68,7 +70,7 @@ class HaxeInstallLibCommand extends WindowCommand
         else 
         {
             var lib = libs[i];
-            if (lib in manager.available) 
+            if (manager.available().exists(lib)) 
             {
                 trace("remove " + lib);
                 manager.remove_lib(lib);

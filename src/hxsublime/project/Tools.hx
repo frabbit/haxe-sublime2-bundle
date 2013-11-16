@@ -9,7 +9,7 @@ class Tools {
 		var win = null;
 	    if (view != null) 
 	    {
-	        var win = view.window();
+	        win = view.window();
 	        if (win == null) 
 	        {
 	            win = Sublime.active_window();

@@ -36,7 +36,7 @@ class TabPanel {
 		
 		function f () 
 		{
-			var max = Std.int(Math.max(this.all.length, 300));
+			var max = Std.int(Math.min(this.all.length, 300));
 			this.all = [for (i in 0...max) this.all[i]];
 			
 			var msg1 = if (show_timestamp) Tools.timestamp_msg(msg) else msg;

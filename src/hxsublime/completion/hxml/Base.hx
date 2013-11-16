@@ -2,6 +2,7 @@ package hxsublime.completion.hxml;
 
 import hxsublime.project.Project;
 import python.lib.Re;
+import sublime.Region;
 import sublime.View;
 
 class Base {
@@ -10,11 +11,11 @@ class Base {
 
 	public static function auto_complete( project:Project, view:View , offset:Int, prefix:String ) 
 	{
-	    var src = view.substr(sublime.Region(0, offset));
-	    var current_line = src[src.rfind("\n")+1:offset];
+	    var src = view.substr(new Region(0, offset));
+	    var current_line = src.substring(src.indexOf("\n")+1,offset);
 	    var m = lib_flag.match( current_line );
 	    if (m != null) {
-	        return project.haxelib_manager.get_completions();
+	        return project.haxelib_manager().get_completions();
 	    }
 	    else {
 	        return [];

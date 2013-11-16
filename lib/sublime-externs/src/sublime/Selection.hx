@@ -1,6 +1,7 @@
 
 package sublime;
 
+import python.lib.Builtin;
 import sublime.Region;
 
 import python.lib.Types;
@@ -18,7 +19,12 @@ extern class Selection implements ArrayAccess<Region> {
 	// 	bool	Returns true iff the given region is a subset.
 	public function contains(region:Region):Bool;
 
-	public var length:Int;
+
+	public var length(get_length, null):Int;
+
+	private inline function get_length():Int {
+		return Builtin.len( (this:Dynamic) );
+	}
 
 	static function __init__ ():Void {
 		python.Macros.importFromAs("sublime", "Selection", "sublime.Selection");

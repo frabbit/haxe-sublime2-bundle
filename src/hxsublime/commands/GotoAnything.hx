@@ -15,7 +15,7 @@ private typedef Entry = {
 
 
 
-class HaxeGotoAnythingCommand extends HaxeGotoBaseCommand<Entry>
+@:keep class HaxeGotoAnythingCommand extends HaxeGotoBaseCommand<Entry>
 {
 
     override public function get_entries (types:StringMap<HaxeType>)

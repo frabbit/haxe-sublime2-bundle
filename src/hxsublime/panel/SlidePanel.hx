@@ -2,6 +2,7 @@ package hxsublime.panel;
 
 import hxsublime.panel.Tools;
 import hxsublime.tools.ViewTools;
+import python.lib.Types.Dict;
 import sublime.Edit;
 import sublime.Region;
 import sublime.View;
@@ -46,7 +47,7 @@ class SlidePanel
 			text = Tools.timestamp_msg(text);
 		}
 		
-		win.run_command("show_panel",{"panel":"output.haxe"});
+		win.run_command("show_panel",Dict.fromObject({"panel":"output.haxe"}));
 		
 		function do_edit(v:View, edit:Edit):Void 
 		{

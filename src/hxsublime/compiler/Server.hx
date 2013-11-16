@@ -86,7 +86,7 @@ class Server
 					
 				if (env != null) 
 				{
-					for (k in env.keys()) 
+					for (k in env.keys().iter().toHaxeIterator()) 
 					{
 						var val = null;
 						try 

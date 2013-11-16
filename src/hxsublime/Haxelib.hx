@@ -170,7 +170,7 @@ class HaxeLibManager {
 		scan();
 	}
 
-	public function this_update(){
+	public function self_update(){
 		var cmd = project.haxelib_exec();
 		var env = project.haxe_env();
 		cmd.push("thisupdate");

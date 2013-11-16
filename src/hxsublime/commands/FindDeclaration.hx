@@ -13,6 +13,7 @@ import python.lib.Codecs;
 import python.lib.Json;
 import python.lib.os.Path;
 import python.lib.Re;
+import sublime.Edit;
 import sublime.EventListener;
 import sublime.Region;
 import sublime.Sublime;
@@ -24,9 +25,9 @@ import hxsublime.tools.HxSrcTools.Regex in HxRegex;
 
 using python.lib.StringTools;
 
-class HaxeFindDeclarationCommand extends TextCommand 
+@:keep class HaxeFindDeclarationCommand extends TextCommand 
 {
-    override public function run( _:KwArgs ) 
+    override public function run( edit:Edit, ?_:KwArgs ) 
     {
 
         this.run1(true);
@@ -296,6 +297,9 @@ private class Helper
 
         build.add_classpath(Path.join(plugin_path, "haxetools"));
         
+
+        trace(build.classpaths);
+
         build.add_arg(Tup2.create("-dce", "no"));
 
         if (use_display)
@@ -307,7 +311,7 @@ private class Helper
     }
 }
 
-class HaxeFindDeclarationListener extends EventListener
+@:keep class HaxeFindDeclarationListener extends EventListener
 {
     override public function on_activated(view:View) 
     {

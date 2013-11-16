@@ -4,7 +4,10 @@ import haxe.ds.StringMap;
 import hxsublime.panel.Base.Panels;
 import hxsublime.Settings;
 import hxsublime.tools.HxSrcTools;
+import python.lib.Builtin;
+import python.lib.Inspect;
 import python.lib.Os;
+import python.lib.PPrint;
 import python.lib.Re;
 import python.lib.Types.Exception;
 import python.lib.xml.etree.ElementTree;
@@ -13,6 +16,7 @@ import python.lib.Types;
 import sublime.Sublime;
 
 using python.lib.StringTools;
+using python.Macros;
 
 import StringTools in ST;
 
@@ -45,14 +49,19 @@ class Output {
 	public static var haxe_compiler_line = "^([^:]*):([0-9]+): characters? ([0-9]+)-?[0-9]* :(.*)$";
 	public static var type_parameter_name = Re.compile("^([A-Z][_a-zA-Z0-9]*)");
 
-	public static function get_type_hint (types:PyIterator<Element>) 
+	public static function get_type_hint (types:PyIterable<Element>) 
 	{
+
 		var hints = [];
-		for (i in types) {
+		
+		for ( i in Builtin.list(types)) 
+		{
+			trace(i);
 			var hint = i.text.strip();
 			var hint_types = HxSrcTools.split_function_signature(hint);
 			hints.push( hint_types );
 		}
+
 		return hints;
 	}
 
@@ -67,13 +76,16 @@ class Output {
 		var name_len = name.length;
 		for (t in signature_types) 
 		{
+			
 			new_args.push(t.split(name + ".").join(""));
 			while (true) 
 			{
+				
 				var index = t.indexOf(name);
 				if (index == -1) break;
 				var type_start_index = index + name_len + 1;
-				var t = t.substr(type_start_index);
+				t = t.substr(type_start_index);
+				
 				var m = type_parameter_name.match(t);
 				if (m != null) 
 				{
@@ -90,22 +102,30 @@ class Output {
 		var keys = [for (k in type_params.keys()) k];
 		keys.reverse();
 		var type_param_list = keys;
+		trace(type_param_list);
+		trace(new_args);
 		return Tup2.create(new_args, type_param_list);
 	}
 
 
-	public static function completion_field_to_entry(name, sig, doc) 
+	public static function completion_field_to_entry(name:String, sig:String, doc:String) 
 	{
+
 		var insert = name;
 		var label = name;
 		
 		var smart_snippets = Settings.smart_snippets_on_completion();
 		var not_smart = !smart_snippets;
 
+
+
 		if (sig != null) {
 			var types = HxSrcTools.split_function_signature(sig);
+
+			trace(types);
 			
 			var r = get_function_type_params(name, types);
+			
 			var types = r._1, type_params = r._2;
 
 			var params_sig = "";
@@ -115,8 +135,15 @@ class Output {
 			}
 
 
-			trace(Std.string(types));
-			trace(Std.string(type_params));
+
+
+
+			
+
+			
+
+			
+			
 			
 			
 			var ret = types.pop();
@@ -136,7 +163,7 @@ class Output {
 					}
 
 					var params = "( " + types.join(", ") + " )";
-					var label = name + params_sig + params + signature_separator + ret;
+					label = name + params_sig + params + signature_separator + ret;
 					
 					//hint_to_long = is_st2 and len(label) > 40
 					//if (hint_to_long) { // compact arguments
@@ -176,7 +203,9 @@ class Output {
 	{
 		var comps = [];
 		if (li != null) {
-			for (i in li.iter("i")) {
+
+			
+			for (i in Builtin.list(li.iter("i"))) {
 				var name = i.get("n");
 				var sig = i.find("t").text;
 				var doc = i.find("d").text; // nothing to do
@@ -196,12 +225,12 @@ class Output {
 		
 		//trace("error_str: |||" + str + "|||")
 		// swallow no classes found in * errors where * could be trace or an unknown variable etc.
-		if (no_classes_found.findall(str).length > 0) {
+		if (no_classes_found.findallString(str).length > 0) {
 			//trace("just no classes found error")
 			errors = [];
 		}
 		else {
-			for (infos in compiler_output.findall(str)) 
+			for (infos in compiler_output.findallArray(str)) 
 			{
 				var infos = infos.copy();
 				var f = infos.shift();
@@ -245,7 +274,7 @@ class Output {
 	}
 
 
-	public static function get_completion_output(temp_file, orig_file, output, commas) 
+	public static function get_completion_output(temp_file:String, orig_file:String, output:String, commas:Int) 
 	{
 		var r = parse_completion_output(temp_file, orig_file, output);
 		var hints = r._1, comps = r._2;
@@ -261,11 +290,16 @@ class Output {
 		hints = new_hints;
 
 		var r1 = get_completion_status_and_errors(hints, comps, output, temp_file, orig_file);
-		var status = r1._1, errors = r1._2;
+		var status = null, errors = null;
+		if (r1 != null) {
+			status = r1._1;
+			errors = r1._2;
+		} 
+		
 		return Tup4.create(hints, comps, status, errors);
 	}
 
-	public static function parse_completion_output(temp_file, orig_file, output) 
+	public static function parse_completion_output(temp_file:String, orig_file:String, output:String):Tup2<Array<Array<String>>, Array<CompletionEntry>>
 	{
 
 		var tree = null;
@@ -285,6 +319,9 @@ class Output {
 
 		if (tree != null) {
 
+			
+
+
 			hints = get_type_hint(tree.iter("type"));
 			comps = collect_completion_fields(tree.find("list"));
 			trace("hints:" + Std.string(hints));
@@ -295,7 +332,8 @@ class Output {
 			comps = [];
 		}
 			
-		if (Re.findall(no_classes_found_in_trace, output).length > 0) {
+		if (Re.findallDynamic(no_classes_found_in_trace, output).length > 0) 
+		{
 			var smart_snippets = Settings.smart_snippets_on_completion();
 			var insert = null;
 			if (smart_snippets) {
@@ -318,15 +356,19 @@ class Output {
 		var errors = [];
 
 		var res = null;
+
 		if (hints.length == 0 && comps.length == 0) 
 		{
 			res = parse_completion_errors(output, temp_file, orig_file, status);
+		} else {
+			res = Tup2.create("", []);
 		}
 			
 		return res;
 	}
 
-	public static function parse_completion_errors(output:String, temp_file:String, orig_file:String, status:String) {
+	public static function parse_completion_errors(output:String, temp_file:String, orig_file:String, status:String) 
+	{
 		trace("output:" + output);
 		trace("status:" + status);
 		trace("orig_file:" + orig_file);

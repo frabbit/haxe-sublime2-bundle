@@ -24,13 +24,14 @@ private class State {
 
 
 
-class HaxeCreateTypeCommand extends WindowCommand
+@:keep class HaxeCreateTypeCommand extends WindowCommand
 {
     var classpath : String;
     var win : Window;
 
     public function new (win:Window)
     {
+        super(win);
         this.classpath = null;
         this.win = win;
     }
@@ -39,13 +40,13 @@ class HaxeCreateTypeCommand extends WindowCommand
     override public function run( kwArgs:KwArgs ) 
     {
 
-        var paths = kwArgs.get("paths", null);
+        var paths = kwArgs.get("paths", []);
         var t = kwArgs.get("t", "class");
-        if (paths == null) paths = [];
+        
 
         trace("createtype");
         
-        var win = this.win;
+        
         var view = win.active_view();
 
         var project = Projects.current_project(view);
@@ -99,8 +100,9 @@ class HaxeCreateTypeCommand extends WindowCommand
                         this.classpath = path.substring(0,cp.length);
                         trace("this.classpath: " + this.classpath);
                         
-                        var rel_path = path.substr(cp.length);
+                        var rel_path = path.substr(cp.length+1);
                         
+                        trace(rel_path);
                         if (rel_path.length == 0)
                         {
                             found = true;
@@ -111,6 +113,7 @@ class HaxeCreateTypeCommand extends WindowCommand
                             trace("subpacks:" + Std.string(sub_packs));
                             for (p in sub_packs) 
                             {
+
                                 if (p.indexOf(".") > -1)
                                 { 
                                     break;
@@ -144,17 +147,19 @@ class HaxeCreateTypeCommand extends WindowCommand
             }
         }
 
+        trace(pack);
         // so default text ends with .
-        if (pack.length > 0) 
-        {
-            pack.push("");
+        
+        var packSuggestion = pack.join(".");
+        if (packSuggestion.length > 0) {
+            packSuggestion += ".";
         }
 
         Sublime.status_message( "Current classpath : " + this.classpath );
-        win.show_input_panel("Enter "+t+" name : " , pack.join(".") , function (inp) this.on_done(inp, t) , this.on_change , this.on_cancel );
+        win.show_input_panel("Enter "+t+" name : " , packSuggestion , function (inp) this.onDone(inp, t) , this.onChange , this.onCancel );
     }
 
-    public function on_done( inp:String, cur_type:String ) 
+    public function onDone( inp:String, cur_type:String ) 
     {
 
         var fn = this.classpath;
@@ -167,7 +172,7 @@ class HaxeCreateTypeCommand extends WindowCommand
         {
             var p = parts.shift();
             
-            var fn = Path.join( fn , p );
+            fn = Path.join( fn , p );
 
             if (hxsublime.tools.HxSrcTools.Regex.is_type.match( p ) != null)
             {
@@ -200,19 +205,19 @@ class HaxeCreateTypeCommand extends WindowCommand
     }
  
 
-    public function on_change( inp:String ) 
+    public function onChange( inp:String ) 
     {
         //sublime.status_message( "Current classpath : " + this.classpath )
         trace( inp );
     }
 
-    public function on_cancel( ) 
+    public function onCancel( ) 
     {
         trace("cancel");
     }
 }
 
-class HaxeCreateTypeListener extends EventListener
+@:keep class HaxeCreateTypeListener extends EventListener
 {
 
     override public function on_load (view:View)
@@ -231,6 +236,7 @@ class HaxeCreateTypeListener extends EventListener
         
         function run_edit(v:View, edit:Edit)
         {
+            trace(data);
             v.insert(edit,0,data);
             var sel = v.sel();
             sel.clear();

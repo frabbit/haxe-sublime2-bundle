@@ -18,6 +18,8 @@ import python.lib.Types.Dict;
 import python.lib.Types.Tup2;
 import python.lib.Types.Tup3;
 
+using python.lib.ArrayTools;
+
 class Regex 
 {
 	public static var compact_func = Re.compile("\\(.*\\)");
@@ -55,7 +57,10 @@ class HxSrcTools {
 		var pack = get_package(src);
 
 		var res = new StringMap();
-		for (decl in Regex._type_decl_with_scope.findall( src )) {
+		for (decl in Regex._type_decl_with_scope.finditer( src ).toHaxeIterator()) {
+
+
+
 			var is_private = decl.group(1) != null;
 			
 			var type_name = decl.group(4);
@@ -63,6 +68,7 @@ class HxSrcTools {
 			if (type_name == "NME_") {
 				trace(Std.string(decl.group(0)));
 			}
+
 			var kind = decl.group(3);
 
 			var is_extern = decl.group(2) != null;
@@ -70,16 +76,25 @@ class HxSrcTools {
 			var is_module_type = type_name == module_name;
 			var is_std_type = module_name == "StdTypes";
 
+
 			var full_type = new HaxeType(pack, module_name, type_name, kind, is_private, is_module_type, is_std_type, is_extern, file, src, src_with_comments, decl);
+
 
 			if (full_type.is_enum()) {
 				full_type._enum_constructors = _extract_enum_constructors_from_src(src, decl.end(4));
 			}
 
+
+
 			if (!res.exists(full_type.full_qualified_name())) {
+
 				res.set(full_type.full_qualified_name(), full_type);
 			}	
+
+			
+
 		}
+		
 
 		return new HaxeTypeBundle(res);
 	}
@@ -595,7 +610,7 @@ class HxSrcTools {
 	public static function get_package(src:String) 
 	{
 		var pack = "";
-		var all = Regex.package_line.findall( src );
+		var all = Regex.package_line.findallString( src );
 		
 		for (ps in all) {
 			pack = ps;
@@ -729,7 +744,7 @@ class HaxeTypeBundle
 
 	public function toString() 
 	{
-		return "HaxeTypeBundle(\n" + python.lib.PPrint.pformat(_types) + "\n)";
+		return "HaxeTypeBundle(\n" + _types.toString() + "\n)";
 	}
 
 
@@ -737,12 +752,13 @@ class HaxeTypeBundle
 	// the same fullqualified name, which is the dict identifier.
 	public function merge (other:HaxeTypeBundle) 
 	{
+
 		var res:StringMap<HaxeType> = [for (k in _types.keys()) k => _types.get(k)];
 
-		for (k in res.keys()) {
-			res.set(k, res.get(k));
+		for (k in other._types.keys()) {
+			res.set(k, other._types.get(k));
 		}
-		
+
 		return new HaxeTypeBundle(res);
 	}
 
@@ -801,7 +817,7 @@ class HaxeTypeBundle
 	}
 
 	// returns a list of all types stored in this type bundle
-	public function all_types() 
+	public function all_types():Array<HaxeType> 
 	{
 		return [for (v in _types) v];
 	}
@@ -820,9 +836,9 @@ class HaxeTypeBundle
 		return new HaxeTypeBundle(res);
 	}	
 
-	public function filter_by_classpath (cp) 
+	public function filter_by_classpath (cp:String) 
 	{
-		return filter(function (p) return p.classpath == cp);
+		return filter(function (p) return p.classpath() == cp);
 	}
 
 	public function filter_by_classpaths (cps:Array<String>) 
@@ -872,6 +888,11 @@ class EnumConstructor
 
 		return Tup2.create(display, insert);
 	}
+
+	public function toString()
+	{
+		return this.name;
+	}
 }
 
 class HaxeField 
@@ -898,35 +919,50 @@ class HaxeField
 		this.match_decl = match_decl;
 	}
 		
-
+	private var _src_pos = null;
 	@lazyprop
 	public function src_pos () 
 	{
-		for (decl in Regex._field.finditer( type.src_with_comments ))
-		{
-			if (decl.group(0) == match_decl.group(0)) {
-				return decl.start(0);
+		if (_src_pos == null) {
+			for (decl in Regex._field.finditer( type.src_with_comments ).toHaxeIterator())
+			{
+				if (decl.group(0) == match_decl.group(0)) {
+					_src_pos = decl.start(0);
+					return _src_pos;
+				}
 			}
 		}
-		return null;
+		return _src_pos;
 	}
 
+	private var _is_var:Bool;
 	@lazyprop
 	public function is_var () 
 	{
-		return kind == "var";
+		if (_is_var == null) {
+			_is_var = kind == "var";
+		}
+		return _is_var;
+		
 	}
 
+	private var _file = null;
 	@property
 	public function file () 
 	{
-		return type.file();
+		if (_file == null) {
+			_file = type.file();
+		}
+		return _file;
 	}
 
+	private var _is_function = null;
 	@lazyprop
 	public function is_function () 
 	{
-		return kind == "function";
+		if (_is_function == null)
+			_is_function = kind == "function";
+		return _is_function;
 	}
 
 	
@@ -979,147 +1015,192 @@ class HaxeType
 		this._enum_constructors = null;
 	}
 
+	var _stripped_start_decl_pos = null;
 	@lazyprop
 	public function stripped_start_decl_pos() 
 	{
-		return match_decl.start(0);
+		if (_stripped_start_decl_pos == null) {
+			_stripped_start_decl_pos = match_decl.start(0);
+		}
+		return _stripped_start_decl_pos;
 	}
 
+	var _class_body:String = null;
 	@lazyprop
 	public function class_body () 
 	{
+		if (_class_body == null) {
+			var res = null;
+			if (this.stripped_end_decl_pos == null) 
+			{
+				res = "";
+			}
+			else 
+			{
+				res = this.src().substring(this.stripped_start_decl_pos(), this.stripped_end_decl_pos());
+			}
+			_class_body = res;
 
-		var res = null;
-		if (this.stripped_end_decl_pos == null) 
-		{
-			res = "";
-		}
-		else 
-		{
-			res = this.src().substring(this.stripped_start_decl_pos(), this.stripped_end_decl_pos());
 		}
 
-		return res;
+		return _class_body;
 	}
 
 	
+	var _public_static_fields = null;
 	@lazyprop
 	public function public_static_fields () 
 	{
-		var res = [];
-		res = res.concat(this.public_static_vars());
-		res = res.concat(this.public_static_functions());
-		return res;
+		if (_public_static_fields == null) {
+			var res = [];
+			res.extend(this.public_static_vars());
+			res.extend(this.public_static_functions());
+			_public_static_fields = res;
+		}
+		return _public_static_fields;
 	}
 
 
 
 
+	var _all_fields = null;
 	@lazyprop 
 	public function all_fields () 
 	{
+		if (_all_fields == null) {
+			var res = new StringMap();
+			if (class_body != null) {
+				for (decl in Regex._field.finditer(class_body()).toHaxeIterator()) 
+				{
+					var modifiers = decl.group(1);
+					var is_static = modifiers != null && modifiers.indexOf("static") > -1;
+					var is_inline = modifiers != null && modifiers.indexOf("inline") > -1;
+					var is_private = modifiers != null && modifiers.indexOf("private") > -1;
+					var is_public = modifiers != null && modifiers.indexOf("public") > -1;
+					var kind = decl.group(2);
+					var name = decl.group(3);
+					if (name == "WAIT_END_RET") trace(modifiers);
 
-		var res = new StringMap();
-		if (class_body != null) {
-			for (decl in Regex._field.findall(class_body())) 
-			{
-				var modifiers = decl.group(1);
-				var is_static = modifiers != null && modifiers.find("static") > -1;
-				var is_inline = modifiers != null && modifiers.find("inline") > -1;
-				var is_private = modifiers != null && modifiers.find("private") > -1;
-				var is_public = modifiers != null && modifiers.find("public") > -1;
-				var kind = decl.group(2);
-				var name = decl.group(3);
-				if (name == "WAIT_END_RET") trace(modifiers);
-
-				if (is_private || is_public || is_static || this.is_extern || HxSrcTools.is_same_nesting_level_at_pos(class_body(), decl.start(0), class_body_start()._1))
-					res.set(name, new HaxeField(this, name, kind, is_static, is_public, is_inline, is_private, decl));
+					if (is_private || is_public || is_static || this.is_extern || HxSrcTools.is_same_nesting_level_at_pos(class_body(), decl.start(0), class_body_start()._1))
+						res.set(name, new HaxeField(this, name, kind, is_static, is_public, is_inline, is_private, decl));
+				}
 			}
+			_all_fields = res;
 		}
-		return res;
+		return _all_fields;
 	}
 
-	
+	var _all_fields_list = null;
 	@lazyprop
 	public function all_fields_list () 
 	{
-		var all = all_fields();
-		return [for (k in all.keys()) all.get(k) ];
+		if (_all_fields_list == null) {
+			var all = all_fields();
+			_all_fields_list = [for (k in all.keys()) all.get(k) ];
+		} 
+		return _all_fields_list;
 	}
-
+	var _public_static_vars = null;
 	@lazyprop
 	public function public_static_vars () 
 	{
-		var all = all_fields();
-		return [for (k in all.keys()) if (all.get(k).is_static && all.get(k).is_var()) all.get(k)];
+		if (_public_static_vars == null) {
+			var all = all_fields();
+			_public_static_vars =  [for (k in all.keys()) if (all.get(k).is_static && all.get(k).is_var()) all.get(k)];
+		}
+		return _public_static_vars;
 	}
-
+	
+	var _public_static_functions = null;
 	@lazyprop
 	public function public_static_functions () 
 	{
-		var all = all_fields();
-		return [for (k in all.keys()) if (all.get(k).is_static && all.get(k).is_function() ) all.get(k)];
+		if (_public_static_functions == null) {
+			var all = all_fields();
+			_public_static_functions =  [for (k in all.keys()) if (all.get(k).is_static && all.get(k).is_function() ) all.get(k)];
+		}
+		return _public_static_functions;
 	}
-
+	var _class_body_start = null;
+	var _class_body_start_set = false;
 	@lazyprop
 	public function class_body_start () 
 	{
-		var start = match_decl.start(0);
-		if (is_abstract() || is_class()) {
-			return HxSrcTools.search_next_char_on_same_nesting_level(src(), ["{"], start);
+		if (!_class_body_start_set) 
+		{
+			_class_body_start_set = true;
+			var start = match_decl.start(0);
+			if (is_abstract() || is_class()) {
+				_class_body_start = HxSrcTools.search_next_char_on_same_nesting_level(src(), ["{"], start);
+			} else {
+				_class_body_start = Tup2.create(0,"");
+			}
 		}
-		return null;
+		return _class_body_start;
 	}
-
+	var _stripped_end_decl_pos = null;
+	var _stripped_end_decl_pos_set = false;
 	@lazyprop
 	public function stripped_end_decl_pos () 
 	{
-		
-		var class_body_start = this.class_body_start();
-		var res = null;
-		if (class_body_start != null) 
+		if (!_stripped_end_decl_pos_set) 
 		{
-			trace("have class_body_start:" + Std.string(class_body_start._1));
-			var class_body_end = HxSrcTools.search_next_char_on_same_nesting_level(src(), ["}"], class_body_start._1+1);
-			if (class_body_end != null) 
+			_stripped_end_decl_pos_set = true;
+			var class_body_start = this.class_body_start();
+			var res = null;
+			if (class_body_start != null) 
 			{
-				trace("have class_body_end:" + Std.string(class_body_end._1));
-				res = class_body_end._1;
+				//trace("have class_body_start:" + Std.string(class_body_start._1));
+				var class_body_end = HxSrcTools.search_next_char_on_same_nesting_level(src(), ["}"], class_body_start._1+1);
+				if (class_body_end != null) 
+				{
+					//trace("have class_body_end:" + Std.string(class_body_end._1));
+					res = class_body_end._1;
+				}
+				else {
+					res = null;
+				}
 			}
-			else {
+			else 
+			{
 				res = null;
 			}
+			_stripped_end_decl_pos = res;
 		}
-		else 
-		{
-			res = null;
-		}
-		return res;
+		return _stripped_end_decl_pos;
 
 	}
 		
 
 
-
+	var _src_pos = null;
+	var _src_pos_set = false;
 	@lazyprop
 	public function src_pos ():Int 
 	{
-		for (decl in Regex.type_decl_with_scope.findall( src_with_comments )) 
-		{
-			trace(Std.string(decl.group(0)));
-			trace(Std.string(match_decl.group(0)));
-			if (decl.group(0) == match_decl.group(0)) 
+		if (!_src_pos_set) {
+			_src_pos_set = true;
+			for (decl in Regex.type_decl_with_scope.finditer( src_with_comments ).toHaxeIterator()) 
 			{
-				return decl.start(0);
+				//trace(Std.string(decl.group(0)));
+				//trace(Std.string(match_decl.group(0)));
+				if (decl.group(0) == match_decl.group(0)) 
+				{
+					_src_pos = decl.start(0);
+
+					return _src_pos;
+				}
 			}
+			
 		}
-		return null;
+		return _src_pos;
+		
 	}
 
 	public function to_snippet(insert_file:String, import_list:Array<String>) 
 	{
 		var location = if (full_pack_with_optional_module().length > 0) (" (" + full_pack_with_optional_module() + ")") else "";
-		var display = name + location + "\t" + type_hint;
+		var display = name + location + "\t" + type_hint();
 		var insert = to_snippet_insert(import_list, insert_file);
 
 		return Tup2.create(display, insert);
@@ -1132,7 +1213,7 @@ class HaxeType
 
 		if (is_enum() && _enum_constructors != null) 
 		{
-			res = res.concat([for (ev in enum_constructors()) ev.to_snippet(insert_file, import_list)]);
+			res.extend([for (ev in enum_constructors()) ev.to_snippet(insert_file, import_list)]);
 		}
 		return res;
 	}
@@ -1153,15 +1234,19 @@ class HaxeType
 		
 		return full_qualified_name_with_optional_module();
 	}
-
-
+	var _toplevel_pack_set = false;
+	var _toplevel_pack = null;
 	@lazyprop
 	public function toplevel_pack():Null<String> 
 	{
-		var pl = pack_list();
-		if (pl.length > 0)
-			return pl[0];
-		return null;
+		if (!_toplevel_pack_set) 
+		{
+			_toplevel_pack_set = true;
+			var pl = pack_list();
+			if (pl.length > 0)
+				_toplevel_pack = pl[0];
+		}
+		return _toplevel_pack;
 	}
 
 	@lazyprop	
@@ -1170,18 +1255,25 @@ class HaxeType
 		return kind;
 	}
 
-	
+	var _full_pack_with_optional_module = null;
 	@lazyprop
 	public function full_pack_with_optional_module() 
 	{
-		var mod = if (is_module_type || is_std_type) "" else pack_suffix + module;
-		return pack + mod;
+		if (_full_pack_with_optional_module == null) {
+			var mod = if (is_module_type || is_std_type) "" else pack_suffix() + module;
+			_full_pack_with_optional_module = pack + mod;
+		}
+		return _full_pack_with_optional_module;
 	}
 
+	var _full_pack_with_module = null;
 	@lazyprop
 	public function full_pack_with_module() 
 	{
-		return pack + pack_suffix + module;
+		if (_full_pack_with_module == null) {
+			_full_pack_with_module = pack + pack_suffix() + module;
+		}
+		return _full_pack_with_module;
 	}
 
 	@lazyprop
@@ -1207,73 +1299,104 @@ class HaxeType
 		return toString();
 	}
 
+	var _pack_list = null;
 	@lazyprop
 	public function pack_list():Array<String> 
 	{
-		return if (pack.length > 0) pack.split(".") else [];
+		if (_pack_list == null) {
+			_pack_list = if (pack.length > 0) pack.split(".") else [];
+		}
+		return _pack_list;
+		
 	}
 
+
+	var _pack_suffix = null;
 	@lazyprop
 	public function pack_suffix() 
 	{
-		return if (pack.length == 0) "" else ".";
+		if (_pack_suffix == null) {
+			_pack_suffix = if (pack.length == 0) "" else ".";	
+		}
+		return _pack_suffix;
+		
 	}
 
+	var _full_qualified_name_with_optional_module = null;
 	@lazyprop
 	public function full_qualified_name_with_optional_module() 
 	{
-		var mod = if (is_module_type || is_std_type ) "" else module + ".";
-		return pack + pack_suffix + mod + name;
+		if (_full_qualified_name_with_optional_module == null) {
+			var mod = if (is_module_type || is_std_type ) "" else module + ".";
+			_full_qualified_name_with_optional_module =  pack + pack_suffix() + mod + name;
+		}
+		return _full_qualified_name_with_optional_module;
 	}
 
+	var _lazy_enum_constructors = null;
 	@lazyprop
 	public function enum_constructors() 
 	{
-		var res = null;
-		if (is_enum() && _enum_constructors != null) {
-			res = [for (e in _enum_constructors) new EnumConstructor(e, this) ];
+		if (_lazy_enum_constructors == null) {
+			var res = null;
+			if (is_enum() && _enum_constructors != null) {
+				res = [for (e in _enum_constructors) new EnumConstructor(e, this) ];
+			}
+			else {
+				res = [];
+			}
+			_lazy_enum_constructors = res;
 		}
-		else {
-			res = [];
-		}
-		return res;
+		return _lazy_enum_constructors;
 	}
 	
+	var _full_qualified_enum_constructors_with_optional_module = null;
 	@lazyprop
 	public function full_qualified_enum_constructors_with_optional_module() 
 	{
-		var res = null;
-		if (!is_enum() || _enum_constructors == null) 
-		{
-			res = [];
+		if (_full_qualified_enum_constructors_with_optional_module == null) {
+			var res = null;
+			if (!is_enum() || _enum_constructors == null) 
+			{
+				res = [];
+			}
+			else 
+			{
+				var fqName = full_qualified_name_with_optional_module();
+				res = [for (e in _enum_constructors) fqName + "." + e];
+			}
+			_full_qualified_enum_constructors_with_optional_module = res;
 		}
-		else 
-		{
-			var fqName = full_qualified_name_with_optional_module();
-			res = [for (e in _enum_constructors) fqName + "." + e];
-		}
-		return res;
+		return _full_qualified_enum_constructors_with_optional_module;
 	}
 
+	var _classpath = null;
 	@lazyprop
 	public function classpath() 
 	{
-		var path_append = [for (_ in pack_list()) ".."];
+		if (_classpath == null) {
+			var path_append = [for (_ in pack_list()) ".."];
 
-		
-		var mod_dir = python.lib.os.Path.dirname(_file);
-		var fp = [mod_dir];
-		fp = fp.concat(path_append);
+			
+			var mod_dir = python.lib.os.Path.dirname(_file);
+			var fp = [mod_dir];
+			fp.extend(path_append);
 
-		var full_dir = fp.join(Os.sep);
+			var full_dir = fp.join(Os.sep);
 
-		return Path.normpath(full_dir);
+			_classpath = Path.normpath(full_dir);
+		}
+		return _classpath;
 	}
 
+	var _full_qualified_name = null;
 	@lazyprop
 	public function full_qualified_name() 
 	{
-		return pack + pack_suffix() + module + "." + name;
+		if (_full_qualified_name == null) {
+			_full_qualified_name = pack + pack_suffix() + module + "." + name;
+		}
+		return _full_qualified_name;
 	}
 
 	public function toString() 
@@ -1283,12 +1406,12 @@ class HaxeType
 			+ " module:" + Std.string(this.module) + ", "
 			+ " name:" + Std.string(this.name) + ", "
 			+ " kind:" + Std.string(this.kind) + ", "
-			+ " enum_constructors:" + Std.string(this.enum_constructors()) + ", "
+			+ " enum_constructors:" + Std.string(this.enum_constructors().map(function (ec) return ec.toString())) + ", "
 			+ " is_private:" + Std.string(this.is_private) + ", "
 			+ " is_module_type:" + Std.string(this.is_module_type) + ", "
 			+ " is_std_type:" + Std.string(this.is_std_type) + ", "
 			+ " is_extern:" + Std.string(this.is_extern) + ", "
-			+ " file:'" + Std.string(this.file) + "'"
+			+ " file:'" + Std.string(this.file()) + "'"
 			+ " classpath:'" + Std.string(this.classpath()) + "'"
 			+ " }");
 	}

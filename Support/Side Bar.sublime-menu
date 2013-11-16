@@ -7,25 +7,25 @@
         { 
         	"id" : "haxe-create-class", 
         	"caption" : "Class",
-        	"command" : "haxe_create_type",
+        	"command" : "hxsublime_commands__create_type__haxe_create_type",
         	"args" : { "paths": [] , "t" : "class" }
         },
         { 
             "id" : "haxe-create-interface", 
             "caption" : "Interface",
-            "command" : "haxe_create_type",
+            "command" : "hxsublime_commands__create_type__haxe_create_type",
             "args" : { "paths": [] , "t" : "interface" }
         },
         { 
             "id" : "haxe-create-enum", 
             "caption" : "Enum",
-            "command" : "haxe_create_type",
+            "command" : "hxsublime_commands__create_type__haxe_create_type",
             "args" : { "paths": [] , "t" : "enum" }
         },
         { 
             "id" : "haxe-create-typedef", 
             "caption" : "Typedef",
-            "command" : "haxe_create_type",
+            "command" : "hxsublime_commands__create_type__haxe_create_type",
             "args" : { "paths": [] , "t" : "typedef" }
         }
     ]  

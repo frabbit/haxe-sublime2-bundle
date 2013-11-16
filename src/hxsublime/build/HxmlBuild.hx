@@ -246,7 +246,13 @@ class HxmlBuild {
 	{
 		file = this.align_drive_letter(file);
 
+
+
 		var cp = this.get_classpath_of_file(file);
+
+		trace(file);
+		trace(file.replace(cp, ""));
+		trace(file.replace(cp, "").substr(1));
 
 		return if (cp != null) file.replace(cp, "").substr(1) else null;
 	}
@@ -456,6 +462,10 @@ class HxmlBuild {
 		var r = this._prepare_run(project, view, server_mode);
 		var cmd = r._1, build_folder = r._2, nekox_file = r._3;
 
+		trace(this.args);
+		trace(cmd);
+		trace(build_folder);
+		trace(nekox_file);
 		
 		var default_open_ext = Settings.open_with_default_app();
 
@@ -465,11 +475,11 @@ class HxmlBuild {
 		}
 		else if (this.target == "swf" && default_open_ext != null)
 		{
-			cmd.extend(["-cmd", default_open_ext + " " + this.absolute_output]);
+			cmd.extend(["-cmd", default_open_ext + " " + this.absolute_output()]);
 		}
 		else if (this.target == "neko")
 		{
-			cmd.extend(["-cmd", "neko " + this.absolute_output]);
+			cmd.extend(["-cmd", "neko " + this.absolute_output()]);
 		}
 		else if (this.target == "cpp")
 		{
@@ -479,7 +489,7 @@ class HxmlBuild {
 		}
 		else if (this.target == "js" && Lambda.has(this.defines, "nodejs"))
 		{
-			cmd.extend(["-cmd", "nodejs " + this.absolute_output]);
+			cmd.extend(["-cmd", "nodejs " + this.absolute_output()]);
 		}
 		else if (this.target == "java")
 		{
@@ -489,7 +499,7 @@ class HxmlBuild {
 		}
 		else if (this.target == "cs") 
 		{
-			cmd.extend(["-cmd", "cd " + this.absolute_output]);
+			cmd.extend(["-cmd", "cd " + this.absolute_output()]);
 			cmd.extend(["-cmd", "gmcs -recurse:*.cs -main:" + this.main + " -out:" + this.main + ".exe-debug"]);
 			cmd.extend(["-cmd", Path.join(".", this.main + ".exe-debug")]);
 		}
@@ -504,7 +514,7 @@ class HxmlBuild {
 		return Tup2.create(cmd, build_folder);
 	}
 
-	public function _prepare_run (project:Project, view:View, server_mode:Null<Bool> = null) 
+	public function _prepare_run (project:Project, view:View, server_mode:Null<Bool> = null):Tup3<Array<String>, String, String>
 	{
 
 		server_mode = if (server_mode == null) project.is_server_mode() else server_mode;

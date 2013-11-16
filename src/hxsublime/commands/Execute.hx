@@ -15,6 +15,7 @@ import sublime.Edit;
 import sublime.Region;
 import sublime.Sublime;
 import sublime.View;
+import sublime.Window;
 import sublime.WindowCommand;
 
 
@@ -43,14 +44,18 @@ private class Helper
 
 
 
-class HaxeExecCommand extends WindowCommand implements ProcessListener
+@:keep class HaxeExecCommand extends WindowCommand implements ProcessListener
 {
 
     var is_check_run:Bool;
-    var output_view : View;
+    var output_view : View = null;
     var proc:AsyncProcess = null;
     var encoding:String;
     var quiet : Bool;
+
+    public function new (window:Window) {
+        super(window);
+    }
     override public function run(kwArgs:KwArgs) 
     {
 
@@ -76,6 +81,12 @@ class HaxeExecCommand extends WindowCommand implements ProcessListener
         }
 
         trace("run haxe exec");
+        if (this.output_view == null) 
+        {
+            // Try not to call get_output_panel until the regexes are assigned
+            this.output_view = this.window.create_output_panel("exec");
+            this.output_view.settings().set('word_wrap', true);
+        }
         if (kill) 
         {
             if (this.proc != null) 
@@ -87,12 +98,7 @@ class HaxeExecCommand extends WindowCommand implements ProcessListener
             return;
         }
 
-        if (this.output_view == null) 
-        {
-            // Try not to call get_output_panel until the regexes are assigned
-            this.output_view = this.window.create_output_panel("exec");
-            this.output_view.settings().set('word_wrap', true);
-        }
+        
 
         // Default the to the current files directory if no working directory was given
         if (working_dir == "" && this.window.active_view() != null && this.window.active_view().file_name() != null) 
@@ -135,7 +141,7 @@ class HaxeExecCommand extends WindowCommand implements ProcessListener
         var show_panel_on_build = Sublime.load_settings("Preferences.sublime-settings").get("show_panel_on_build", true);
         if (show_panel_on_build) 
         {
-            this.window.run_command("show_panel", {"panel": "output.exec"});
+            this.window.run_command("show_panel", Dict.fromObject({"panel": "output.exec"}));
         }
 
 
@@ -167,7 +173,17 @@ class HaxeExecCommand extends WindowCommand implements ProcessListener
             
             trace("CMD:" + Std.string(cmd));
             trace("ENV:" + Std.string(merged_env));
-            this.proc = new AsyncProcess(cmd, null, merged_env, this, untyped __python_kwargs__(kwargs));
+            var d:Dict<String, Dynamic> = kwArgs;
+            if (d.hasKey("working_dir")) d.remove("working_dir");
+            if (d.hasKey("file_regex")) d.remove("file_regex");
+            if (d.hasKey("line_regex")) d.remove("line_regex");
+            if (d.hasKey("encoding")) d.remove("encoding");
+            if (d.hasKey("is_check_run")) d.remove("is_check_run");
+            if (d.hasKey("env")) d.remove("env");
+            if (d.hasKey("cmd")) d.remove("cmd");
+            //d.remove("line_regex");
+            
+            this.proc = new AsyncProcess(cmd, null, merged_env, this, untyped __python_kwargs__(kwArgs));
 
             this.append_data(this.proc, ("Running Command: " + Helper.escape_cmd(cmd).join(" ") + "\n").encode("utf-8"));
         }
@@ -176,7 +192,7 @@ class HaxeExecCommand extends WindowCommand implements ProcessListener
         {
             this.append_data_str(null, Std.string(e) + "\n");
             this.append_data_str(null, "[cmd:  " + Std.string(cmd) + "]\n");
-            this.append_data_str(null, "[dir:  " + Os.getcwdu().decode("utf-8") + "]\n");
+            this.append_data_str(null, "[dir:  " + Os.getcwdb().decode("utf-8") + "]\n");
             if (merged_env.hasKey("PATH")) 
             {
                 this.append_data_str(null, "[path: " + merged_env.get("PATH", "") + "]\n");
@@ -303,10 +319,10 @@ class HaxeExecCommand extends WindowCommand implements ProcessListener
     }
         
 
-    public function on_data(proc:AsyncProcess, data:String):Void
+    public function on_data(proc:AsyncProcess, data:Bytes):Void
     {
         Sublime.set_timeout(function () trace(data), 0);
-        Sublime.set_timeout(this.append_data.bind(proc, data.encode("utf-8")), 0);
+        Sublime.set_timeout(this.append_data.bind(proc, data), 0);
     }
 
     public function on_finished(proc:AsyncProcess):Void

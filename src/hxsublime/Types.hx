@@ -55,6 +55,7 @@ class Types
 
 	public static function extract_types( path:String , filtered_classes = null, filtered_packages = null, depth = 0, pack:Array<String> = null, include_private_types = true)  
 	{
+		
 		if (pack == null) pack = [];
 		if (filtered_classes == null) 
 		{
@@ -67,8 +68,10 @@ class Types
 		
 		var bundle = HxSrcTools.empty_type_bundle();
 		
+		
 		for (fullpath in Glob.glob( Path.join(path,"*.hx") )) 
 		{ 
+			
 			var f = Path.basename(fullpath);
 
 			var r = Path.splitext( f );
@@ -77,11 +80,17 @@ class Types
 								
 			if (!Lambda.has(filtered_classes, cl)) 
 			{
+
 				var file = Path.join( path , f );
 				if (Path.exists(file)) 
 				{
+					
 					var module_bundle = extract_types_from_file(file, cl, include_private_types);
+					
 					bundle = bundle.merge(module_bundle);
+
+
+					
 				}
 			}
 		}
@@ -90,6 +99,7 @@ class Types
 		
 		for (f in Os.listdir( path )) 
 		{
+		
 			if (is_valid_package(f)) 
 			{
 				var r = Path.splitext( f );
@@ -102,6 +112,7 @@ class Types
 
 				if (Path.isdir( Path.join( path , f ) ) && !Lambda.has(filtered_packages, cur_pack) && !Config.ignored_packages.exists(cur_pack)) 
 				{
+					
 					var next_pack = pack.copy();
 					next_pack.push(f);
 					
@@ -110,7 +121,7 @@ class Types
 				}
 			}
 		}
-					
+		
 		return bundle;
 	}
 
@@ -120,6 +131,7 @@ class Types
 
 	public static function extract_types_from_file (file:String, module_name:String = null, include_private_types = true) 
 	{
+		//trace("extract types from file");
 		var mtime = Path.getmtime(file);
 		if (file_type_cache.exists(file) && file_type_cache.get(file)._1 == mtime) 
 		{
@@ -135,12 +147,16 @@ class Types
 
 		var s = Codecs.open( file , "r" , "utf-8" , "ignore" );
 		var src_with_comments = s.read();
+
 		var src = HxSrcTools.strip_comments(src_with_comments);
 		
+
 
 		var bundle = HxSrcTools.get_types_from_src(src, module_name, file, src_with_comments);
 
 		file_type_cache.set(file, Tup2.create(mtime, bundle));
+
+		
 
 		return bundle;
 	}

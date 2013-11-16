@@ -18,6 +18,7 @@ import hxsublime.Temp;
 import hxsublime.tools.ViewTools;
 import python.lib.Re;
 import python.lib.Time;
+import python.lib.Types.Dict;
 import python.lib.Types.Tup2;
 import sublime.Region;
 import sublime.Sublime;
@@ -28,33 +29,37 @@ using python.lib.ArrayTools;
 using python.lib.StringTools;
 
 class Base {
-    public static function trigger_completion (view, options, show_top_level_snippets = false) {
+    public static function trigger_completion (view:View, options:CompletionOptions, show_top_level_snippets = false) {
 
-        trace("show_top_level_snippets: " + Std.string(show_top_level_snippets));
+
         function run() 
         {
             var project = Projects.current_project(view);
             
+
             if (!project.has_build()) {
                 project.extract_build_args(view, false);
             }
 
+
             if (project.has_build()) {
                 project.completion_context.set_trigger(view, options);
+
                 
-                view.run_command( "auto_complete" , {
+                view.run_command( "auto_complete" , Dict.fromObject({
                     "api_completions_only" : !show_top_level_snippets,
                     "disable_auto_insert" : true,
                     "next_completion_if_showing" : true,
                     'auto_complete_commit_on_tab': true
-                });
+                }));
             }
             else {
+
                 project.extract_build_args(view, true);
             }
         }
 
-        view.run_command('hide_auto_complete', {});
+        view.run_command('hide_auto_complete');
 
         Sublime.set_timeout(run, 0);
     }
@@ -95,27 +100,37 @@ class Base {
 
     public static function auto_complete(project:Project, view:View, offset:Int, prefix:String) {
 
+        trace("run auto_complete");
         // if completion is triggered by a background completion process
         // completion return the result
 
         var options = project.completion_context.get_and_delete_trigger(view);
         var res = null;
         if (options != null && options.async_trigger()) {
+            trace("run auto_complete 1");
             var async_result = project.completion_context.get_and_delete_async(view);
+            
             var use_async_results = async_result != null && async_result.has_results();
             if (use_async_results) {
+                trace("run auto_complete 2");
                 res = get_available_async_completions(async_result, view);
                 res = completion_result_with_smart_snippets(view, res, async_result, options);
-
+                trace(res);
             }
                 
             else {
+                trace("run auto_complete 3");
                 res = cancel_completion(view);
             }
         }
         else {
+            trace("create comps");
             res = create_new_completions(project, view, offset, options, prefix);
+            //trace("res:" + res);
+            trace("after create comps");
         }
+
+        
         return res;
     }
 
@@ -137,22 +152,26 @@ class Base {
         // again would result in multiple queries for
         // the same view && src position
         if (is_equivalent_completion_already_running(ctx)) {
+            trace("create_new_completions9");
             trace("cancel completion, same is running");
             res = cancel_completion(ctx.view);
         }
         else if (!ctx.options.manual_completion()) {
+            trace("create_new_completions7");
             trigger_manual_completion(ctx.view, ctx.options.copy_as_manual() );
             res = cancel_completion(ctx.view);
         }
         else if (is_after_int_iterator(ctx.src(), ctx.offset)) {
+            trace("create_new_completions8");
             res = cancel_completion(ctx.view);
         }
         else if (is_iterator_completion(ctx.src(), ctx.offset)) {
+            trace("create_new_completions10");
             trace("iterator completion");
             res = [Tup2.create(".\tint iterator", "..")];
         }
         else {
-
+            trace("create_new_completions11");
             if (is_hint_completion(ctx)) {
                 trace("ADD HINT");
                 ctx.options.types().add_hint();
@@ -186,7 +205,7 @@ class Base {
                 }
                 else if (supported_compiler_completion_char(ctx.complete_char())) 
                 {
-                    
+                    trace("supported char");
                     var comp_build = create_completion_build(ctx);
                     if (comp_build != null) {
                         run_compiler_completion(comp_build, function (out, err) completion_finished(ctx, comp_build,  out, err));
@@ -199,11 +218,11 @@ class Base {
                     res = cancel_completion(view, true);
                 }
                 else {
-
+                    trace("whatever");
                     var comp_result = CompletionResult.empty_result(ctx, function () return get_toplevel_completions(ctx));
                     update_completion_cache(cache, comp_result);
                     project.completion_context.add_completion_result(comp_result);
-                    var res = cancel_completion(view);
+                    res = cancel_completion(view);
                     trigger_async_completion(view, ctx.options, comp_result.show_top_level_snippets());
                     //res = combine_hints_and_comps(comp_result)
                 }
@@ -331,7 +350,7 @@ class Base {
                     var last_index = h.length-1;
                     var params = h.slice(0, last_index);
                     
-                    var show = params.join(", ");
+                    show = params.join(", ");
 
                     if (Settings.smart_snippets_just_current()) 
                     {
@@ -423,9 +442,10 @@ class Base {
     public static function should_include_top_level_completion(ctx:CompletionContext) 
     {
         
+        trace("complete Char: '" + ctx.complete_char() + "'");
         var toplevel_complete = ":(,{;})".indexOf(ctx.complete_char()) > -1 || ctx.in_control_struct() || ctx.is_new();
         
-
+        trace("should include: " + toplevel_complete);
 
 
         return toplevel_complete;
@@ -433,13 +453,16 @@ class Base {
 
 
     public static function get_toplevel_completions(ctx:CompletionContext) {
+        trace("get top level completions");
         var comps = null;
         if (should_include_top_level_completion( ctx )) {
             comps = TopLevel.get_toplevel_completion_filtered( ctx );
         }
         else {
+            trace("should not");
             comps = [];
         }
+
         return comps;
     }
 
@@ -454,6 +477,8 @@ class Base {
         if (options == null) {
             options = new CompletionOptions(Constants.COMPLETION_TRIGGER_AUTO);
         }
+
+        trace(options);
             
         
         var settings = new CompletionSettings(Settings);
@@ -523,7 +548,7 @@ class Base {
             // this seems to work fine, it cancels the sublime
             // triggered completion without poping up a completion
             // view
-            view.run_command('hide_auto_complete', {});
+            view.run_command('hide_auto_complete');
         }
         return [Tup2.create("  ...  ", "")];
     }
@@ -549,19 +574,19 @@ class Base {
         function run_complete() {
             if (hint && macroComp) 
             {
-                view.run_command("haxe_hint_display_macro_completion", {});
+                view.run_command("haxe_hint_display_macro_completion");
             }
             else if (hint) 
             {
-                view.run_command("haxe_hint_display_completion", {});
+                view.run_command("haxe_hint_display_completion");
             }
             else if (macroComp) 
             {
-                view.run_command("haxe_display_macro_completion", {});
+                view.run_command("haxe_display_macro_completion");
             }
             else 
             {
-                view.run_command("haxe_display_completion", {});
+                view.run_command("haxe_display_completion");
             }
         }
 

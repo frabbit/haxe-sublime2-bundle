@@ -1,22 +1,27 @@
 package hxsublime.commands;
 
+import hxsublime.commands.FindDeclaration.HaxeFindDeclarationCommand;
+import hxsublime.panel.Base.Panels;
+import python.lib.Types.Dict;
+import sublime.View;
 
-class HaxeGetTypeOfExprCommand extends HaxeFindDeclarationCommand
+
+@:keep class HaxeGetTypeOfExprCommand extends HaxeFindDeclarationCommand
 {
-    public function helper_method() 
+    override public function helper_method() 
     {
         return "hxsublime.FindDeclaration.__getType";
     }
         
 
-    public function handle_successfull_result(view:View, json_res, using_insert, insert_before, insert_after, expr_end, build, temp_path, temp_file) 
+    override public function handle_successfull_result(view:View, json_res:Dict<String, Dynamic>, using_insert, insert_before, insert_after, expr_end, build, temp_path, temp_file) 
     {
-        var t = json_res["type"];
-        var e = json_res["expr"];
+        var t:String = json_res.get("type", null);
+        var e:String = json_res.get("expr", null);
         
         var msg = "Expr: " + e + "\n" + "Type: " + t;
 
-        panel.slide_panel().writeln(msg, false);
+        Panels.slide_panel().writeln(msg, false);
     }
 }
 

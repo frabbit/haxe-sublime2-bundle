@@ -18,6 +18,7 @@ import sublime.View;
 using python.lib.StringTools;
 
 
+using python.lib.ArrayTools;
 
 class CompletionResult {
     
@@ -38,12 +39,14 @@ class CompletionResult {
 
     public function new (ret:String, comps:Array<Tup2<String, String>>, status:String, hints:Array<Array<String>>, ctx:CompletionContext, retrieve_toplevel_comps:Void->Array<Tup2<String, String>>) 
     {
+        
         this.ret = ret;
         this.comps = comps;
         this.status = status;
         this.hints = hints;
         this.ctx = ctx;
         if (retrieve_toplevel_comps == null) {
+            
             retrieve_toplevel_comps = function () return [];
         }
 
@@ -52,9 +55,17 @@ class CompletionResult {
 
         
 
+    var _lazy_toplevel_comps = null;
+
     @lazyprop
     public function _toplevel_comps():Array<Tup2<String, String>> {
-        return retrieve_toplevel_comps();
+        
+        if (_lazy_toplevel_comps == null) {
+            _lazy_toplevel_comps = retrieve_toplevel_comps();
+            
+        }        
+        
+        return _lazy_toplevel_comps;
     }
 
 
@@ -71,7 +82,15 @@ class CompletionResult {
     }
 
     public function show_top_level_snippets () {
-        return requires_toplevel_comps() && !ctx.is_new();
+
+        var req = requires_toplevel_comps();
+
+        
+        var r = req && !ctx.is_new();
+
+        
+
+        return r;
     }
 
     
@@ -83,16 +102,19 @@ class CompletionResult {
         trace("has_hints:" + Std.string(this.has_hints()));
         trace("has_hint:" + Std.string(this.ctx.options.types().has_hint()));
         trace("has_compiler_results:" + Std.string(this.has_compiler_results()));
-        return !((prefix_is_whitespace && has_hints() && ctx.options.types().has_hint()) || has_compiler_results());
+        var r = !((prefix_is_whitespace && has_hints() && ctx.options.types().has_hint()) || has_compiler_results());
+        trace("requires_toplevel_comps:" + r);
+        return r;
     }
 
     public function all_comps () {
+        
         var res = [];
+        
         if (requires_toplevel_comps()) {
-            trace("yes required toplevel comps");
-            res = res.concat(_toplevel_comps());
+            res.extend(_toplevel_comps());
         }
-        res = res.concat(comps);
+        res.extend(comps);
         res.sort(function (s1, s2) return (s1._1 < s2._1) ? -1 : (s1._1 > s2._1) ? 1 : 0);
         return res;
     }
@@ -379,14 +401,20 @@ class CompletionContext {
     }
    
 
+    var lazyCompleteOffsetInBytes:Int;
+
     @lazyprop
-    public function complete_offset_in_bytes() {
-        var s = src_until_complete_offset();
-        
-        var s_bytes = s.encode();
-        
-        
-        return s_bytes.length;
+    public function complete_offset_in_bytes() 
+    {
+        if (lazyCompleteOffsetInBytes == null) {
+            var s = src_until_complete_offset();
+            
+            var s_bytes = s.encode();
+            
+            
+            lazyCompleteOffsetInBytes = s_bytes.length;
+        }
+        return lazyCompleteOffsetInBytes;
     }
 
     @lazyprop
@@ -395,12 +423,17 @@ class CompletionContext {
     }
 
     // build which is used for current compiler completion
+    var lazyBuild = null;
     @lazyprop
-    public function build() {
-        if (!project.has_build()) {
-            project.extract_build_args();
+    public function build() 
+    {
+        if (lazyBuild == null) {
+            if (!project.has_build()) {
+                project.extract_build_args();
+            }
+            lazyBuild = project.get_build( view ).copy();
         }
-        return project.get_build( view ).copy();
+        return lazyBuild;
     }
 
     // indicates if completion starts after the first ( after a control struct like while, if, for etc.
@@ -426,14 +459,26 @@ class CompletionContext {
     }
 
     // src of current file
+
+
+    var _lazy_src = null;
     @lazyprop
     public function src () {
-        return ViewTools.getContent(view);
+        if (_lazy_src == null) {
+            _lazy_src = ViewTools.getContent(view);
+        }
+        return _lazy_src;
     }
+
+
+    var lazyCompleteChar = null;
 
     @lazyprop
     public function complete_char () {
-        return src().charAt(complete_offset()-1);
+        if (lazyCompleteChar == null) {
+            lazyCompleteChar = src().charAt(complete_offset()-1);
+        }
+        return lazyCompleteChar;
     }
 
     @lazyprop
@@ -444,7 +489,7 @@ class CompletionContext {
     @lazyprop
     public function src_from_complete_to_prefix_end() {
         var rest = src().substring(complete_offset()+1, offset+1 + prefix.length);
-        trace("REEEEEEEEEEST:'" + rest + "'");
+        
         return rest;
     }
                 
@@ -455,7 +500,7 @@ class CompletionContext {
 
     @lazyprop
     public function _completion_info() {
-        trace("CALLED ONCE");
+        
         return get_completion_info(view, offset, src());
     }
 
@@ -598,7 +643,7 @@ class CompletionContext {
         {
             is_new = true;
         }
-        else if ("(.;".contains(prev) ) 
+        else if (!"(.;".contains(prev) ) 
         {
             var fragment = view.substr(new Region(0,offset));
             var prev_dot = fragment.lastIndexOf(".");
@@ -609,12 +654,16 @@ class CompletionContext {
             var prev_semi = fragment.lastIndexOf(";");
             
             
+
+            
+
             var prev_symbol = Builtin.max(prev_dot,prev_par,prev_comma,prev_brace,prev_colon, prev_semi);
             
             if (prev_symbol == prev_comma)
             {
                 var r = count_commas_and_complete_offset(src, prev_comma, complete_offset);
-                var commas = r._1, complete_offset = r._2;
+                commas = r._1;
+                complete_offset = r._2;
                 //print("closedBrackets : " + str(closedBrackets))
                 prev_symbol_is_comma = true;
             }
@@ -624,7 +673,7 @@ class CompletionContext {
             }
         }
                 
-        trace("COMPLETE_CHAR:" + src.charAt(complete_offset-1));
+        //trace("COMPLETE_CHAR:" + src.charAt(complete_offset-1));
 
         return Tup4.create(commas, complete_offset, prev_symbol_is_comma, is_new);
     }
@@ -634,21 +683,21 @@ class CompletionContext {
 
 }
 
-class CompletionInfo 
-{
+// class CompletionInfo 
+// {
 
-    public var commas:Int;
-    public var complete_offset:Int;
-    public var toplevel_complete:Bool;
-    public var is_new:Bool;
-    public function new(commas:Int, complete_offset:Int, toplevel_complete:Bool, is_new:Bool) 
-    {
-        this.commas = commas;
-        this.complete_offset = complete_offset;
-        this.toplevel_complete = toplevel_complete;
-        this.is_new = is_new;
-    }
-}
+//     public var commas:Int;
+//     public var complete_offset:Int;
+//     public var toplevel_complete:Bool;
+//     public var is_new:Bool;
+//     public function new(commas:Int, complete_offset:Int, toplevel_complete:Bool, is_new:Bool) 
+//     {
+//         this.commas = commas;
+//         this.complete_offset = complete_offset;
+//         this.toplevel_complete = toplevel_complete;
+//         this.is_new = is_new;
+//     }
+// }
 
 
 

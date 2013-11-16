@@ -6,10 +6,10 @@ import sublime.Sublime;
 import sublime.WindowCommand;
 
 
-class HaxeRestartServerCommand extends WindowCommand 
+@:keep class HaxeRestartServerCommand extends WindowCommand 
 {
 
-    public override function run(_:KwArgs) 
+    public override function run(kwArgs:KwArgs) 
     { 
         trace("run HaxeRestartServerCommand");
         

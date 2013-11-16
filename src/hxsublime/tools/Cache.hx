@@ -39,6 +39,7 @@ class Cache<K, T>
 	{
 		var res = null;
 		if (data.exists(id)) {
+			
 			res = _get_val(id);
 		} else {
 			res = creator();
@@ -60,6 +61,7 @@ class Cache<K, T>
 	function _cache_valid (id:K) 
 	{
 		var now = Time.time();
+		
 		return now - data.get(id).time <= cache_time;
 	}
 

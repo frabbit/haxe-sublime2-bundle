@@ -1,5 +1,7 @@
 -cp src
+
 -cp lib/hx2python/src
+-cp lib/hx2python/src/python/_std
 -cp lib/sublime-externs/src
 -D python
 -main hxsublime.Main
@@ -7,4 +9,4 @@
 --macro haxe.macro.PythonGenerator.use()
 -dce no
 
-#-cmd python3 bin/hxpython.py
+#-cmd python3 haxe_plugin.py

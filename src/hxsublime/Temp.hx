@@ -42,8 +42,10 @@ class Temp {
 
 	public static function create_file(temp_path:String, build:Build, orig_file:String, content:String) 
 	{
-		var orig_file = orig_file;
+		
 		var relative = build.get_relative_path(orig_file);
+		trace(relative);
+		trace(orig_file);
 		trace("relative:" + Std.string(relative));
 		if (relative == null) {
 			throw new GetRelativePathException(build, orig_file);
@@ -58,6 +60,7 @@ class Temp {
 		var f = Codecs.open( new_file , "wb" , "utf-8" , "ignore" );
 		f.write( content );
 		f.close();
+		trace(new_file);
 		return new_file;
 	}
 

@@ -14,8 +14,8 @@ private typedef Vector = Tup2<Int,Int>;
 #end
 
 
-#if !macro extern #end 
-class View {
+ 
+extern class View {
 
 	#if !macro
 	static function __init__ ():Void {
@@ -308,11 +308,7 @@ class View {
 	// Runs the named TextCommand with the (optional) given arguments.
 	//public static function run_command(string:String, args:NamedArgs):Void;	
 
-	macro public function run_command(ethis:haxe.macro.Expr, string:haxe.macro.Expr.ExprOf<String>, args:haxe.macro.Expr.ExprOf<{}>):haxe.macro.Expr 
-	{
-		return return macro @:pos(string.pos) 
-			untyped __named__(untyped __field__($ethis, $string), $args);
-	}	
+	public function run_command(string:String, ?args:Dict<String,Dynamic>):Void;	
 
 	
 }

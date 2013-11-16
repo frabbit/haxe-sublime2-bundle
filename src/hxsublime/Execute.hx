@@ -23,7 +23,7 @@ class Execute {
 			Sublime.set_timeout(callback.bind(out, err), 1);
 		}
 
-		ThreadLowLevel.start_new_thread(in_thread);
+		ThreadLowLevel.start_new_thread(in_thread, Tuple.empty());
 	}
 
 
@@ -45,7 +45,9 @@ class Execute {
 			
 			var env = base_env;
 
-			for (k in env.keys()) 
+			trace(env);
+
+			for (k in env.keys().iter().toHaxeIterator()) 
 			{
 				var val = env.get(k, null);
 				env.set(k, Path.expandvars(val));
@@ -55,20 +57,22 @@ class Execute {
 			// safely remove empty strings from args
 			var encoded_args = args.filter(function (s) return s != "");
 			
-			
+			trace("pre popen");
 			
 			var p = Popen.create(encoded_args, { cwd : cwd, stdout : Subprocess.PIPE, stderr : Subprocess.PIPE, stdin :Subprocess.PIPE, startupinfo : Plugin.startupInfo(), env : env});
-			
-			var inputBytes = input.encode("utf-8");
+			trace("post popen");
+			var inputBytes = input != null ? input.encode("utf-8") : null;
 			//print("INPUT:" + str(input))
+			trace("pre communicate");
 			var r = p.communicate(inputBytes);
 			var out = r._1, err = r._2;
 
-
+			trace("pre decode");
 			return Tup2.create(out.decode("utf-8"), err.decode("utf-8"));
 		}
 		catch (e:Dynamic) 
 		{
+			trace(e);
 			var p = args[0];
 			var err = 'Error while running $p: in $cwd ($e)'; 
 			return Tup2.create("", err);

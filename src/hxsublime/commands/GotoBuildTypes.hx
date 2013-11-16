@@ -5,7 +5,7 @@ import hxsublime.commands.GotoBase.HaxeGotoBaseCommand;
 import hxsublime.tools.HxSrcTools.HaxeType;
 import python.lib.Types.Tup2;
 
-class HaxeGotoBuildTypesCommand extends HaxeGotoBaseCommand<HaxeType>
+@:keep class HaxeGotoBuildTypesCommand extends HaxeGotoBaseCommand<HaxeType>
 {
 	override public function get_entries (types:StringMap<HaxeType>):Array<Array<String>>
     {

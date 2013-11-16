@@ -119,7 +119,7 @@ class HaxeImportGenerator {
 		var clow = cname.toLowerCase();
 		var last = null;
 
-		for (imp in regex.finditer(src)) {
+		for (imp in regex.finditer(src).toHaxeIterator()) {
 			if (clow < imp.group(2).toLowerCase()) {
 				var ins = "{0}{1} {2};\n".format([imp.group(1), statement, cname]);
 				view.insert(edit, this._get_indent(src, imp.start(0)), ins);

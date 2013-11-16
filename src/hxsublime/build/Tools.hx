@@ -7,6 +7,7 @@ import hxsublime.project.Project;
 import hxsublime.tools.PathTools;
 import python.lib.Codecs;
 import python.lib.Glob;
+import python.lib.Inspect;
 import python.lib.io.StringIO;
 import python.lib.Os;
 import python.lib.os.Path;
@@ -41,11 +42,13 @@ class Tools {
 		while (true)
 		{ 
 			var l = f.readline();
-			if (l == null) {
+
+			
+			if (l == "") {
 				break;
 			}
 
-			if (l == "") {
+			if (l == "\n") {
 				continue;
 			}
 
@@ -185,6 +188,7 @@ class Tools {
 					var spl = l.split(" ");
 					spl.shift();
 					var outp = spl.join(" ");
+					trace(outp);
 					current_build.add_arg( Tup2.create("-"+flag, outp) );
 					
 					current_build.target = flag;
@@ -221,19 +225,22 @@ class Tools {
 	
 	public static function _find_build_files_in_folder(folder:String, extension:String)
 	{
+		trace("a");
 		if (!Path.isdir(folder) )
 		{
 			return [];
 		}
-			
-		var files = Glob.glob( Path.join( folder , "*."+extension ) ).map(function (x) return Tup2.create(x, folder));
 		
+		var files = Glob.glob( Path.join( folder , "*."+extension ) ).map(function (x) return Tup2.create(x, folder));
+		trace("b");
+		trace(files);	
 		for (dir in Os.listdir(folder)) 
 		{
 			var f = Path.join(folder, dir);
 			var x = Glob.glob( Path.join( f , "*."+extension ) ).map(function (x) return Tup2.create(x, f));
 			files.extend( x );
 		}
+		trace("c");
 		return files;
 	}
 	
@@ -300,10 +307,10 @@ class Tools {
 		var builds = [];
 		var found = _find_build_files_in_folder(folder, "hxml");
 		for (build in found) {
-			
+			trace("check " + build);
 			var hxml_file = build._1;
 			var hxml_folder = build._2;
-			
+			trace("hxml to builds");
 			var b = _hxml_to_builds(project, hxml_file, hxml_folder);
 			trace("builds in hxml " + Std.string(hxml_file) + ":" + Std.string(b.length));
 			builds.extend(b);

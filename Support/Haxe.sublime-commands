@@ -1,17 +1,17 @@
 [
-    { "caption": "Haxe: New Class", "command": "haxe_create_type" , "args" : { "t" : "class"} },
-    { "caption": "Haxe: New Interface", "command": "haxe_create_type" , "args" : { "t" : "interface"} },
-    { "caption": "Haxe: New Enum", "command": "haxe_create_type" , "args" : { "t" : "enum"} },
-    { "caption": "Haxe: New Typedef", "command": "haxe_create_type" , "args" : { "t" : "typedef"} },
-    { "caption": "Haxe: Manage libraries", "command": "haxe_install_lib" },
+    { "caption": "Haxe: New Class", "command": "hxsublime_commands__create_type__haxe_create_type" , "args" : { "t" : "class"} },
+    { "caption": "Haxe: New Interface", "command": "hxsublime_commands__create_type__haxe_create_type" , "args" : { "t" : "interface"} },
+    { "caption": "Haxe: New Enum", "command": "hxsublime_commands__create_type__haxe_create_type" , "args" : { "t" : "enum"} },
+    { "caption": "Haxe: New Typedef", "command": "hxsublime_commands__create_type__haxe_create_type" , "args" : { "t" : "typedef"} },
+    { "caption": "Haxe: Manage libraries", "command": "hxsublime_commands__haxelib__haxe_install_lib" },
 
-    { "caption": "Haxe: Restart Server", "command": "haxe_restart_server" },
-    { "caption": "Haxe: Find Declaration", "command": "haxe_find_declaration" },
-    { "caption": "Haxe: Show Documentation", "command": "haxe_show_doc" },
-    { "caption": "Haxe: Show Type of Expression", "command": "haxe_get_type_of_expr" },
-    { "caption": "Haxe: Goto Build Type", "command": "haxe_goto_build_types" },
-    { "caption": "Haxe: Goto Build Field", "command": "haxe_goto_build_fields" },
-    { "caption": "Haxe: Goto Anything", "command": "haxe_goto_anything" },
-    { "caption": "Haxe: Save All And Build", "command": "haxe_save_all_and_build" },
-    { "caption": "Haxe: Select Build", "command": "haxe_select_build" }
+    { "caption": "Haxe: Restart Server", "command": "hxsublime_commands__completion_server__haxe_restart_server" },
+    { "caption": "Haxe: Find Declaration", "command": "hxsublime_commands__find_declaration__haxe_find_declaration" },
+    { "caption": "Haxe: Show Documentation", "command": "hxsublime_commands__show_doc__haxe_show_doc" },
+    { "caption": "Haxe: Show Type of Expression", "command": "hxsublime_commands__get_expr_type__haxe_get_type_of_expr" },
+    { "caption": "Haxe: Goto Build Type", "command": "hxsublime_commands__goto_build_types__haxe_goto_build_types" },
+    { "caption": "Haxe: Goto Build Field", "command": "hxsublime_commands__goto_build_fields__haxe_goto_build_fields" },
+    { "caption": "Haxe: Goto Anything", "command": "hxsublime_commands__goto_anything__haxe_goto_anything" },
+    { "caption": "Haxe: Save All And Build", "command": "hxsublime_commands__build__haxe_save_all_and_build" },
+    { "caption": "Haxe: Select Build", "command": "hxsublime_commands__build__haxe_select_build" }
 ]

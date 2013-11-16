@@ -11,11 +11,10 @@ import sublime.TextCommand;
 import sublime.View;
 import python.lib.Types;
 
-class HaxeAsyncTriggeredCompletionCommand extends TextCommand
+@:keep class HaxeAsyncTriggeredCompletionCommand extends TextCommand
 {
-    override public function run( kwArgs:KwArgs) 
+    override public function run( edit:Edit, ?kwArgs:KwArgs) 
     {
-        var edit:Edit = kwArgs.get("edit", null);
         var options = new CompletionOptions(
             Constants.COMPLETION_TRIGGER_ASYNC, 
             Constants.COMPILER_CONTEXT_REGULAR, 
@@ -25,19 +24,19 @@ class HaxeAsyncTriggeredCompletionCommand extends TextCommand
 
 
 }
-class HaxeDisplayCompletionCommand extends TextCommand
+@:keep class HaxeDisplayCompletionCommand extends TextCommand
 {
-    override public function run( kwArgs:KwArgs) 
+    override public function run( edit:Edit, ?kwArgs:KwArgs) 
     {
-        var edit:Edit = kwArgs.get("edit", null);
-        var input_char:String = kwArgs.get("input_char", null);
+
+        var input_char:String = kwArgs == null ? null : kwArgs.get("input_char", null);
         
         
         if (input_char != null) 
         {
-            this.view.run_command("insert" , {
+            this.view.run_command("insert" , Dict.fromObject({
                 "characters" : input_char
-            });
+            }));
         }
         trace("RUN - HaxeDisplayCompletionCommand");
         if (Helper.is_valid_completion(this.view, edit, input_char)) 
@@ -51,11 +50,10 @@ class HaxeDisplayCompletionCommand extends TextCommand
     }
 }
 
-class HaxeDisplayMacroCompletionCommand extends TextCommand
+@:keep class HaxeDisplayMacroCompletionCommand extends TextCommand
 {
-    override public function run( kwArgs:KwArgs) 
+    override public function run( edit:Edit, ?kwArgs:KwArgs) 
     {
-        var edit:Edit = kwArgs.get("edit", null);
         trace("RUN - HaxeDisplayMacroCompletionCommand");
         
         var options = new CompletionOptions(
@@ -66,11 +64,11 @@ class HaxeDisplayMacroCompletionCommand extends TextCommand
     }
 }
 
-class HaxeHintDisplayCompletionCommand extends TextCommand
+@:keep class HaxeHintDisplayCompletionCommand extends TextCommand
 {
-    override public function run( kwArgs:KwArgs) 
+    override public function run( edit:Edit, ?kwArgs:KwArgs) 
     {
-        var edit:Edit = kwArgs.get("edit", null);
+
         trace("RUN - HaxeHintDisplayCompletionCommand");
         
         var options = new CompletionOptions(
@@ -81,11 +79,11 @@ class HaxeHintDisplayCompletionCommand extends TextCommand
     }
 
 }
-class HaxeMacroHintDisplayCompletionCommand extends TextCommand
+@:keep class HaxeMacroHintDisplayCompletionCommand extends TextCommand
 {
-    override public function run( kwArgs:KwArgs) 
+    override public function run( edit:Edit, ?kwArgs:KwArgs) 
     {
-        var edit:Edit = kwArgs.get("edit", null);
+        
         trace("RUN - HaxeMacroHintDisplayCompletionCommand");
         
         var options = new CompletionOptions(

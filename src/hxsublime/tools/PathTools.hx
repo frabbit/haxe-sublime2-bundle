@@ -1,7 +1,7 @@
 package hxsublime.tools;
 
 import python.lib.os.Path;
-import python.lib.Shutil.ShUtil;
+import python.lib.ShUtil;
 
 class PathTools {
 	public static function removeDir (path:String) 

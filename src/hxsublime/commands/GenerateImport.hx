@@ -7,21 +7,20 @@ import sublime.TextCommand;
 
 
 
-class HaxeGenerateUsingCommand extends TextCommand
+@:keep class HaxeGenerateUsingCommand extends TextCommand
 {
-    override public function run( kwArgs:KwArgs )
+    override public function run( edit:Edit, ?kwArgs:KwArgs )
     {
-    	var edit:Edit = kwArgs.get("edit", null);
+    	
         trace("run HaxeGenerateUsingCommand");
         HaxeImportGenerator.generate_using(view, edit);
     }
 }
         
-class HaxeGenerateImportCommand extends TextCommand
+@:keep class HaxeGenerateImportCommand extends TextCommand
 {
-    override public function run( kwArgs:KwArgs )
+    override public function run( edit:Edit, ?kwArgs:KwArgs )
     {
-    	var edit:Edit = kwArgs.get("edit", null);
         trace("run HaxeGenerateImportCommand");
         HaxeImportGenerator.generate_import(view, edit);
     }

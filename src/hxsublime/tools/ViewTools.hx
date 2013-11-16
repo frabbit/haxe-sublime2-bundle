@@ -19,20 +19,22 @@ import sublime.Edit;
 class AsyncEdit 
 {
 	public static var dict : Dict<Int, View->Edit->Void> = new Dict();
-	public static var id:Int;
+	public static var id:Int = 0;
 }
 
 //from haxe import config as hxconfig
 
-class HaxeTextEditCommand extends TextCommand 
+@:keep class HaxeTextEditCommand extends TextCommand 
 {
 	static var _async_edit_dict;
 	
-	override public function run (args:KwArgs) 
+	override public function run (edit:Edit, ?args:KwArgs) 
 	{
 		var d:Dict<String, Dynamic> = args;
-        var edit:Edit = d.get("edit", null);
+        
         var id:Int = d.get("id", null);
+
+        trace(id);
         
         if (AsyncEdit.dict.hasKey(id)) 
         {
@@ -49,7 +51,7 @@ class ViewTools {
 	
 	public static function insertSnippet (view:View, snippet:String) 
 	{
-		view.run_command("insert_snippet", { 'contents' : snippet } );
+		view.run_command("insert_snippet", Dict.fromObject({ 'contents' : snippet }) );
 	}
 
 	public static function insertAtCursor(view:View, txt:String) 
@@ -79,7 +81,7 @@ class ViewTools {
 	        	AsyncEdit.id += 1;
 	        
 	        AsyncEdit.dict.set(id, doEdit);
-	        view.run_command("hxsublime_tools_haxe_text_edit", { "id" : id });
+	        view.run_command("hxsublime_tools__view_tools__haxe_text_edit", Dict.fromObject({ "id" : id }));
 	    }
 	        
 	    Sublime.set_timeout(start, 10);

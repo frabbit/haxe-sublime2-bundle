@@ -21,7 +21,7 @@ private class State
     public static var _is_open = false;
 }
 
-class HaxeGotoBaseCommand<T> extends TextCommand
+@:keep class HaxeGotoBaseCommand<T> extends TextCommand
 {
     var selecting_build:Bool = false;
 
@@ -44,9 +44,9 @@ class HaxeGotoBaseCommand<T> extends TextCommand
         return throw "abstract method";
     }
 
-    override public function run( kwArgs:KwArgs ) 
+    override public function run( edit:Edit, ?kwArgs:KwArgs ) 
     {
-        var edit:Edit = kwArgs.get("edit", null);
+        
 
         trace("run HaxeListBuildFieldsCommand");
 
@@ -160,7 +160,7 @@ class HaxeGotoBaseCommand<T> extends TextCommand
 }
 
 
-class HaxeGotoBaseListener extends EventListener
+@:keep class HaxeGotoBaseListener extends EventListener
 {
 
     override public function on_activated(view:View)
@@ -170,7 +170,7 @@ class HaxeGotoBaseListener extends EventListener
         // global _find_decl_pos, _find_decl_file, _is_open, _init_text
         var find_pos = State._find_decl_pos;
         var find_file = State._find_decl_file;
-        trace("HaxeListBuildTypesListener::on_activated");
+        trace("HaxeGotoBaseListener::on_activated");
         
         
         trace(Std.string(view));
