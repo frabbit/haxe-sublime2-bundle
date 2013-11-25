@@ -54,13 +54,12 @@ class Output {
 
 		var hints = [];
 		
-		for ( i in Builtin.list(types)) 
-		{
-			trace(i);
+		Macros.pyFor(i, types, {
 			var hint = i.text.strip();
 			var hint_types = HxSrcTools.split_function_signature(hint);
 			hints.push( hint_types );
-		}
+		});
+		
 
 		return hints;
 	}
@@ -102,8 +101,7 @@ class Output {
 		var keys = [for (k in type_params.keys()) k];
 		keys.reverse();
 		var type_param_list = keys;
-		trace(type_param_list);
-		trace(new_args);
+		
 		return Tup2.create(new_args, type_param_list);
 	}
 
@@ -122,7 +120,7 @@ class Output {
 		if (sig != null) {
 			var types = HxSrcTools.split_function_signature(sig);
 
-			trace(types);
+			
 			
 			var r = get_function_type_params(name, types);
 			
@@ -204,15 +202,15 @@ class Output {
 		var comps = [];
 		if (li != null) {
 
-			
-			for (i in Builtin.list(li.iter("i"))) {
+			Macros.pyFor(i, li.iter("i"), {
 				var name = i.get("n");
 				var sig = i.find("t").text;
 				var doc = i.find("d").text; // nothing to do
 				var entry = completion_field_to_entry(name, sig, doc);
-				
+					
 				comps.push(entry);
-			}
+			});
+			
 		}
 
 		return comps;
@@ -232,7 +230,7 @@ class Output {
 		else {
 			for (infos in compiler_output.findallArray(str)) 
 			{
-				var infos = infos.copy();
+				//var infos = infos.copy();
 				var f = infos.shift();
 				var l = Std.parseInt( infos.shift() )-1;
 				var left = Std.parseInt( infos.shift() );
@@ -265,7 +263,7 @@ class Output {
 		//print(errors)
 		if (errors.length > 0) 
 		{
-			trace("should show panel");
+			
 			Panels.slide_panel().writeln(errors[0].message);
 			Sublime.status_message(errors[0].message);
 		}
@@ -322,10 +320,11 @@ class Output {
 			
 
 
+
 			hints = get_type_hint(tree.iter("type"));
 			comps = collect_completion_fields(tree.find("list"));
-			trace("hints:" + Std.string(hints));
-			trace("comps:" + Std.string(comps));
+			//trace("hints:" + Std.string(hints));
+			//trace("comps:" + Std.string(comps));
 		}
 		else {
 			hints = [];

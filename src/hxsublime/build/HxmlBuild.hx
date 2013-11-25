@@ -65,7 +65,7 @@ class HxmlBuild {
 	public function classpaths ():Array<String> return _classpaths;
 	public function hxml () return _hxml;
 
-	@property
+	
 	public function title() 
 	{
 		return this.output;
@@ -76,7 +76,7 @@ class HxmlBuild {
 	}
 	
 
-	@property
+	
 	public function build_file() 
 	{
 		return this._build_file;
@@ -131,7 +131,7 @@ class HxmlBuild {
 			&& this._build_file == other._build_file);
 	}
 		   
-	public function merge (other_build) 
+	public function merge (other_build:HxmlBuild) 
 	{
 		var ob = other_build;
 		this._args.extend(ob.args());
@@ -187,7 +187,7 @@ class HxmlBuild {
 		this.set_cwd(this.get_build_folder());
 	}
 	
-	public function align_drive_letter(path) 
+	public function align_drive_letter(path:String) 
 	{
 		var is_win =  Sublime.platform() == "windows";
 		
@@ -450,8 +450,6 @@ class HxmlBuild {
 		return Tup2.create(cmd, build_folder);
 	}
 	
-
-	@property
 	public function absolute_output() 
 	{
 		if (Path.isabs(this.output)) {
@@ -462,7 +460,6 @@ class HxmlBuild {
 		}
 	}
 		
-
 	public function prepare_run_cmd (project:Project, server_mode:Bool, view:View):Tup2<Array<String>, String>
 	{
 		var r = this._prepare_run(project, view, server_mode);
@@ -653,13 +650,14 @@ class HxmlBuild {
 		}
 	}
 
+	@lazyFunction
 	public function is_type_available (type:HaxeType) 
 	{
 		var pack = type.toplevel_pack();
 		return pack == null || this.is_pack_available(pack);
 	}
 
-
+	@lazyFunction
 	public function is_pack_available (pack:String) 
 	{
 		if (pack == "") 
@@ -685,23 +683,3 @@ class HxmlBuild {
 		return available;
 	}
 }
-
-/*
-import os
-import re
-import time
-import sublime
-
-from haxe import config
-from haxe import types as hxtypes
-from haxe import panel as hxpanel
-from haxe.tools import hxsrctools
-from haxe.tools.stringtools import to_unicode, encode_utf8, st2_to_unicode
-from haxe import settings as hxsettings
-
-from haxe.execute import run_cmd, run_cmd_async
-from haxe.log import log
-
-
-
-*/

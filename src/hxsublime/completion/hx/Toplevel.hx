@@ -29,7 +29,7 @@ class TopLevel {
     public static function get_local_vars(ctx:CompletionContext):Array<Tup2<String,String>> 
     {
         var comps = [];
-        for (v in hxsublime.tools.HxSrcTools.Regex.variables.finditer(ctx.src()).toHaxeIterator()) {
+        for (v in hxsublime.tools.HxSrcTools.Regex.variables.finditer(ctx.src())) {
             comps.push(Tup2.create( v.group(1) + "\tvar" , v.group(1) ));
         }
         return comps;
@@ -142,12 +142,20 @@ class TopLevel {
         var build_target = get_build_target(ctx);
         var comps = [];
         
-        for (t in bundle.all_types()) {
+        var start_time = Time.time();
+        
+        var allTypes = bundle.all_types();
+        
+        var run_time0 = Time.time() - start_time;        
+
+        for (t in allTypes) {
             if (ctx.build().is_type_available(t)) {
                 var snippets = t.to_snippets(imported, ctx.orig_file());
-                comps = comps.concat(snippets);
+                comps.extend(snippets);
             }
         }
+
+        var run_time1 = Time.time() - start_time;
 
         for (p in bundle.packs()) {
             if (ctx.build().is_pack_available(p)) {
@@ -155,6 +163,12 @@ class TopLevel {
                 comps.push(cm);
             }
         }
+
+        var run_time2 = Time.time() - start_time;
+
+        trace("get_type_comps time0" + Std.string(run_time0));
+        trace("get_type_comps time1" + Std.string(run_time1));
+        trace("get_type_comps time2" + Std.string(run_time2));
 
         return comps;
     }
@@ -199,7 +213,7 @@ class TopLevel {
 
         var run_time4 = Time.time() - start_time;
 
-        comps = comps.concat(comps1);
+        comps.extend(comps1);
         
         var run_time = Time.time() - start_time;
 
@@ -216,39 +230,85 @@ class TopLevel {
     {
         var comps = get_toplevel_completion(ctx);
         
-        return filter_top_level_completions(ctx.offset_char(), comps);
+        trace(ctx.prefix);
+        return filter_top_level_completions(ctx.prefix, comps);
     }
 
-    public static function filter_top_level_completions (offset_char:String, all_comps:Array<Tup2<String, String>>) {
+    public static function filter_top_level_completions (prefix:String, all_comps:Array<Tup2<String, String>>) {
             
         var comps = [];
 
-        var is_lower = "abcdefghijklmnopqrstuvwxyz".indexOf(offset_char) >= 0;
-        var is_upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".indexOf(offset_char) >= 0;
-        var is_digit = "0123456789".indexOf(offset_char) >= 0;
-        var is_special = "$_#".indexOf(offset_char) >= 0;
-        
-        if (is_lower || is_upper || is_digit || is_special) 
-        {
-            var offset_upper = offset_char.toUpperCase();
-            var offset_lower = offset_char.toLowerCase();
+        trace("c : " + prefix);
 
+        if (prefix.length == 0) {
+            comps = all_comps.copy();
+        } else {
+            var test = [];
+            for (i in 0...prefix.length) {
+                
+                
+                var c = prefix.charAt(i);
+
+                var isLower = "abcdefghijklmnopqrstuvwxyz".indexOf(c) > -1;
+                var isUpper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".indexOf(c) > -1;
+                var is_digit = "0123456789".indexOf(c) > -1;
+                var is_special = "$_#".indexOf(c) > -1;
+                if (isLower || isUpper || is_digit || is_special) 
+                {
+                    var offsetUpper = c.toUpperCase();
+                    var offsetLower = c.toLowerCase();
+
+                    test.push(offsetLower);
+                }
+
+                
+            }
             for (c in all_comps) 
             {
-
-                var id = c._2;
-
-                if (id.indexOf(offset_char) >= 0
-                    || (is_upper && id.indexOf(offset_lower) >= 0)
-                    || (is_lower && id.indexOf(offset_upper) >= 0)) 
-                {
+                var found = true;
+                var id = c._2.toLowerCase();
+                var oldId = id;
+                if (id.indexOf("arraysort") > -1) {
+                    trace(id);
+                    trace(test);
+                }
+                for (cur in test) {
+                    
+                    if (found) {
+                        var index = id.indexOf(cur);
+                        if (oldId.indexOf("arraysort") > -1) {
+                            trace("index: " + Std.string(index));
+                        }
+                        if (index > -1)
+                        {
+                            
+                            id = id.substr(index+1);
+                            if (oldId.indexOf("arraysort") > -1) {
+                                trace(id);
+                            }
+                        } else {
+                            found = false;
+                            break;
+                        } 
+                        
+                    }
+                }
+                if (oldId.indexOf("arraysort") > -1) {
+                    trace(id);
+                    trace(found);
+                }
+                if (found) {
                     comps.push(c);
                 }
+
+                
             }
         }
-        else {
-            comps = all_comps.copy();
-        }
+            
+               
+            
+        
+        
 
         trace("number of top level completions (all: " + Std.string(all_comps.length) + ", filtered: " + Std.string(comps.length) + ")");
         return comps;

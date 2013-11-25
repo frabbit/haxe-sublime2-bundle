@@ -81,7 +81,7 @@ class ViewTools {
 	        	AsyncEdit.id += 1;
 	        
 	        AsyncEdit.dict.set(id, doEdit);
-	        view.run_command("hxsublime_tools__view_tools__haxe_text_edit", Dict.fromObject({ "id" : id }));
+	        view.run_command("hxsublime_tools__haxe_text_edit", Dict.fromObject({ "id" : id }));
 	    }
 	        
 	    Sublime.set_timeout(start, 10);

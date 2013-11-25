@@ -27,7 +27,8 @@ using python.lib.ArrayTools;
 //using Settings;
 
 
-class Project {
+class Project 
+{
 
     public var completion_context:ProjectCompletionState;
     public var _haxelib_manager:HaxeLibManager;
@@ -42,6 +43,7 @@ class Project {
     public var std_bundle:HaxeTypeBundle;
     public var std_paths:Array<String>;
     public var server_mode:Bool;
+
 
     public function new (id, file:String, win_id, server_port:Int) {
         
@@ -363,7 +365,7 @@ class Project {
 
 
         
-        win.run_command("hxsublime_commands__execute__haxe_exec", Dict.fromObject({
+        win.run_command("hxsublime_commands__haxe_exec", Dict.fromObject({
             cmd: cmd,
             is_check_run : type == "check",
             working_dir: build_folder,

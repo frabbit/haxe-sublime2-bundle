@@ -10,6 +10,7 @@
 package hxsublime.tools;
 
 import haxe.ds.StringMap;
+import hxsublime.macros.LazyFunctionSupport;
 import python.lib.ArrayTools;
 import python.lib.Os;
 import python.lib.os.Path;
@@ -17,6 +18,7 @@ import python.lib.Re;
 import python.lib.Types.Dict;
 import python.lib.Types.Tup2;
 import python.lib.Types.Tup3;
+import python.Macros;
 
 using python.lib.ArrayTools;
 
@@ -733,7 +735,7 @@ class HaxeModule
 }
 
 
-class HaxeTypeBundle 
+class HaxeTypeBundle implements LazyFunctionSupport
 {
 	var _types:StringMap<HaxeType>;
 
@@ -742,6 +744,7 @@ class HaxeTypeBundle
 		this._types = types;
 	}
 
+	@lazyFunction
 	public function toString() 
 	{
 		return "HaxeTypeBundle(\n" + _types.toString() + "\n)";
@@ -763,8 +766,11 @@ class HaxeTypeBundle
 	}
 
 	// returns all available packages based on the types inside of this bundle
+
+	@lazyFunction
 	public function packs () 
 	{
+		
 		var res = new StringMap();
 
 		for (k in _types.keys()) {
@@ -775,8 +781,11 @@ class HaxeTypeBundle
 		}
 
 		return Lambda.array({ iterator : function () return res.keys()});
+
 	}
 
+	
+	@lazyFunction
 	public function all_modules () 
 	{
 		var res = new StringMap();
@@ -784,17 +793,21 @@ class HaxeTypeBundle
 			var t = _types.get(k);
 			res.set(t.full_pack_with_module(), new HaxeModule(t.pack, t.module, t.file()));
 		}
-			
 		return res;
 	}
 
+
+	@lazyFunction
 	public function all_modules_list () 
 	{
+		
 		var mods = all_modules();
 		return [ for (m in mods) m];
+		
 	}
 
-
+	
+	@lazyFunction
 	public function all_types_and_enum_constructors_with_info () 
 	{
 		var res = new StringMap();
@@ -806,10 +819,10 @@ class HaxeTypeBundle
 			var fq_name = t.full_qualified_name_with_optional_module();
 			res.set(fq_name, t);
 		}
-
 		return res;
 	}
 
+	@lazyFunction
 	public function all_types_and_enum_constructors () 
 	{
 		var res = all_types_and_enum_constructors_with_info();
@@ -817,6 +830,7 @@ class HaxeTypeBundle
 	}
 
 	// returns a list of all types stored in this type bundle
+	@lazyFunction
 	public function all_types():Array<HaxeType> 
 	{
 		return [for (v in _types) v];
@@ -895,7 +909,7 @@ class EnumConstructor
 	}
 }
 
-class HaxeField 
+class HaxeField implements LazyFunctionSupport
 {
 	public var type : HaxeType;
 	public var name : String;
@@ -919,58 +933,48 @@ class HaxeField
 		this.match_decl = match_decl;
 	}
 		
-	private var _src_pos = null;
-	@lazyprop
+	
+	@lazyFunction
 	public function src_pos () 
 	{
-		if (_src_pos == null) {
-			for (decl in Regex._field.finditer( type.src_with_comments ).toHaxeIterator())
-			{
-				if (decl.group(0) == match_decl.group(0)) {
-					_src_pos = decl.start(0);
-					return _src_pos;
-				}
+	
+		for (decl in Regex._field.finditer( type.src_with_comments ).toHaxeIterator())
+		{
+			if (decl.group(0) == match_decl.group(0)) {
+				return decl.start(0);
+				
 			}
 		}
-		return _src_pos;
-	}
-
-	private var _is_var:Bool;
-	@lazyprop
-	public function is_var () 
-	{
-		if (_is_var == null) {
-			_is_var = kind == "var";
-		}
-		return _is_var;
-		
-	}
-
-	private var _file = null;
-	@property
-	public function file () 
-	{
-		if (_file == null) {
-			_file = type.file();
-		}
-		return _file;
-	}
-
-	private var _is_function = null;
-	@lazyprop
-	public function is_function () 
-	{
-		if (_is_function == null)
-			_is_function = kind == "function";
-		return _is_function;
+		return null;
 	}
 
 	
+	@lazyFunction
+	public function is_var () 
+	{
+		return kind == "var";
+	}
+
+	@lazyFunction
+	public function file () 
+	{
+		
+		return type.file();
+	}
+
+	@lazyFunction
+	public function is_function () 
+	{
+		return kind == "function";
+	}
+
+	@lazyFunction
 	public function toString () 
 	{
 		return type.full_qualified_name_with_optional_module() + ( if (is_static || name == "new") "::" else ".") + name;
 	}
-
+	
+	@lazyFunction
 	public function to_expression () 
 	{
 		return type.full_qualified_name_with_optional_module() + "." + name;
@@ -978,7 +982,7 @@ class HaxeField
 
 }
 
-class HaxeType 
+class HaxeType implements LazyFunctionSupport
 {
 
 	public var _src:String;
@@ -1015,185 +1019,146 @@ class HaxeType
 		this._enum_constructors = null;
 	}
 
-	var _stripped_start_decl_pos = null;
-	@lazyprop
+	@lazyFunction
 	public function stripped_start_decl_pos() 
 	{
-		if (_stripped_start_decl_pos == null) {
-			_stripped_start_decl_pos = match_decl.start(0);
-		}
-		return _stripped_start_decl_pos;
+		return match_decl.start(0);
 	}
 
-	var _class_body:String = null;
-	@lazyprop
+	
+	@lazyFunction
 	public function class_body () 
 	{
-		if (_class_body == null) {
-			var res = null;
-			if (this.stripped_end_decl_pos == null) 
-			{
-				res = "";
-			}
-			else 
-			{
-				res = this.src().substring(this.stripped_start_decl_pos(), this.stripped_end_decl_pos());
-			}
-			_class_body = res;
-
+		var res = null;
+		if (this.stripped_end_decl_pos == null) 
+		{
+			res = "";
 		}
-
-		return _class_body;
+		else 
+		{
+			res = this.src().substring(this.stripped_start_decl_pos(), this.stripped_end_decl_pos());
+		}
+		return res;
 	}
 
 	
-	var _public_static_fields = null;
-	@lazyprop
+	@lazyFunction
 	public function public_static_fields () 
 	{
-		if (_public_static_fields == null) {
-			var res = [];
-			res.extend(this.public_static_vars());
-			res.extend(this.public_static_functions());
-			_public_static_fields = res;
-		}
-		return _public_static_fields;
+		var res = [];
+		res.extend(this.public_static_vars());
+		res.extend(this.public_static_functions());
+		return res;
 	}
 
 
 
 
-	var _all_fields = null;
-	@lazyprop 
+	
+	@lazyFunction 
 	public function all_fields () 
 	{
-		if (_all_fields == null) {
-			var res = new StringMap();
-			if (class_body != null) {
-				for (decl in Regex._field.finditer(class_body()).toHaxeIterator()) 
-				{
-					var modifiers = decl.group(1);
-					var is_static = modifiers != null && modifiers.indexOf("static") > -1;
-					var is_inline = modifiers != null && modifiers.indexOf("inline") > -1;
-					var is_private = modifiers != null && modifiers.indexOf("private") > -1;
-					var is_public = modifiers != null && modifiers.indexOf("public") > -1;
-					var kind = decl.group(2);
-					var name = decl.group(3);
-					if (name == "WAIT_END_RET") trace(modifiers);
+		
+		var res = new StringMap();
+		if (class_body != null) {
+			for (decl in Regex._field.finditer(class_body()).toHaxeIterator()) 
+			{
+				var modifiers = decl.group(1);
+				var is_static = modifiers != null && modifiers.indexOf("static") > -1;
+				var is_inline = modifiers != null && modifiers.indexOf("inline") > -1;
+				var is_private = modifiers != null && modifiers.indexOf("private") > -1;
+				var is_public = modifiers != null && modifiers.indexOf("public") > -1;
+				var kind = decl.group(2);
+				var name = decl.group(3);
+				if (name == "WAIT_END_RET") trace(modifiers);
 
-					if (is_private || is_public || is_static || this.is_extern || HxSrcTools.is_same_nesting_level_at_pos(class_body(), decl.start(0), class_body_start()._1))
-						res.set(name, new HaxeField(this, name, kind, is_static, is_public, is_inline, is_private, decl));
-				}
+				if (is_private || is_public || is_static || this.is_extern || HxSrcTools.is_same_nesting_level_at_pos(class_body(), decl.start(0), class_body_start()._1))
+					res.set(name, new HaxeField(this, name, kind, is_static, is_public, is_inline, is_private, decl));
 			}
-			_all_fields = res;
 		}
-		return _all_fields;
+		return res;
+		
 	}
 
-	var _all_fields_list = null;
-	@lazyprop
+	
+	@lazyFunction
 	public function all_fields_list () 
 	{
-		if (_all_fields_list == null) {
-			var all = all_fields();
-			_all_fields_list = [for (k in all.keys()) all.get(k) ];
-		} 
-		return _all_fields_list;
+		var all = all_fields();
+		return [for (e in all) e ];
 	}
-	var _public_static_vars = null;
-	@lazyprop
+
+	
+	@lazyFunction
 	public function public_static_vars () 
 	{
-		if (_public_static_vars == null) {
-			var all = all_fields();
-			_public_static_vars =  [for (k in all.keys()) if (all.get(k).is_static && all.get(k).is_var()) all.get(k)];
-		}
-		return _public_static_vars;
+		var all = all_fields();
+		return  [for (e in all) if (e.is_static && e.is_var()) e];
 	}
 	
-	var _public_static_functions = null;
-	@lazyprop
+
+	@lazyFunction
 	public function public_static_functions () 
 	{
-		if (_public_static_functions == null) {
-			var all = all_fields();
-			_public_static_functions =  [for (k in all.keys()) if (all.get(k).is_static && all.get(k).is_function() ) all.get(k)];
-		}
-		return _public_static_functions;
+		var all = all_fields();
+		return [for (e in all) if (e.is_static && e.is_function() ) e];
 	}
-	var _class_body_start = null;
-	var _class_body_start_set = false;
-	@lazyprop
+
+	
+	@lazyFunction
 	public function class_body_start () 
 	{
-		if (!_class_body_start_set) 
-		{
-			_class_body_start_set = true;
-			var start = match_decl.start(0);
-			if (is_abstract() || is_class()) {
-				_class_body_start = HxSrcTools.search_next_char_on_same_nesting_level(src(), ["{"], start);
-			} else {
-				_class_body_start = Tup2.create(0,"");
-			}
+		
+		var start = match_decl.start(0);
+		if (is_abstract() || is_class()) {
+			return HxSrcTools.search_next_char_on_same_nesting_level(src(), ["{"], start);
+		} else {
+			return Tup2.create(0,"");
 		}
-		return _class_body_start;
+		
 	}
-	var _stripped_end_decl_pos = null;
-	var _stripped_end_decl_pos_set = false;
-	@lazyprop
+
+	@lazyFunction
 	public function stripped_end_decl_pos () 
 	{
-		if (!_stripped_end_decl_pos_set) 
+	
+		var class_body_start = this.class_body_start();
+		var res = null;
+		if (class_body_start != null) 
 		{
-			_stripped_end_decl_pos_set = true;
-			var class_body_start = this.class_body_start();
-			var res = null;
-			if (class_body_start != null) 
+			//trace("have class_body_start:" + Std.string(class_body_start._1));
+			var class_body_end = HxSrcTools.search_next_char_on_same_nesting_level(src(), ["}"], class_body_start._1+1);
+			if (class_body_end != null) 
 			{
-				//trace("have class_body_start:" + Std.string(class_body_start._1));
-				var class_body_end = HxSrcTools.search_next_char_on_same_nesting_level(src(), ["}"], class_body_start._1+1);
-				if (class_body_end != null) 
-				{
-					//trace("have class_body_end:" + Std.string(class_body_end._1));
-					res = class_body_end._1;
-				}
-				else {
-					res = null;
-				}
+				//trace("have class_body_end:" + Std.string(class_body_end._1));
+				res = class_body_end._1;
 			}
-			else 
-			{
+			else {
 				res = null;
 			}
-			_stripped_end_decl_pos = res;
 		}
-		return _stripped_end_decl_pos;
+		else 
+		{
+			res = null;
+		}
+		return res;
+		
 
 	}
 		
 
 
-	var _src_pos = null;
-	var _src_pos_set = false;
-	@lazyprop
+	@lazyFunction
 	public function src_pos ():Int 
 	{
-		if (!_src_pos_set) {
-			_src_pos_set = true;
-			for (decl in Regex.type_decl_with_scope.finditer( src_with_comments ).toHaxeIterator()) 
+		
+		Macros.pyFor(decl, Regex.type_decl_with_scope.finditer( src_with_comments ), {
+			if (decl.group(0) == match_decl.group(0)) 
 			{
-				//trace(Std.string(decl.group(0)));
-				//trace(Std.string(match_decl.group(0)));
-				if (decl.group(0) == match_decl.group(0)) 
-				{
-					_src_pos = decl.start(0);
-
-					return _src_pos;
-				}
+				return decl.start(0);
 			}
-			
-		}
-		return _src_pos;
+		});
+		return null;
 		
 	}
 
@@ -1213,7 +1178,8 @@ class HaxeType
 
 		if (is_enum() && _enum_constructors != null) 
 		{
-			res.extend([for (ev in enum_constructors()) ev.to_snippet(insert_file, import_list)]);
+			for (ev in enum_constructors()) res.push(ev.to_snippet(insert_file, import_list));
+			
 		}
 		return res;
 	}
@@ -1234,61 +1200,47 @@ class HaxeType
 		
 		return full_qualified_name_with_optional_module();
 	}
-	var _toplevel_pack_set = false;
-	var _toplevel_pack = null;
-	@lazyprop
+
+	@lazyFunction
 	public function toplevel_pack():Null<String> 
 	{
-		if (!_toplevel_pack_set) 
-		{
-			_toplevel_pack_set = true;
-			var pl = pack_list();
-			if (pl.length > 0)
-				_toplevel_pack = pl[0];
-		}
-		return _toplevel_pack;
+		var pl = pack_list();
+		if (pl.length > 0)
+			return pl[0];
+		return null;
+		
 	}
 
-	@lazyprop	
+	
 	public function type_hint() 
 	{
 		return kind;
 	}
 
-	var _full_pack_with_optional_module = null;
-	@lazyprop
+	@lazyFunction
 	public function full_pack_with_optional_module() 
 	{
-		if (_full_pack_with_optional_module == null) {
-			var mod = if (is_module_type || is_std_type) "" else pack_suffix() + module;
-			_full_pack_with_optional_module = pack + mod;
-		}
-		return _full_pack_with_optional_module;
+		var mod = if (is_module_type || is_std_type) "" else pack_suffix() + module;
+		return pack + mod;
 	}
 
-	var _full_pack_with_module = null;
-	@lazyprop
+	@lazyFunction
 	public function full_pack_with_module() 
 	{
-		if (_full_pack_with_module == null) {
-			_full_pack_with_module = pack + pack_suffix() + module;
-		}
-		return _full_pack_with_module;
+		return pack + pack_suffix() + module;
 	}
 
-	@lazyprop
+	@lazyFunction
 	public function is_enum () 
 	{
 		return kind == "enum";
 	}
-
-	@lazyprop
+	@lazyFunction
 	public function is_class () 
 	{
 		return kind == "class";
 	}
 
-	@lazyprop
 	public function is_abstract () 
 	{
 		return kind == "abstract";
@@ -1299,106 +1251,82 @@ class HaxeType
 		return toString();
 	}
 
-	var _pack_list = null;
-	@lazyprop
+	@lazyFunction
 	public function pack_list():Array<String> 
 	{
-		if (_pack_list == null) {
-			_pack_list = if (pack.length > 0) pack.split(".") else [];
-		}
-		return _pack_list;
-		
+		return if (pack.length > 0) pack.split(".") else [];
 	}
 
 
-	var _pack_suffix = null;
-	@lazyprop
+	@lazyFunction
 	public function pack_suffix() 
 	{
-		if (_pack_suffix == null) {
-			_pack_suffix = if (pack.length == 0) "" else ".";	
-		}
-		return _pack_suffix;
-		
+		return if (pack.length == 0) "" else ".";	
 	}
 
-	var _full_qualified_name_with_optional_module = null;
-	@lazyprop
+	
+	@lazyFunction
 	public function full_qualified_name_with_optional_module() 
 	{
-		if (_full_qualified_name_with_optional_module == null) {
-			var mod = if (is_module_type || is_std_type ) "" else module + ".";
-			_full_qualified_name_with_optional_module =  pack + pack_suffix() + mod + name;
-		}
-		return _full_qualified_name_with_optional_module;
+		var mod = if (is_module_type || is_std_type ) "" else module + ".";
+		return pack + pack_suffix() + mod + name;
 	}
 
-	var _lazy_enum_constructors = null;
-	@lazyprop
+	
+	@lazyFunction
 	public function enum_constructors() 
 	{
-		if (_lazy_enum_constructors == null) {
-			var res = null;
-			if (is_enum() && _enum_constructors != null) {
-				res = [for (e in _enum_constructors) new EnumConstructor(e, this) ];
-			}
-			else {
-				res = [];
-			}
-			_lazy_enum_constructors = res;
+		var res = null;
+		if (is_enum() && _enum_constructors != null) {
+			res = [for (e in _enum_constructors) new EnumConstructor(e, this) ];
 		}
-		return _lazy_enum_constructors;
+		else {
+			res = [];
+		}
+		return res;
 	}
 	
-	var _full_qualified_enum_constructors_with_optional_module = null;
-	@lazyprop
+	@lazyFunction
 	public function full_qualified_enum_constructors_with_optional_module() 
 	{
-		if (_full_qualified_enum_constructors_with_optional_module == null) {
-			var res = null;
-			if (!is_enum() || _enum_constructors == null) 
-			{
-				res = [];
-			}
-			else 
-			{
-				var fqName = full_qualified_name_with_optional_module();
-				res = [for (e in _enum_constructors) fqName + "." + e];
-			}
-			_full_qualified_enum_constructors_with_optional_module = res;
+		var res = null;
+		if (!is_enum() || _enum_constructors == null) 
+		{
+			res = [];
 		}
-		return _full_qualified_enum_constructors_with_optional_module;
+		else 
+		{
+			var fqName = full_qualified_name_with_optional_module();
+			res = [for (e in _enum_constructors) fqName + "." + e];
+		}
+		return res;
+	
 	}
 
-	var _classpath = null;
-	@lazyprop
+	
+	@lazyFunction
 	public function classpath() 
 	{
-		if (_classpath == null) {
-			var path_append = [for (_ in pack_list()) ".."];
+		var path_append = [for (_ in pack_list()) ".."];
 
-			
-			var mod_dir = python.lib.os.Path.dirname(_file);
-			var fp = [mod_dir];
-			fp.extend(path_append);
+		
+		var mod_dir = python.lib.os.Path.dirname(_file);
+		var fp = [mod_dir];
+		fp.extend(path_append);
 
-			var full_dir = fp.join(Os.sep);
+		var full_dir = fp.join(Os.sep);
 
-			_classpath = Path.normpath(full_dir);
-		}
-		return _classpath;
+		return Path.normpath(full_dir);
 	}
 
-	var _full_qualified_name = null;
-	@lazyprop
+	
+	@lazyFunction
 	public function full_qualified_name() 
 	{
-		if (_full_qualified_name == null) {
-			_full_qualified_name = pack + pack_suffix() + module + "." + name;
-		}
-		return _full_qualified_name;
+		return pack + pack_suffix() + module + "." + name;
 	}
 
+	@lazyFunction
 	public function toString() 
 	{
 		return ("{"

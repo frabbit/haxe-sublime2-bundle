@@ -159,6 +159,7 @@ class Server
 		catch (e:Dynamic) 
 		{
 			this._server_proc = null;
+			this._server_port += 1;
 		}
 		
 		if (completeCallback != null) 

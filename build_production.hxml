@@ -1,3 +1,4 @@
+#build-name=HxSublime-Production
 -cp src
 
 -cp lib/hx2python/src
@@ -8,5 +9,6 @@
 -js haxe_plugin.py
 --macro haxe.macro.PythonGenerator.use()
 -dce no
+--no-traces
 
 #-cmd python3 haxe_plugin.py

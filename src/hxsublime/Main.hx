@@ -1,6 +1,10 @@
 
 package hxsublime;
 
+import python.lib.Types.Dict;
+
+import hxsublime.macros.LazyFunctionSupport;
+
 import python.lib.Inspect;
 
  
@@ -51,12 +55,42 @@ using Lambda;
 
 
 
+using StringTools;
 
-class Main {
+enum Hui {
+	Foo1(a:Int);
+	Foo2;
+}
+
+class Main{
 
 	public static function main () {
-
 		
+		// var z = function () return 1;
+
+		// z();
+
+		// trace(z());
+
+
+		// trace(1);
+
+		// trace(1 + "hey");
+
+		// trace("hey");
+
+		// trace({ foo : "bar"});
+		// var z = true;
+		//var t = switch (z) {
+		//	case true: 5;
+		//	case false: 7;
+		//}
+		var t = Foo1(5);
+		var z = switch (t) {
+			case Foo1(x) if (x > 2): true;
+			case _: false;
+		}
+		trace(t);
 	}
 
 

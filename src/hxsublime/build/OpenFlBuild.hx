@@ -1,13 +1,14 @@
 package hxsublime.build;
 
 import hxsublime.build.HxmlBuild;
+import hxsublime.macros.LazyFunctionSupport;
 import hxsublime.project.Project;
 import hxsublime.tools.HxSrcTools.HaxeType;
 import sublime.View;
 
 using python.lib.ArrayTools;
 
-class OpenFlBuild extends NmeBuild 
+class OpenFlBuild extends NmeBuild implements LazyFunctionSupport 
 {
 	
 	public function new (project:Project, title:String, openfl_xml:String, target, cb:HxmlBuild = null)
@@ -49,12 +50,13 @@ class OpenFlBuild extends NmeBuild
 		return '${out} (OpenFL - ${target})';
 	}
 	
+	@lazyFunction
 	override public function is_type_available (type:HaxeType)
 	{
 		var pack = type.toplevel_pack();
 		return pack == null || this.is_pack_available(pack);
 	}
-	
+	@lazyFunction
 	override public function is_pack_available (pack:String)
 	{
 		if (pack == "")

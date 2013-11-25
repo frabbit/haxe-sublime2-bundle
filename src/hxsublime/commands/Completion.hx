@@ -38,7 +38,11 @@ import python.lib.Types;
                 "characters" : input_char
             }));
         }
+
         trace("RUN - HaxeDisplayCompletionCommand");
+        if (input_char == ":") {
+            return;
+        }
         if (Helper.is_valid_completion(this.view, edit, input_char)) 
         {
             var options = new CompletionOptions(

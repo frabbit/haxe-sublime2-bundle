@@ -290,6 +290,8 @@ class Base {
         // store the data of the currently running completion operation in cache to fetch it later
         project.completion_context.set_new_completion(ctx);
         
+        trace("ASYNC: " + async);
+
         build.run(project, view, async, on_result);
     }
 
@@ -574,19 +576,19 @@ class Base {
         function run_complete() {
             if (hint && macroComp) 
             {
-                view.run_command("haxe_hint_display_macro_completion");
+                view.run_command("hxsublime_commands__haxe_hint_display_macro_completion");
             }
             else if (hint) 
             {
-                view.run_command("haxe_hint_display_completion");
+                view.run_command("hxsublime_commands__haxe_hint_display_completion");
             }
             else if (macroComp) 
             {
-                view.run_command("haxe_display_macro_completion");
+                view.run_command("hxsublime_commands__haxe_display_macro_completion");
             }
             else 
             {
-                view.run_command("haxe_display_completion");
+                view.run_command("hxsublime_commands__haxe_display_completion");
             }
         }
 

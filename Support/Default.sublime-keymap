@@ -1,7 +1,7 @@
 [
     {
         "keys": ["ctrl+shift+h","ctrl+shift+r"],
-        "command": "hxsublime_commands__completion_server__haxe_restart_server",
+        "command": "hxsublime_commands__haxe_restart_server",
         "context":
         [
             {
@@ -13,7 +13,7 @@
     },
     {   
         "keys": ["ctrl+space"], 
-        "command": "hxsublime_commands__completion__haxe_display_completion",
+        "command": "hxsublime_commands__haxe_display_completion",
         "context":
         [
             {
@@ -25,7 +25,7 @@
     },
     { 
         "keys": ["ctrl+shift+h", "ctrl+shift+f"], 
-        "command": "hxsublime_commands__find_declaration__haxe_find_declaration",
+        "command": "hxsublime_commands__haxe_find_declaration",
         "context":
         [
             {
@@ -37,7 +37,7 @@
     },
     { 
         "keys": ["ctrl+shift+h", "ctrl+shift+d"], 
-        "command": "hxsublime_commands__show_doc__haxe_show_doc",
+        "command": "hxsublime_commands__haxe_show_doc",
         "context":
         [
             {
@@ -49,7 +49,7 @@
     },
     { 
         "keys": ["alt+p"], 
-        "command": "hxsublime_commands__goto_build_types__haxe_goto_build_types",
+        "command": "hxsublime_commands__haxe_goto_build_types",
         "context":
         [
             {
@@ -61,7 +61,7 @@
     },
     { 
         "keys": ["alt+m"], 
-        "command": "hxsublime_commands__goto_build_fields__haxe_goto_build_fields",
+        "command": "hxsublime_commands__haxe_goto_build_fields",
         "context":
         [
             {
@@ -97,7 +97,7 @@
     },*/
     { 
         "keys": ["ctrl+shift+h","ctrl+shift+space"], 
-        "command": "hxsublime_commands__completion__haxe_display_completion",
+        "command": "hxsublime_commands__haxe_display_completion",
         "context":
             [
                 {
@@ -109,7 +109,7 @@
     },
     {
         "keys": ["ctrl+shift+h", "ctrl+shift+z"],
-        "command": "hxsublime_commands__get_expr_type__haxe_get_type_of_expr",
+        "command": "hxsublime_commands__haxe_get_type_of_expr",
         "context":
         [
             {
@@ -121,7 +121,7 @@
     },
     {
         "keys": ["ctrl+shift+b"],
-        "command": "hxsublime_commands__build__haxe_select_build",
+        "command": "hxsublime_commands__haxe_select_build",
         "context":
         [
             {
@@ -133,7 +133,7 @@
     },
     {
         "keys": ["ctrl+enter"],
-        "command": "hxsublime_commands__build__haxe_save_all_and_build",
+        "command": "hxsublime_commands__haxe_save_all_and_build",
         "context":
         [
             {
@@ -145,7 +145,7 @@
     },
     {
         "keys": ["ctrl+shift+f9"],
-        "command": "hxsublime_commands__build__haxe_save_all_and_check",
+        "command": "hxsublime_commands__haxe_save_all_and_check",
         "context":
         [
             {
@@ -157,7 +157,7 @@
     },
     {
         "keys": ["ctrl+shift+enter"],
-        "command": "hxsublime_commands__build__haxe_save_all_and_run",
+        "command": "hxsublime_commands__haxe_save_all_and_run",
         "context":
         [
             {
@@ -169,7 +169,7 @@
     },
     {
         "keys": ["ctrl+i"],
-        "command": "hxsublime_commands__generate_import__haxe_generate_import",
+        "command": "hxsublime_commands__haxe_generate_import",
         "context":
         [
             {
@@ -181,7 +181,7 @@
     },
     {
         "keys": ["ctrl+u"],
-        "command": "hxsublime_commands__generate_import__haxe_generate_using",
+        "command": "hxsublime_commands__haxe_generate_using",
         "context":
         [
             {
@@ -193,7 +193,7 @@
     },
     {
         "keys": ["ctrl+shift+l"],
-        "command": "hxsublime_commands__haxelib__haxe_install_lib",
+        "command": "hxsublime_commands__haxe_install_lib",
         "context":
         [
             {
@@ -207,22 +207,22 @@
     {
         "keys": ["ctrl+shift+h","ctrl+shift+c"],
         
-        "command": "hxsublime_commands__create_type__haxe_create_type",
+        "command": "hxsublime_commands__haxe_create_type",
         "args" : {"t" : "class"}
     },
     {
         "keys": ["ctrl+shift+h","ctrl+shift+i"],
-        "command": "hxsublime_commands__create_type__haxe_create_type",
+        "command": "hxsublime_commands__haxe_create_type",
         "args" : {"t" : "interface"}
     },
     {
         "keys": ["ctrl+shift+h","ctrl+shift+t"],
-        "command": "hxsublime_commands__create_type__haxe_create_type",
+        "command": "hxsublime_commands__haxe_create_type",
         "args" : {"t" : "typedef"}
     },
     {
         "keys": ["ctrl+shift+h","ctrl+shift+e"],
-        "command": "hxsublime_commands__create_type__haxe_create_type",
+        "command": "hxsublime_commands__haxe_create_type",
         "args" : {"t" : "enum"}
     },
     
@@ -233,7 +233,7 @@
      // hxml autocompletion
      {
         "keys": ["-"],
-        "command": "hxsublime_commands__completion__haxe_display_completion",
+        "command": "hxsublime_commands__haxe_display_completion",
         "args" : { "input_char" : "-" },
         "context":
         [
@@ -262,7 +262,7 @@
     {
         "keys": ["."],
 
-        "command": "hxsublime_commands__completion__haxe_display_completion",
+        "command": "hxsublime_commands__haxe_display_completion",
         "args" : { "input_char" : "." },
         "context":
         [
@@ -281,7 +281,7 @@
     }, 
     {
         "keys": ["("],
-        "command": "hxsublime_commands__completion__haxe_display_completion",
+        "command": "hxsublime_commands__haxe_display_completion",
         "args" : { "input_char" : "(" },
         "context":
         [
@@ -301,7 +301,7 @@
    
     {
         "keys": [","],
-        "command": "hxsublime_commands__completion__haxe_display_completion",
+        "command": "hxsublime_commands__haxe_display_completion",
         "args" : { "input_char" : "," },
         "context":
         [
@@ -320,7 +320,7 @@
     },
     {
         "keys": [":"],
-        "command": "hxsublime_commands__completion__haxe_display_completion",
+        "command": "hxsublime_commands__haxe_display_completion",
         "args" : { "input_char" : ":" },
         "context":
         [

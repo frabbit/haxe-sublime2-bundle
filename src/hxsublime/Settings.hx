@@ -67,6 +67,7 @@ class Settings
 		}
 		else 
 		{
+			
 			if (Std.is(r, Bool))
 			{
 				return r;
@@ -127,7 +128,11 @@ class Settings
 
 	public static function is_async_completion (view:View = null) 
 	{
-		return get_bool("haxe_completion_async", true, view);
+
+		var r = get_bool("haxe_completion_async", true, view);
+
+		trace("AAAAAASYNC:" + r);
+		return r;
 	}
 
 	public static function get_completion_delays (view:View = null) 
