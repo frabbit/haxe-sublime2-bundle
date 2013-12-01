@@ -13,12 +13,12 @@ import python.lib.Types.Tup2;
 
 class Temp {
 
-	public static function get_temp_path_id(build:Build) {
+	public static function getTempPathId(build:Build) 
+	{
+		var path = build.getBuildFolder();
 
-		
-		var path = build.get_build_folder();
-
-		if (path == null) {
+		if (path == null) 
+		{
 			throw new ExtractBuildPathException(build);
 		}
 
@@ -29,9 +29,9 @@ class Temp {
 		return temp_path;
 	}
 
-	public static function create_temp_path(build:Build) {
-
-		var temp_path = get_temp_path_id(build);
+	public static function createTempPath(build:Build) 
+	{
+		var temp_path = getTempPathId(build);
 		
 		
 		PathTools.removeDir(temp_path);
@@ -40,20 +40,22 @@ class Temp {
 		return temp_path;
 	}
 
-	public static function create_file(temp_path:String, build:Build, orig_file:String, content:String) 
+	public static function createFile(temp_path:String, build:Build, orig_file:String, content:String) 
 	{
 		
-		var relative = build.get_relative_path(orig_file);
+		var relative = build.getRelativePath(orig_file);
 		trace(relative);
 		trace(orig_file);
 		trace("relative:" + Std.string(relative));
-		if (relative == null) {
+		if (relative == null) 
+		{
 			throw new GetRelativePathException(build, orig_file);
 		}
 
 		var new_file = Path.join(temp_path, relative);
 		var new_file_dir = Path.dirname(new_file);
-		if (!Path.exists(new_file_dir)) {
+		if (!Path.exists(new_file_dir)) 
+		{
 			Os.makedirs(new_file_dir);
 		}
 		
@@ -64,33 +66,21 @@ class Temp {
 		return new_file;
 	}
 
-	public static function create_temp_path_and_file(build:Build, orig_file:String, content:String) {
-		var temp_path = create_temp_path(build);
+	public static function createTempPathAndFile(build:Build, orig_file:String, content:String) 
+	{
+		var temp_path = createTempPath(build);
 			
-		var temp_file = create_file(temp_path, build, orig_file, content);
+		var temp_file = createFile(temp_path, build, orig_file, content);
 		return Tup2.create(temp_path, temp_file);
 	}
 
-	public static function remove_path (temp_path:String) {
-		if (temp_path != null) {
+	public static function removePath (temp_path:String) 
+	{
+		if (temp_path != null) 
+		{
 			PathTools.removeDir(temp_path);
 		}
 
 	}
 
 }
-
-/*
-import os
-
-import codecs
-import tempfile
-
-from haxe.log import log
-from haxe.tools import pathtools
-
-from haxe import exceptions
-
-from haxe.tools.stringtools import encode_utf8, st2_to_unicode
-
-*/

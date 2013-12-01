@@ -48,8 +48,8 @@ class HaxeLibLibrary {
 	public function extract_types( ) 
 	{
 		if (dev || classes == null && packages == null) {
-			var t = Types.extract_types( this.path );
-			classes = t.all_types();
+			var t = Types.extractTypes( this.path );
+			classes = t.allTypes();
 			packages = t.packs();
 		}
 		
@@ -59,8 +59,12 @@ class HaxeLibLibrary {
 
 
 
-class HaxeLibManager {
+class HaxeLibManager 
+{
 	
+	static var libLine = Re.compile("([^:]*):[^\\[]*\\[(dev\\:)?(.*)\\]");
+
+
 	var _available:StringMap<HaxeLibLibrary>;
 
 	var project:Project;
@@ -94,7 +98,8 @@ class HaxeLibManager {
 		}
 	}
 
-	public function get_completions():Array<Tup2<String, String>> {
+	public function getCompletions():Array<Tup2<String, String>> 
+	{
 		var comps = [];
 		for (k in available().keys())
 		{
@@ -106,25 +111,25 @@ class HaxeLibManager {
 		return comps;
 	}
 
-	static var libLine = Re.compile("([^:]*):[^\\[]*\\[(dev\\:)?(.*)\\]");
+	
 
 	public function scan() 
 	{
 		scanned = true;
-		var env = project.haxe_env();
-		var cmd = project.haxelib_exec();
+		var env = project.haxeEnv();
+		var cmd = project.haxelibExec();
 		cmd.push("config");
-		var r = Execute.run_cmd( cmd, env );
+		var r = Execute.runCmd( cmd, env );
 		var hlout = r._1;
 		var hlerr = r._2;
 		basePath = hlout.strip();
 
 		_available = new StringMap();
 
-		var cmd = project.haxelib_exec();
+		var cmd = project.haxelibExec();
 		cmd.push("list");
 		
-		var r = Execute.run_cmd( cmd, env );
+		var r = Execute.runCmd( cmd, env );
 		var hlout = r._1;
 		var hlerr = r._2;
 		//trace("haxelib output: " + hlout);
@@ -146,92 +151,76 @@ class HaxeLibManager {
 		}
 	}
 
-	public function install_lib(lib:String)
+	public function installLib(lib:String)
 	{
-		var cmd = project.haxelib_exec();
-		var env = project.haxe_env();
+		var cmd = project.haxelibExec();
+		var env = project.haxeEnv();
 		cmd.push("install");
 		cmd.push(lib);
 		trace(Std.string(cmd));
-		Execute.run_cmd(cmd, null, null, env);
+		Execute.runCmd(cmd, null, null, env);
 		scan();
 	}
 
-	public function remove_lib(lib:String)
+	public function removeLib(lib:String)
 	{
-		var cmd = project.haxelib_exec();
-		var env = project.haxe_env();
+		var cmd = project.haxelibExec();
+		var env = project.haxeEnv();
 		cmd.push("remove");
 		cmd.push(lib);
 		trace(Std.string(cmd));
-		Execute.run_cmd(cmd,null, null, env);
+		Execute.runCmd(cmd,null, null, env);
 		scan();
 	}
 
-	public function upgrade_all()
+	public function upgradeAll()
 	{
-		var cmd = project.haxelib_exec();
-		var env = project.haxe_env();
+		var cmd = project.haxelibExec();
+		var env = project.haxeEnv();
 		cmd.push("upgrade");
 		trace(Std.string(cmd));
-		Execute.run_cmd(cmd, null, null, env);
+		Execute.runCmd(cmd, null, null, env);
 		scan();
 	}
 
-	public function self_update()
+	public function selfUpdate()
 	{
-		var cmd = project.haxelib_exec();
-		var env = project.haxe_env();
+		var cmd = project.haxelibExec();
+		var env = project.haxeEnv();
 		cmd.push("thisupdate");
 		trace(Std.string(cmd));
-		Execute.run_cmd(cmd, null, null, env);
+		Execute.runCmd(cmd, null, null, env);
 		scan();
 	}
 
-	public function search_libs()
+	public function searchLibs()
 	{
-		var cmd = project.haxelib_exec();
-		var env = project.haxe_env();
+		var cmd = project.haxelibExec();
+		var env = project.haxeEnv();
 		cmd.push("search");
 		cmd.push("_");
 		//trace(Std.string(cmd));
-		var res = Execute.run_cmd(cmd, null, null, env);
+		var res = Execute.runCmd(cmd, null, null, env);
 		var out = res._1;
 		var err = res._2;
-		return _collect_libraries(out);
+		return parseLibraries(out);
 	}
 
-	public function _collect_libraries(out:String)
+	function parseLibraries(out:String):Array<String>
 	{
-		
 		var x = out.split("\n").filter(function (x) return x != "" && x.indexOf("libraries found") == -1);
 		x.reverse();
 		return x;
 	}
 
-	public function is_lib_installed(lib:String)
+	public function isLibInstalled(lib:String)
 	{
 		return available().exists(lib);
 	}
 	
-	public function get_lib(lib:String) 
+	public function getLib(lib:String) 
 	{
 		return available().get(lib);
 	}
 
 }
-
-/*
-import re
-import os
-import sublime
-
-from haxe import types as hxtypes
-
-from haxe.log import log
-
-from haxe.execute import run_cmd
-
-
-
-*/

@@ -3,7 +3,7 @@ package hxsublime;
 import haxe.ds.StringMap;
 import hxsublime.Config;
 import hxsublime.Haxelib.HaxeLibLibrary;
-import hxsublime.panel.Base.Panels;
+import hxsublime.panel.Panels;
 import hxsublime.tools.HxSrcTools;
 import python.lib.Codecs;
 import python.lib.Glob;
@@ -16,10 +16,10 @@ import python.lib.Types.Tup2;
 
 class Types 
 {
-	public static function find_types (classpaths, libs:Array<HaxeLibLibrary>, base_path, filtered_classes = null, filtered_packages = null, include_private_types = true) 
+	public static function findTypes (classpaths, libs:Array<HaxeLibLibrary>, base_path, filtered_classes = null, filtered_packages = null, include_private_types = true) 
 	{
 
-		var bundle = HxSrcTools.empty_type_bundle();
+		var bundle = HxSrcTools.emptyTypeBundle();
 
 		var cp = [];
 		cp = cp.concat( classpaths );
@@ -35,25 +35,25 @@ class Types
 			var p = Path.join( base_path, path );
 
 			if (Path.exists(p)) {
-				var b = extract_types( p, filtered_classes, filtered_packages, 0, [], include_private_types );
+				var b = extractTypes( p, filtered_classes, filtered_packages, 0, [], include_private_types );
 				bundle = bundle.merge(b);
 			}
 			else {
-				Panels.default_panel().writeln("Error: The classpath " + p + " does not exist, in case of nme or openfl you need have to build (CTRL + ENTER) the project first (the build creates these paths)");
+				Panels.defaultPanel().writeln("Error: The classpath " + p + " does not exist, in case of nme or openfl you need have to build (CTRL + ENTER) the project first (the build creates these paths)");
 			}
 		}
 
 		return bundle;
 	}
 
-	public static var valid_package = Re.compile("^[_a-z][a-zA-Z0-9_]*$");
+	static var validPackageRegex = Re.compile("^[_a-z][a-zA-Z0-9_]*$");
 
-	public static function is_valid_package (pack:String) 
+	static function isValidPackage (pack:String) 
 	{
-		return valid_package.match(pack) != null && pack != "_std";
+		return validPackageRegex.match(pack) != null && pack != "_std";
 	}
 
-	public static function extract_types( path:String , filtered_classes = null, filtered_packages = null, depth = 0, pack:Array<String> = null, include_private_types = true)  
+	public static function extractTypes( path:String , filtered_classes = null, filtered_packages = null, depth = 0, pack:Array<String> = null, include_private_types = true)  
 	{
 		
 		if (pack == null) pack = [];
@@ -66,9 +66,9 @@ class Types
 			filtered_packages = [];
 		}
 		
-		var bundle = HxSrcTools.empty_type_bundle();
+		var bundle = HxSrcTools.emptyTypeBundle();
 		
-		
+		var bundles = [];
 		for (fullpath in Glob.glob( Path.join(path,"*.hx") )) 
 		{ 
 			
@@ -85,22 +85,22 @@ class Types
 				if (Path.exists(file)) 
 				{
 					
-					var module_bundle = extract_types_from_file(file, cl, include_private_types);
+					var module_bundle = extractTypesFromFile(file, cl, include_private_types);
 					
-					bundle = bundle.merge(module_bundle);
+					bundles.push(module_bundle);
+					
 
 
 					
 				}
 			}
 		}
-				
-					
-		
+
+
 		for (f in Os.listdir( path )) 
 		{
 		
-			if (is_valid_package(f)) 
+			if (isValidPackage(f)) 
 			{
 				var r = Path.splitext( f );
 				var cl = r._1;
@@ -116,26 +116,28 @@ class Types
 					var next_pack = pack.copy();
 					next_pack.push(f);
 					
-					var sub_bundle = extract_types( Path.join( path , f ) , filtered_classes, filtered_packages, depth + 1, next_pack, include_private_types );
-					bundle = bundle.merge(sub_bundle);
+					var sub_bundle = extractTypes( Path.join( path , f ) , filtered_classes, filtered_packages, depth + 1, next_pack, include_private_types );
+					bundles.push(sub_bundle);
+					//bundle = bundle.merge(sub_bundle);
 				}
 			}
 		}
+		bundle = bundle.mergeAll(bundles);
 		
 		return bundle;
 	}
 
-	public static var file_type_cache = new StringMap<Tup2<Float, HaxeTypeBundle>>();
+	static var fileTypeCache = new StringMap<Tup2<Float, HaxeTypeBundle>>();
 
 
 
-	public static function extract_types_from_file (file:String, module_name:String = null, include_private_types = true) 
+	static function extractTypesFromFile (file:String, module_name:String = null, include_private_types = true) 
 	{
-		//trace("extract types from file");
+		
 		var mtime = Path.getmtime(file);
-		if (file_type_cache.exists(file) && file_type_cache.get(file)._1 == mtime) 
+		if (fileTypeCache.exists(file) && fileTypeCache.get(file)._1 == mtime) 
 		{
-			return file_type_cache.get(file)._2;
+			return fileTypeCache.get(file)._2;
 		}
 
 		// use cache based on last file modification
@@ -148,30 +150,16 @@ class Types
 		var s = Codecs.open( file , "r" , "utf-8" , "ignore" );
 		var src_with_comments = s.read();
 
-		var src = HxSrcTools.strip_comments(src_with_comments);
+		var src = HxSrcTools.stripComments(src_with_comments);
 		
 
 
-		var bundle = HxSrcTools.get_types_from_src(src, module_name, file, src_with_comments);
+		var bundle = HxSrcTools.getTypesFromSrc(src, module_name, file, src_with_comments);
 
-		file_type_cache.set(file, Tup2.create(mtime, bundle));
+		fileTypeCache.set(file, Tup2.create(mtime, bundle));
 
 		
 
 		return bundle;
 	}
 }
-
-/*
-
-import os, codecs, glob, re
-
-from haxe import config as hxconfig
-from haxe import panel
-from haxe.tools import hxsrctools
-from haxe.log import log
-
-
-
-
-*/

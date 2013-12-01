@@ -15,6 +15,7 @@ import python.lib.ArrayTools;
 import python.lib.Os;
 import python.lib.os.Path;
 import python.lib.Re;
+import python.lib.Time;
 import python.lib.Types.Dict;
 import python.lib.Types.Tup2;
 import python.lib.Types.Tup3;
@@ -22,48 +23,56 @@ import python.Macros;
 
 using python.lib.ArrayTools;
 
+
+@:allow(hxsublime.tools)
 class Regex 
 {
-	public static var compact_func = Re.compile("\\(.*\\)");
-	public static var compact_prop = Re.compile(":.*\\.([a-z_0-9]+)", Re.I);
 	public static var space_chars = Re.compile("\\s");
 	public static var word_chars = Re.compile("[a-z0-9._]", Re.I);
 	public static var import_line = Re.compile("^([ \t]*)import\\s+([a-z0-9._]+);", Re.I | Re.M);
 	public static var using_line = Re.compile("^([ \t]*)using\\s+([a-z0-9._]+);", Re.I | Re.M);
 	public static var package_line = Re.compile("\\s*package\\s*([a-z0-9.]*)\\s*;", Re.I);
-	public static var type_decl_with_scope = Re.compile("(private\\s+)?(?:extern\\s+)?(class|typedef|enum|interface|abstract)\\s+([A-Z][a-zA-Z0-9_]*)\\s*(<[a-zA-Z0-9_,]+>)?" , Re.M );
-	public static var type_decl = Re.compile("(class|typedef|enum|interface|abstract)\\s+([A-Z][a-zA-Z0-9_]*)\\s*(<[a-zA-Z0-9_,]+>)?" , Re.M );
-	public static var enum_start_decl = Re.compile("enum\\s+([A-Z][a-zA-Z0-9_]*)\\s*(<[a-zA-Z0-9_,]+>)?" , Re.M );
-	public static var skippable = Re.compile("^[a-zA-Z0-9_\\s]*$");
-	public static var in_anonymous = Re.compile("[{,]\\s*([a-zA-Z0-9_\"\']+)\\s*:\\s*$" , Re.M | Re.U );
 	public static var variables = Re.compile("var\\s+([^:;\\s]*)", Re.I);
-	public static var functions = Re.compile("function\\s+([^;\\.\\(\\)\\s]*)", Re.I);
+
 	public static var named_functions = Re.compile("function\\s+([a-zA-Z0-9_]+)\\s*", Re.I);
 	public static var function_params = Re.compile("function\\s+[a-zA-Z0-9_]+\\s*\\(([^\\)]*)", Re.M);
 	public static var param_default = Re.compile("(=\\s*\"*[^\"]*\")", Re.M);
-	public static var is_type = Re.compile("^[A-Z][a-zA-Z0-9_]*$");
-	public static var comments = Re.compile("(//[^\n\r]*?[\n\r]|/\\*(.*?)\\*/)", Re.MULTILINE | Re.DOTALL );
-	public static var _field = Re.compile("((?:(?:public|static|inline|private)\\s+)*)(var|function)\\s+([a-zA-Z_][a-zA-Z0-9_]*)", Re.MULTILINE);
-	public static var _type_decl_with_scope = Re.compile("(private\\s+)?(extern\\s+)?(class|typedef|enum|interface|abstract)\\s+([A-Z][a-zA-Z0-9_]*)\\s*(<[a-zA-Z0-9,_]+>)?(:?\\{|\\s+)" , Re.M );
-	public static var enum_constructor_start_decl = Re.compile("\\s+([a-zA-Z_]+)" , Re.M );
+	public static var isType = Re.compile("^[A-Z][a-zA-Z0-9_]*$");
+
+
+	//static var compactFuncRegex = Re.compile("\\(.*\\)");
+	//static var compactPropRegex = Re.compile(":.*\\.([a-z_0-9]+)", Re.I);
+	
+	static var typeDeclWithScope = Re.compile("(private\\s+)?(?:extern\\s+)?(class|typedef|enum|interface|abstract)\\s+([A-Z][a-zA-Z0-9_]*)\\s*(<[a-zA-Z0-9_,]+>)?" , Re.M );
+	//static var type_decl = Re.compile("(class|typedef|enum|interface|abstract)\\s+([A-Z][a-zA-Z0-9_]*)\\s*(<[a-zA-Z0-9_,]+>)?" , Re.M );
+	//static var enum_start_decl = Re.compile("enum\\s+([A-Z][a-zA-Z0-9_]*)\\s*(<[a-zA-Z0-9_,]+>)?" , Re.M );
+	//static var skippable = Re.compile("^[a-zA-Z0-9_\\s]*$");
+	//static var in_anonymous = Re.compile("[{,]\\s*([a-zA-Z0-9_\"\']+)\\s*:\\s*$" , Re.M | Re.U );
+	
+	//static var functions = Re.compile("function\\s+([^;\\.\\(\\)\\s]*)", Re.I);
+	
+	static var comments = Re.compile("(//[^\n\r]*?[\n\r]|/\\*(.*?)\\*/)", Re.MULTILINE | Re.DOTALL );
+	static var fieldRegex = Re.compile("((?:(?:public|static|inline|private)\\s+)*)(var|function)\\s+([a-zA-Z_][a-zA-Z0-9_]*)", Re.MULTILINE);
+	static var typeDeclWithScopeRegex = Re.compile("(private\\s+)?(extern\\s+)?(class|typedef|enum|interface|abstract)\\s+([A-Z][a-zA-Z0-9_]*)\\s*(<[a-zA-Z0-9,_]+>)?(:?\\{|\\s+)" , Re.M );
+	static var enumConstructorStartDecl = Re.compile("\\s+([a-zA-Z_]+)" , Re.M );
 }
 
 class HxSrcTools {
 
-	public static function get_types_from_src (src:String, module_name:String, file:String, src_with_comments:String) 
+	public static function getTypesFromSrc (src:String, moduleName:String, file:String, src_with_comments:String) 
 	{
-		if (module_name == null) {
-			module_name = Path.splitext( Path.basename(file) )._1;
+		if (moduleName == null) 
+		{
+			moduleName = Path.splitext( Path.basename(file) )._1;
 		}
 
-		var pack = get_package(src);
+		var pack = getPackage(src);
 
 		var res = new StringMap();
-		for (decl in Regex._type_decl_with_scope.finditer( src ).toHaxeIterator()) {
+		for (decl in Regex.typeDeclWithScopeRegex.finditer( src ).toHaxeIterator()) 
+		{
 
-
-
-			var is_private = decl.group(1) != null;
+			var isPrivate = decl.group(1) != null;
 			
 			var type_name = decl.group(4);
 
@@ -73,24 +82,24 @@ class HxSrcTools {
 
 			var kind = decl.group(3);
 
-			var is_extern = decl.group(2) != null;
+			var isExtern = decl.group(2) != null;
 
-			var is_module_type = type_name == module_name;
-			var is_std_type = module_name == "StdTypes";
-
-
-			var full_type = new HaxeType(pack, module_name, type_name, kind, is_private, is_module_type, is_std_type, is_extern, file, src, src_with_comments, decl);
+			var isModuleType = type_name == moduleName;
+			var isStdType = moduleName == "StdTypes";
 
 
-			if (full_type.is_enum()) {
-				full_type._enum_constructors = _extract_enum_constructors_from_src(src, decl.end(4));
+			var fullType = new HaxeType(pack, moduleName, type_name, kind, isPrivate, isModuleType, isStdType, isExtern, file, src, src_with_comments, decl);
+
+
+			if (fullType.isEnum()) {
+				fullType._enumConstructors = extractEnumConstructorsFromSrc(src, decl.end(4));
 			}
 
 
 
-			if (!res.exists(full_type.full_qualified_name())) {
+			if (!res.exists(fullType.fullQualifiedName())) {
 
-				res.set(full_type.full_qualified_name(), full_type);
+				res.set(fullType.fullQualifiedName(), fullType);
 			}	
 
 			
@@ -103,16 +112,16 @@ class HxSrcTools {
 
 
 
-	private static function _extract_enum_constructors_from_src (src:String, start_pos:Int) 
+	static function extractEnumConstructorsFromSrc (src:String, start_pos:Int) 
 	{
 
 		var constructors = null;
 		
-		var start = search_next_char_on_same_nesting_level(src, ["{"], start_pos);
+		var start = searchNextCharOnSameNestingLevel(src, ["{"], start_pos);
 		if (start != null) {
-			var end = search_next_char_on_same_nesting_level(src, ["}"], start._1 + 1);
+			var end = searchNextCharOnSameNestingLevel(src, ["}"], start._1 + 1);
 			if (end != null) {
-				constructors = _extract_enum_constructors_from_enum(src.substring(start._1 + 1, end._1-1));
+				constructors = extractEnumConstructorsFromEnum(src.substring(start._1 + 1, end._1-1));
 			}
 		}
 				
@@ -121,17 +130,17 @@ class HxSrcTools {
 
 	
 
-	private static function _extract_enum_constructors_from_enum (enumStr:String) 
+	static function extractEnumConstructorsFromEnum (enumStr:String) 
 	{
 		
 		var constructors = [];
 		var start = 0;
 		while (true) {
-			var m = Regex.enum_constructor_start_decl.match(enumStr, start);
+			var m = Regex.enumConstructorStartDecl.match(enumStr, start);
 			if (m != null) {
 				var constructor = m.group(1);
 				constructors.push(constructor);
-				var end = search_next_char_on_same_nesting_level(enumStr, [";"], m.end(1));
+				var end = searchNextCharOnSameNestingLevel(enumStr, [";"], m.end(1));
 				if (end != null) {
 					start = end._1+1;
 				}	
@@ -146,12 +155,12 @@ class HxSrcTools {
 		return constructors;
 	}
 
-	public static function skip_whitespace_or_comments(hx_src_section:String, start_pos:Int) 
+	public static function skipWhitespaceOrComments(hxSrcSection:String, start_pos:Int) 
 	{
 		var in_single_comment = false;
 		var in_multi_comment = false;
 
-		var count = hx_src_section.length;
+		var count = hxSrcSection.length;
 		var pos = start_pos;
 
 		while (true) 
@@ -159,8 +168,8 @@ class HxSrcTools {
 
 			if (pos > count-1)
 				break;
-			var c = hx_src_section.charAt(pos);
-			var next = if (pos < count-1) hx_src_section.charAt(pos+1) else null;
+			var c = hxSrcSection.charAt(pos);
+			var next = if (pos < count-1) hxSrcSection.charAt(pos+1) else null;
 
 			if (in_single_comment && c == "\n") 
 			{
@@ -192,15 +201,15 @@ class HxSrcTools {
 			}
 			else {
 				// we are done
-				return Tup2.create(pos, hx_src_section.substring(start_pos,pos));
+				return Tup2.create(pos, hxSrcSection.substring(start_pos,pos));
 			}
 		}
 		return null;
 	}
 
-	public static function is_same_nesting_level_at_pos (hx_src_section:String, end_pos:Int, start_pos:Int) 
+	public static function isSameNestingLevelAtPos (hxSrcSection:String, end_pos:Int, start_pos:Int) 
 	{
-
+		//trace("isSameNestingLevelAtPos - end : " + end_pos + " - start : " + start_pos);
 		if (end_pos < start_pos)
 		{
 			return false;
@@ -213,27 +222,34 @@ class HxSrcTools {
 		var string_char = null;
 		var in_regexp = false;
 
-		var count = hx_src_section.length;
+		var count = hxSrcSection.length;
 		var cur = "";
 		var pos = start_pos;
 
-		while (true) {
+		var lastPos = count-1;
+		while (true) 
+		{
 
-			if (pos == end_pos || pos > count-1) {
+			if (pos == end_pos || pos > lastPos) {
 				return open_pars == 0 && open_braces == 0 && open_brackets == 0 && open_angle_brackets == 0 && !in_string && !in_regexp;
 			}
 
 
-			var c = hx_src_section.charAt(pos);
+			var c = hxSrcSection.charAt(pos);
+			var ccode = std.StringTools.fastCodeAt(c, 0);
 
+			var hasNext = pos < lastPos;
 
-			var next = if (pos < count-1) hx_src_section.charAt(pos+1) else null;
+			var next = if (hasNext) hxSrcSection.charAt(pos+1) else null;
+
+			var nextCode = if (hasNext) std.StringTools.fastCodeAt(next, 0) else null;
+
 
 			if (in_regexp) 
 			{
 				pos += 1;
 				cur += c;
-				if (c != "\\" && next == "/") {
+				if (ccode != "\\".code && nextCode == "/".code) {
 					in_regexp = false;
 				}
 				continue;
@@ -248,7 +264,7 @@ class HxSrcTools {
 					cur += c;
 					in_string = false;
 				}
-				else if (c == "\\" && next == string_char) 
+				else if (ccode == "\\".code && next == string_char) 
 				{
 					pos += 2;
 					cur += c + next;
@@ -263,67 +279,67 @@ class HxSrcTools {
 			}
 
 		
-			if (c == "~" && next == "/") 
+			if (ccode == "~".code && nextCode == "/".code) 
 			{
 				pos +=2;
 				in_regexp = true;
 				cur += c;
 			}
-			else if (c == "'" || c == '"')
+			else if (ccode == "'".code || ccode == '"'.code)
 			{
 				in_string = true;
 				string_char = c;
 				cur += c;
 				pos += 1;
 			}
-			else if (c == "-" && next == ">") 
+			else if (ccode == "-".code && nextCode == ">".code) 
 			{
 				cur += "->";
 				pos += 2;
 			}
-			else if (c == "{") 
+			else if (ccode == "{".code) 
 			{
 				pos += 1;
 				open_braces += 1;
 				cur += c;
 			}
-			else if (c == "}") 
+			else if (ccode == "}".code) 
 			{
 				pos += 1;
 				open_braces -= 1;
 				cur += c;
 			}
-			else if (c == "(") 
+			else if (ccode == "(".code) 
 			{
 				pos += 1;
 				open_pars += 1;
 				cur += c;
 			}
-			else if (c == ")") 
+			else if (ccode == ")".code) 
 			{
 				pos += 1;
 				open_pars -= 1;
 				cur += c;
 			}
-			else if (c == "[") 
+			else if (ccode == "[".code) 
 			{
 				pos += 1;
 				open_brackets += 1;
 				cur += c;
 			}
-			else if (c == "]") 
+			else if (ccode == "]".code) 
 			{
 				pos += 1;
 				open_brackets -= 1;
 				cur += c;
 			}
-			else if (c == "<") 
+			else if (ccode == "<".code) 
 			{
 				pos += 1;
 				open_angle_brackets += 1;
 				cur += c;
 			}
-			else if (c == ">")
+			else if (ccode == ">".code)
 			{
 				pos += 1;
 				open_angle_brackets -= 1;
@@ -339,9 +355,9 @@ class HxSrcTools {
 	}
 
 
-	// searches the next occurrence of `char` in `hx_src_section` on the same nesting level as the char at position `start_pos`
-	// the search starts at position `start_pos` in `hx_src_section`.
-	public static function search_next_char_on_same_nesting_level (hx_src_section:String, chars:Array<String>, start_pos:Int) 
+	// searches the next occurrence of `char` in `hxSrcSection` on the same nesting level as the char at position `start_pos`
+	// the search starts at position `start_pos` in `hxSrcSection`.
+	public static function searchNextCharOnSameNestingLevel (hxSrcSection:String, chars:Array<String>, start_pos:Int) 
 	{
 		
 
@@ -353,17 +369,17 @@ class HxSrcTools {
 		var string_char = null;
 		var in_regexp = false;
 
-		var count = hx_src_section.length;
+		var count = hxSrcSection.length;
 		var cur = "";
 		var pos = start_pos;
 		while (true) {
 			if (pos > count-1)
 				break;
 
-			var c = hx_src_section.charAt(pos);
+			var c = hxSrcSection.charAt(pos);
 
 
-			var next = if (pos < count-1) hx_src_section.charAt(pos+1) else null;
+			var next = if (pos < count-1) hxSrcSection.charAt(pos+1) else null;
 
 			if (in_regexp) 
 			{
@@ -397,7 +413,7 @@ class HxSrcTools {
 				continue;
 			}
 
-			if (ArrayTools.contains(chars,c) && open_pars == 0 && open_braces == 0 && open_brackets == 0 && open_angle_brackets == 0) 
+			if (open_pars == 0 && open_braces == 0 && open_brackets == 0 && open_angle_brackets == 0 && ArrayTools.contains(chars,c)) 
 			{
 				return Tup2.create(pos,cur);
 			}
@@ -477,9 +493,9 @@ class HxSrcTools {
 		return null;
 	}
 
-	// reverse search the next occurrence of `char` in `hx_src_section` on the same nesting level as the char at position `start_pos`.
-	// the reverse search starts at position `start_pos` in `hx_src_section`.
-	public static function reverse_search_next_char_on_same_nesting_level (hx_src_section:String, chars:Array<String>, start_pos:Int) 
+	// reverse search the next occurrence of `char` in `hxSrcSection` on the same nesting level as the char at position `start_pos`.
+	// the reverse search starts at position `start_pos` in `hxSrcSection`.
+	public static function reverse_search_next_char_on_same_nesting_level (hxSrcSection:String, chars:Array<String>, start_pos:Int) 
 	{
 		
 		var open_pars = 0;
@@ -499,9 +515,9 @@ class HxSrcTools {
 				break;
 			}
 
-			var c = hx_src_section.charAt(pos);
+			var c = hxSrcSection.charAt(pos);
 
-			var next = if (pos > 0) hx_src_section.charAt(pos-1) else null;
+			var next = if (pos > 0) hxSrcSection.charAt(pos-1) else null;
 
 			if (in_string) 
 			{
@@ -527,7 +543,7 @@ class HxSrcTools {
 
 
 
-			if (ArrayTools.contains(chars, c) && open_pars == 0 && open_braces == 0 && open_brackets == 0 && open_angle_brackets == 0) 
+			if (open_pars == 0 && open_braces == 0 && open_brackets == 0 && open_angle_brackets == 0 && ArrayTools.contains(chars, c)) 
 			{
 				return Tup2.create(pos,cur);
 			}
@@ -603,13 +619,13 @@ class HxSrcTools {
 	}
 
 	// removes comments from a haxe source
-	public static function strip_comments (src:String) 
+	public static function stripComments (src:String) 
 	{
 		return Regex.comments.sub( "" , src );
 	}
 
 	// returns the package of a haxe source file
-	public static function get_package(src:String) 
+	static function getPackage(src:String) 
 	{
 		var pack = "";
 		var all = Regex.package_line.findallString( src );
@@ -628,7 +644,7 @@ class HxSrcTools {
 	// returns:
 	// ["A","Array<T>","(Void->Void)","Int"]
 	//
-	public static function split_function_signature (signature:String) 
+	public static function splitFunctionSignature (signature:String) 
 	{
 		var open_pars = 0;
 		var open_braces = 0;
@@ -714,7 +730,7 @@ class HxSrcTools {
 
 
 
-	public static function empty_type_bundle() {
+	public static function emptyTypeBundle() {
 		return new HaxeTypeBundle(new StringMap());
 	}
 }
@@ -755,11 +771,17 @@ class HaxeTypeBundle implements LazyFunctionSupport
 	// the same fullqualified name, which is the dict identifier.
 	public function merge (other:HaxeTypeBundle) 
 	{
+		return mergeAll([other]);
+	}
 
+	public function mergeAll (others:Array<HaxeTypeBundle>) 
+	{
 		var res:StringMap<HaxeType> = [for (k in _types.keys()) k => _types.get(k)];
 
-		for (k in other._types.keys()) {
-			res.set(k, other._types.get(k));
+		for (o in others) {
+			for (k in o._types.keys()) {
+				res.set(k, o._types.get(k));
+			}
 		}
 
 		return new HaxeTypeBundle(res);
@@ -770,7 +792,6 @@ class HaxeTypeBundle implements LazyFunctionSupport
 	@lazyFunction
 	public function packs () 
 	{
-		
 		var res = new StringMap();
 
 		for (k in _types.keys()) {
@@ -786,52 +807,52 @@ class HaxeTypeBundle implements LazyFunctionSupport
 
 	
 	@lazyFunction
-	public function all_modules () 
+	public function allModules () 
 	{
 		var res = new StringMap();
 		for (k in _types.keys()) {
 			var t = _types.get(k);
-			res.set(t.full_pack_with_module(), new HaxeModule(t.pack, t.module, t.file()));
+			res.set(t.fullPackWithModule(), new HaxeModule(t.pack, t.module, t.file()));
 		}
 		return res;
 	}
 
 
 	@lazyFunction
-	public function all_modules_list () 
+	public function allModulesList () 
 	{
 		
-		var mods = all_modules();
+		var mods = allModules();
 		return [ for (m in mods) m];
 		
 	}
 
 	
 	@lazyFunction
-	public function all_types_and_enum_constructors_with_info () 
+	public function allTypesAndEnumConstructorsWithInfo () 
 	{
 		var res = new StringMap();
 		for (k in _types.keys()) {
 			var t = _types.get(k);
-			if (t.is_enum())
-				for (ec in t.full_qualified_enum_constructors_with_optional_module())
+			if (t.isEnum())
+				for (ec in t.fullQualifiedEnumConstructorsWithOptionalModule())
 					res.set(ec,t);
-			var fq_name = t.full_qualified_name_with_optional_module();
+			var fq_name = t.fullQualifiedNameWithOptionalModule();
 			res.set(fq_name, t);
 		}
 		return res;
 	}
 
 	@lazyFunction
-	public function all_types_and_enum_constructors () 
+	public function allTypesAndEnumConstructors () 
 	{
-		var res = all_types_and_enum_constructors_with_info();
+		var res = allTypesAndEnumConstructorsWithInfo();
 		return [for (k in res.keys()) k];
 	}
 
 	// returns a list of all types stored in this type bundle
 	@lazyFunction
-	public function all_types():Array<HaxeType> 
+	public function allTypes():Array<HaxeType> 
 	{
 		return [for (v in _types) v];
 	}
@@ -850,55 +871,58 @@ class HaxeTypeBundle implements LazyFunctionSupport
 		return new HaxeTypeBundle(res);
 	}	
 
-	public function filter_by_classpath (cp:String) 
+	/*
+	public function filterByClasspath (cp:String) 
 	{
 		return filter(function (p) return p.classpath() == cp);
 	}
 
-	public function filter_by_classpaths (cps:Array<String>) 
+	public function filterByClasspaths (cps:Array<String>) 
 	{
 		return filter(function (p) return Lambda.has(cps, p.classpath()));
 	}
+	*/
 }
 class EnumConstructor 
 {
 	
 	var name:String;
 	var enumType : HaxeType;
+
 	public function new (name, enum_type) 
 	{
 		this.name = name;
 		this.enumType = enum_type;
 	}
 
-	public function to_snippet_insert (import_list:Array<String>, insert_file:String) 
+	function toSnippetInsert (import_list:Array<String>, insert_file:String) 
 	{
 		for (i in import_list) 
 		{
 			if (enumType.file() == insert_file ||
-				i == enumType.full_qualified_name_with_optional_module() ||
-				i == enumType.full_pack_with_module() ||
-				i == enumType.full_qualified_name_with_optional_module() + "." + name) 
+				i == enumType.fullQualifiedNameWithOptionalModule() ||
+				i == enumType.fullPackWithModule() ||
+				i == enumType.fullQualifiedNameWithOptionalModule() + "." + name) 
 			{
 				return name;
 			}
 		}
 		
-		return enumType.full_qualified_name_with_optional_module() + "." + name;
+		return enumType.fullQualifiedNameWithOptionalModule() + "." + name;
 	}
 
 	//@lazyprop
-	public function type_hint() 
+	public function typeHint() 
 	{
 		return "enum value";
 	}
 
 
-	public function to_snippet(insert_file:String, import_list:Array<String>):Tup2<String, String>
+	public function toSnippet(insert_file:String, import_list:Array<String>):Tup2<String, String>
 	{
-		var location = if (enumType.full_pack_with_optional_module().length > 0) " (" + enumType.full_pack_with_optional_module() + ")" else "";
-		var display = enumType.name + "." + name + location + "\t" + type_hint();
-		var insert = to_snippet_insert(import_list, insert_file);
+		var location = if (enumType.fullPackWithOptionalModule().length > 0) " (" + enumType.fullPackWithOptionalModule() + ")" else "";
+		var display = enumType.name + "." + name + location + "\t" + typeHint();
+		var insert = toSnippetInsert(import_list, insert_file);
 
 		return Tup2.create(display, insert);
 	}
@@ -914,10 +938,10 @@ class HaxeField implements LazyFunctionSupport
 	public var type : HaxeType;
 	public var name : String;
 	public var kind : String;
-	public var is_static : Bool;
-	public var is_public : Bool;
-	public var is_inline : Bool;
-	public var is_private : Bool;
+	public var isStatic : Bool;
+	public var isPublic : Bool;
+	public var isInline : Bool;
+	public var isPrivate : Bool;
 
 	public var match_decl : MatchObject;
 
@@ -926,19 +950,19 @@ class HaxeField implements LazyFunctionSupport
 		this.type = type;
 		this.name = name;
 		this.kind = kind;
-		this.is_static = is_static;
-		this.is_public = is_public;
-		this.is_inline = is_inline;
-		this.is_private = is_private;
+		this.isStatic = is_static;
+		this.isPublic = is_public;
+		this.isInline = is_inline;
+		this.isPrivate = is_private;
 		this.match_decl = match_decl;
 	}
 		
 	
 	@lazyFunction
-	public function src_pos () 
+	public function srcPos () 
 	{
 	
-		for (decl in Regex._field.finditer( type.src_with_comments ).toHaxeIterator())
+		for (decl in Regex.fieldRegex.finditer( type.src_with_comments ).toHaxeIterator())
 		{
 			if (decl.group(0) == match_decl.group(0)) {
 				return decl.start(0);
@@ -950,7 +974,7 @@ class HaxeField implements LazyFunctionSupport
 
 	
 	@lazyFunction
-	public function is_var () 
+	public function isVar () 
 	{
 		return kind == "var";
 	}
@@ -963,7 +987,7 @@ class HaxeField implements LazyFunctionSupport
 	}
 
 	@lazyFunction
-	public function is_function () 
+	public function isFunction () 
 	{
 		return kind == "function";
 	}
@@ -971,13 +995,13 @@ class HaxeField implements LazyFunctionSupport
 	@lazyFunction
 	public function toString () 
 	{
-		return type.full_qualified_name_with_optional_module() + ( if (is_static || name == "new") "::" else ".") + name;
+		return type.fullQualifiedNameWithOptionalModule() + ( if (isStatic || name == "new") "::" else ".") + name;
 	}
 	
 	@lazyFunction
-	public function to_expression () 
+	public function toExpression () 
 	{
-		return type.full_qualified_name_with_optional_module() + "." + name;
+		return type.fullQualifiedNameWithOptionalModule() + "." + name;
 	}
 
 }
@@ -985,22 +1009,22 @@ class HaxeField implements LazyFunctionSupport
 class HaxeType implements LazyFunctionSupport
 {
 
-	public var _src:String;
+	var _src:String;
 	public var src_with_comments:String;
-	public var match_decl:MatchObject;
+	var match_decl:MatchObject;
 	public var is_private:Bool;
 	public var pack:String;
 	public var module:String;
 	public var kind:String;
 	public var name:String;
 	public var is_module_type:Bool;
-	public var is_std_type:Bool;
-	public var is_extern:Bool;
-	public var _file:String;
-	public var _enum_constructors:Array<String>;
+	var isStdType:Bool;
+	public var isExtern:Bool;
+	var _file:String;
+	public var _enumConstructors:Array<String>;
 
-	public function src () return _src;
-	public function file () return _file;
+	public inline function src () return _src;
+	public inline function file () return _file;
 
 	public function new(pack, module, name, kind, is_private, is_module_type, is_std_type, is_extern, file, src, src_with_comments, match_decl) 
 	{
@@ -1013,41 +1037,41 @@ class HaxeType implements LazyFunctionSupport
 		this.kind = kind;
 		this.name = name;
 		this.is_module_type = is_module_type;
-		this.is_std_type = is_std_type;
-		this.is_extern = is_extern;
+		this.isStdType = is_std_type;
+		this.isExtern = is_extern;
 		this._file = file;
-		this._enum_constructors = null;
+		this._enumConstructors = null;
 	}
 
 	@lazyFunction
-	public function stripped_start_decl_pos() 
+	public function strippedStartDeclPos() 
 	{
 		return match_decl.start(0);
 	}
 
 	
 	@lazyFunction
-	public function class_body () 
+	public function classBody () 
 	{
 		var res = null;
-		if (this.stripped_end_decl_pos == null) 
+		if (this.strippedEndDeclPos == null) 
 		{
 			res = "";
 		}
 		else 
 		{
-			res = this.src().substring(this.stripped_start_decl_pos(), this.stripped_end_decl_pos());
+			res = this.src().substring(this.strippedStartDeclPos(), this.strippedEndDeclPos());
 		}
 		return res;
 	}
 
 	
 	@lazyFunction
-	public function public_static_fields () 
+	public function publicStaticFields () 
 	{
 		var res = [];
-		res.extend(this.public_static_vars());
-		res.extend(this.public_static_functions());
+		res.extend(this.publicStaticVars());
+		res.extend(this.publicStaticFunctions());
 		return res;
 	}
 
@@ -1056,25 +1080,39 @@ class HaxeType implements LazyFunctionSupport
 
 	
 	@lazyFunction 
-	public function all_fields () 
+	public function allFields () 
 	{
-		
+		var startTime = Time.time();
 		var res = new StringMap();
-		if (class_body != null) {
-			for (decl in Regex._field.finditer(class_body()).toHaxeIterator()) 
+		if (classBody() != null) {
+			var startPos = classBodyStart()._1;
+			Macros.pyFor(decl, Regex.fieldRegex.finditer(classBody()), 
 			{
+			
 				var modifiers = decl.group(1);
-				var is_static = modifiers != null && modifiers.indexOf("static") > -1;
-				var is_inline = modifiers != null && modifiers.indexOf("inline") > -1;
-				var is_private = modifiers != null && modifiers.indexOf("private") > -1;
-				var is_public = modifiers != null && modifiers.indexOf("public") > -1;
-				var kind = decl.group(2);
-				var name = decl.group(3);
-				if (name == "WAIT_END_RET") trace(modifiers);
+				var isStatic = modifiers != null && modifiers.indexOf("static") > -1;
+				var isInline = modifiers != null && modifiers.indexOf("inline") > -1;
+				var isPrivate = modifiers != null && modifiers.indexOf("private") > -1;
+				var isPublic = modifiers != null && modifiers.indexOf("public") > -1;
+				
 
-				if (is_private || is_public || is_static || this.is_extern || HxSrcTools.is_same_nesting_level_at_pos(class_body(), decl.start(0), class_body_start()._1))
-					res.set(name, new HaxeField(this, name, kind, is_static, is_public, is_inline, is_private, decl));
-			}
+				
+				function sameNestingLevel () {
+					return HxSrcTools.isSameNestingLevelAtPos(classBody(), decl.start(0), startPos);
+				}
+
+				if (isPrivate || isPublic || isStatic || this.isExtern || sameNestingLevel()) 
+				{
+					var kind = decl.group(2);
+					var name = decl.group(3);	
+					res.set(name, new HaxeField(this, name, kind, isStatic, isPublic, isInline, isPrivate, decl));
+				}
+				startPos = decl.start(0);
+			});
+		}
+		var runTime = Time.time() - startTime;
+		if (runTime > 0.02) {
+			trace("allFields Time " + this._file + " : " + (runTime));
 		}
 		return res;
 		
@@ -1082,36 +1120,35 @@ class HaxeType implements LazyFunctionSupport
 
 	
 	@lazyFunction
-	public function all_fields_list () 
+	public function allFieldsList () 
 	{
-		var all = all_fields();
+		var all = allFields();
 		return [for (e in all) e ];
 	}
 
 	
 	@lazyFunction
-	public function public_static_vars () 
+	public function publicStaticVars () 
 	{
-		var all = all_fields();
-		return  [for (e in all) if (e.is_static && e.is_var()) e];
+		var all = allFields();
+		return  [for (e in all) if (e.isStatic && e.isVar()) e];
 	}
 	
 
 	@lazyFunction
-	public function public_static_functions () 
+	public function publicStaticFunctions () 
 	{
-		var all = all_fields();
-		return [for (e in all) if (e.is_static && e.is_function() ) e];
+		var all = allFields();
+		return [for (e in all) if (e.isStatic && e.isFunction() ) e];
 	}
 
 	
 	@lazyFunction
-	public function class_body_start () 
+	public function classBodyStart () 
 	{
-		
 		var start = match_decl.start(0);
-		if (is_abstract() || is_class()) {
-			return HxSrcTools.search_next_char_on_same_nesting_level(src(), ["{"], start);
+		if (isAbstract() || isClass()) {
+			return HxSrcTools.searchNextCharOnSameNestingLevel(src(), ["{"], start);
 		} else {
 			return Tup2.create(0,"");
 		}
@@ -1119,19 +1156,17 @@ class HaxeType implements LazyFunctionSupport
 	}
 
 	@lazyFunction
-	public function stripped_end_decl_pos () 
+	public function strippedEndDeclPos () 
 	{
 	
-		var class_body_start = this.class_body_start();
+		var classBodyStart = this.classBodyStart();
 		var res = null;
-		if (class_body_start != null) 
+		if (classBodyStart != null) 
 		{
-			//trace("have class_body_start:" + Std.string(class_body_start._1));
-			var class_body_end = HxSrcTools.search_next_char_on_same_nesting_level(src(), ["}"], class_body_start._1+1);
-			if (class_body_end != null) 
+			var classBodyEnd = HxSrcTools.searchNextCharOnSameNestingLevel(src(), ["}"], classBodyStart._1+1);
+			if (classBodyEnd != null) 
 			{
-				//trace("have class_body_end:" + Std.string(class_body_end._1));
-				res = class_body_end._1;
+				res = classBodyEnd._1;
 			}
 			else {
 				res = null;
@@ -1142,17 +1177,14 @@ class HaxeType implements LazyFunctionSupport
 			res = null;
 		}
 		return res;
-		
-
 	}
-		
 
 
 	@lazyFunction
-	public function src_pos ():Int 
+	public function srcPos ():Int 
 	{
 		
-		Macros.pyFor(decl, Regex.type_decl_with_scope.finditer( src_with_comments ), {
+		Macros.pyFor(decl, Regex.typeDeclWithScope.finditer( src_with_comments ), {
 			if (decl.group(0) == match_decl.group(0)) 
 			{
 				return decl.start(0);
@@ -1162,49 +1194,49 @@ class HaxeType implements LazyFunctionSupport
 		
 	}
 
-	public function to_snippet(insert_file:String, import_list:Array<String>) 
+	function toSnippet(insert_file:String, import_list:Array<String>) 
 	{
-		var location = if (full_pack_with_optional_module().length > 0) (" (" + full_pack_with_optional_module() + ")") else "";
-		var display = name + location + "\t" + type_hint();
-		var insert = to_snippet_insert(import_list, insert_file);
+		var location = if (fullPackWithOptionalModule().length > 0) (" (" + fullPackWithOptionalModule() + ")") else "";
+		var display = name + location + "\t" + typeHint();
+		var insert = toSnippetInsert(import_list, insert_file);
 
 		return Tup2.create(display, insert);
 	}
 
 	// convert this type into insert snippets. Multiple snippets when it's an enum, separated into the enum itself and it's constructors.
-	public function to_snippets(import_list:Array<String>, insert_file:String) 
+	public function toSnippets(import_list:Array<String>, insert_file:String) 
 	{
-		var res = [to_snippet(insert_file, import_list)];
+		var res = [toSnippet(insert_file, import_list)];
 
-		if (is_enum() && _enum_constructors != null) 
+		if (isEnum() && _enumConstructors != null) 
 		{
-			for (ev in enum_constructors()) res.push(ev.to_snippet(insert_file, import_list));
+			for (ev in enumConstructors()) res.push(ev.toSnippet(insert_file, import_list));
 			
 		}
 		return res;
 	}
 
 
-	public function to_snippet_insert (import_list:Array<String>, insert_file:String)
+	public function toSnippetInsert (import_list:Array<String>, insert_file:String)
 	{
 		for (i in import_list) 
 		{
 			if (_file == insert_file ||
-				i == full_pack_with_module() ||
-				i == full_qualified_name_with_optional_module() || 
-				i == full_qualified_name()) 
+				i == fullPackWithModule() ||
+				i == fullQualifiedNameWithOptionalModule() || 
+				i == fullQualifiedName()) 
 			{
 				return name;
 			}
 		}
 		
-		return full_qualified_name_with_optional_module();
+		return fullQualifiedNameWithOptionalModule();
 	}
 
 	@lazyFunction
-	public function toplevel_pack():Null<String> 
+	public function toplevelPack():Null<String> 
 	{
-		var pl = pack_list();
+		var pl = packList();
 		if (pl.length > 0)
 			return pl[0];
 		return null;
@@ -1212,73 +1244,69 @@ class HaxeType implements LazyFunctionSupport
 	}
 
 	
-	public function type_hint() 
+	public inline function typeHint() 
 	{
 		return kind;
 	}
 
 	@lazyFunction
-	public function full_pack_with_optional_module() 
+	public function fullPackWithOptionalModule() 
 	{
-		var mod = if (is_module_type || is_std_type) "" else pack_suffix() + module;
+		var mod = if (is_module_type || isStdType) "" else packSuffix() + module;
 		return pack + mod;
 	}
 
 	@lazyFunction
-	public function full_pack_with_module() 
+	public function fullPackWithModule() 
 	{
-		return pack + pack_suffix() + module;
+		return pack + packSuffix() + module;
 	}
 
-	@lazyFunction
-	public function is_enum () 
+	
+	public inline function isEnum () 
 	{
 		return kind == "enum";
 	}
-	@lazyFunction
-	public function is_class () 
+	
+	public inline function isClass () 
 	{
 		return kind == "class";
 	}
 
-	public function is_abstract () 
+	public inline function isAbstract () 
 	{
 		return kind == "abstract";
 	}
 
-	public function __repr__() 
-	{
-		return toString();
-	}
 
 	@lazyFunction
-	public function pack_list():Array<String> 
+	public function packList():Array<String> 
 	{
 		return if (pack.length > 0) pack.split(".") else [];
 	}
 
 
 	@lazyFunction
-	public function pack_suffix() 
+	public function packSuffix() 
 	{
 		return if (pack.length == 0) "" else ".";	
 	}
 
 	
 	@lazyFunction
-	public function full_qualified_name_with_optional_module() 
+	public function fullQualifiedNameWithOptionalModule() 
 	{
-		var mod = if (is_module_type || is_std_type ) "" else module + ".";
-		return pack + pack_suffix() + mod + name;
+		var mod = if (is_module_type || isStdType ) "" else module + ".";
+		return pack + packSuffix() + mod + name;
 	}
 
 	
 	@lazyFunction
-	public function enum_constructors() 
+	public function enumConstructors() 
 	{
 		var res = null;
-		if (is_enum() && _enum_constructors != null) {
-			res = [for (e in _enum_constructors) new EnumConstructor(e, this) ];
+		if (isEnum() && _enumConstructors != null) {
+			res = [for (e in _enumConstructors) new EnumConstructor(e, this) ];
 		}
 		else {
 			res = [];
@@ -1287,17 +1315,17 @@ class HaxeType implements LazyFunctionSupport
 	}
 	
 	@lazyFunction
-	public function full_qualified_enum_constructors_with_optional_module() 
+	public function fullQualifiedEnumConstructorsWithOptionalModule() 
 	{
 		var res = null;
-		if (!is_enum() || _enum_constructors == null) 
+		if (!isEnum() || _enumConstructors == null) 
 		{
 			res = [];
 		}
 		else 
 		{
-			var fqName = full_qualified_name_with_optional_module();
-			res = [for (e in _enum_constructors) fqName + "." + e];
+			var fqName = fullQualifiedNameWithOptionalModule();
+			res = [for (e in _enumConstructors) fqName + "." + e];
 		}
 		return res;
 	
@@ -1307,7 +1335,7 @@ class HaxeType implements LazyFunctionSupport
 	@lazyFunction
 	public function classpath() 
 	{
-		var path_append = [for (_ in pack_list()) ".."];
+		var path_append = [for (_ in packList()) ".."];
 
 		
 		var mod_dir = python.lib.os.Path.dirname(_file);
@@ -1321,9 +1349,9 @@ class HaxeType implements LazyFunctionSupport
 
 	
 	@lazyFunction
-	public function full_qualified_name() 
+	public function fullQualifiedName() 
 	{
-		return pack + pack_suffix() + module + "." + name;
+		return pack + packSuffix() + module + "." + name;
 	}
 
 	@lazyFunction
@@ -1334,11 +1362,11 @@ class HaxeType implements LazyFunctionSupport
 			+ " module:" + Std.string(this.module) + ", "
 			+ " name:" + Std.string(this.name) + ", "
 			+ " kind:" + Std.string(this.kind) + ", "
-			+ " enum_constructors:" + Std.string(this.enum_constructors().map(function (ec) return ec.toString())) + ", "
+			+ " enum_constructors:" + Std.string(this.enumConstructors().map(function (ec) return ec.toString())) + ", "
 			+ " is_private:" + Std.string(this.is_private) + ", "
 			+ " is_module_type:" + Std.string(this.is_module_type) + ", "
-			+ " is_std_type:" + Std.string(this.is_std_type) + ", "
-			+ " is_extern:" + Std.string(this.is_extern) + ", "
+			+ " isStdType:" + Std.string(this.isStdType) + ", "
+			+ " is_extern:" + Std.string(this.isExtern) + ", "
 			+ " file:'" + Std.string(this.file()) + "'"
 			+ " classpath:'" + Std.string(this.classpath()) + "'"
 			+ " }");

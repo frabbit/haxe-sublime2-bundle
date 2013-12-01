@@ -12,18 +12,19 @@ import sublime.Window;
 class SlidePanel 
 {
 	
-	public var win:Window;
-	public var output_view:View;
-	public var output_view_id:Int;
+	var win:Window;
+	public var outputView:View;
+	public var outputViewId:Int;
+
 	public function new (win:Window) 
 	{
 		this.win = win;
-		this.output_view = null;
+		this.outputView = null;
 	}
 
 	public function clear() 
 	{
-		this.output_view = this.win.create_output_panel("haxe");
+		this.outputView = this.win.create_output_panel("haxe");
 	}
 
 	public function write( text :String , scope:String = null, show_timestamp = true ) 
@@ -31,20 +32,20 @@ class SlidePanel
 		
 		var win = this.win;
 
-		if (this.output_view == null) 
+		if (this.outputView == null) 
 		{
-			this.output_view = win.create_output_panel("haxe");
+			this.outputView = win.create_output_panel("haxe");
 		}
 
-		this.output_view.settings().set("result_file_regex", Tools.haxe_file_regex());
+		this.outputView.settings().set("result_file_regex", Tools.haxeFileRegex());
 		// force result buffer
 		win.create_output_panel("haxe");
 		
-		var panel = this.output_view;
+		var panel = this.outputView;
 		
 		if (show_timestamp) 
 		{
-			text = Tools.timestamp_msg(text);
+			text = Tools.timestampMsg(text);
 		}
 		
 		win.run_command("show_panel",Dict.fromObject({"panel":"output.haxe"}));
@@ -80,7 +81,7 @@ class SlidePanel
 
 	public function writeln (msg:String, scope = null, show_timestamp = true) 
 	{
-		if (Tools.valid_message(msg))
+		if (Tools.isValidMessage(msg))
 		{
 			this.write(msg + "\n", scope, show_timestamp);
 		}
@@ -88,18 +89,9 @@ class SlidePanel
 
 	public function status (title:String, msg:String) 
 	{
-		if (Tools.valid_message(msg))
+		if (Tools.isValidMessage(msg))
 		{
 			this.writeln(title + ": " + msg);
 		}
 	}
 }
-
-/*
-import sublime
-
-from haxe.tools import viewtools
-
-from haxe.panel.tools import valid_message, haxe_file_regex, timestamp_msg
-
-*/

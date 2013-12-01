@@ -6,24 +6,24 @@ import python.lib.Types.Bytes;
 
 import StringTools in ST;
 
-class StringTools {
+class StringTools 
+{
 
 	static var _whitespace = Re.compile("^\\s*$");
 
 	public static function startsWithAny (s:String, l:Array<String>) 
 	{
-		for (s1 in l) {
-			if (ST.startsWith(s, s1)) {
+		for (s1 in l) 
+		{
+			if (ST.startsWith(s, s1)) 
+			{
 				return true;
 			}
 		}
 		return false;
 	}
 
-	public static function reverse (s:String) 
-	{
-		return untyped __python__("s[::-1]");
-	}
+	
 
 
 	public static function isWhitespaceOrEmpty(s:String) 
@@ -31,23 +31,28 @@ class StringTools {
 		return Re.match(_whitespace, s) != null;
 	}
 
+	/*
+	static function reverse (s:String) 
+	{
+		return untyped __python__("s[::-1]");
+	}
 
-	public static function unicodeToStr(s:Bytes, encoding:String, errors:String = "") 
+	static function unicodeToStr(s:Bytes, encoding:String, errors:String = "") 
 	{
 		return s.decode(encoding, errors);
 	}
 
-	public static function strToUnicodeToStr (s:String, encoding1:String, encoding2:String) 
+	static function strToUnicodeToStr (s:String, encoding1:String, encoding2:String) 
 	{
 		return unicodeToStr(python.lib.StringTools.encode(s, encoding1), encoding2);
 	}
 
-	public static function strToUnicode (s:String, encoding:String, ?errors:String = "") 
+	static function strToUnicode (s:String, encoding:String, ?errors:String = "") 
 	{
 		return python.lib.StringTools.encode(s, encoding, errors);
 	}
 
-	public static function toUnicode (s:String):Bytes 
+	static function toUnicode (s:String):Bytes 
 	{
 		var res:Bytes = null;
 		if (s == null) 
@@ -74,25 +79,26 @@ class StringTools {
 		return res;
 	}
 
-	public static function st3EncodeUtf8 (s:String):String {
+	static function st3EncodeUtf8 (s:String):String 
+	{
 		return encodeUtf8(s);
 	}
 	
-	public static function st2EncodeUtf8 (s:String):String
+	static function st2EncodeUtf8 (s:String):String
 	{
 		return s;
 	}
 
 
-	public static function st2ToUnicode(s:Bytes):Bytes {
+	static function st2ToUnicode(s:Bytes):Bytes {
 		return s;
 	}
 
-	public static function encodeUtf8Bytes (s:Bytes):String {
+	static function encodeUtf8Bytes (s:Bytes):String {
 		return s.decode("utf-8", "ignore");
 	}
 
-	public static function encodeUtf8 (s:String):String 
+	static function encodeUtf8 (s:String):String 
 	{
 		if (s == null)
 			return null;
@@ -109,5 +115,5 @@ class StringTools {
 		
 		return res;
 	}
-	
+	*/
 }

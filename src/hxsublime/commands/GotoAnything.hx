@@ -10,7 +10,7 @@ using python.lib.ArrayTools;
 
 private typedef Entry = { 
     function file() : String;
-    function src_pos():Int;
+    function srcPos():Int;
 }
 
 
@@ -18,9 +18,9 @@ private typedef Entry = {
 @:keep class HaxeGotoAnythingCommand extends HaxeGotoBaseCommand<Entry>
 {
 
-    override public function get_entries (types:StringMap<HaxeType>)
+    override function getEntries (types:StringMap<HaxeType>)
     {
-        var fields:Array<Array<String>> = [for (k in types.keys()) for (p in types.get(k).all_fields_list()) [p.toString() + " - " + p.kind, p.type.file()]];
+        var fields:Array<Array<String>> = [for (k in types.keys()) for (p in types.get(k).allFieldsList()) [p.toString() + " - " + p.kind, p.type.file()]];
         var types:Array<Array<String>> = [for (k in types.keys()) [k, types.get(k).file()]];
         fields.extend(types);
         return fields;
@@ -28,26 +28,21 @@ private typedef Entry = {
 
     private function toEntry (e:Entry):Entry return e;
 
-    override public function get_data (types:StringMap<HaxeType>)
+    override function getData (types:StringMap<HaxeType>)
     {
-        var fields:Array<Tup2<String, Entry>> = [for (k in types.keys()) for (p in types.get(k).all_fields_list()) Tup2.create(k + "." + p.name, toEntry(p) )];
+        var fields:Array<Tup2<String, Entry>> = [for (k in types.keys()) for (p in types.get(k).allFieldsList()) Tup2.create(k + "." + p.name, toEntry(p) )];
         var types = [for (k in types.keys()) Tup2.create(k,toEntry(types.get(k)))];
         fields.extend(types);
         return fields;
     }
 
-    override public function get_file(data_entry:Entry):String
+    override function getFile(dataEntry:Entry):String
     {
-        return data_entry.file();
+        return dataEntry.file();
     }
 
-    override public function get_src_pos(data_entry:Entry):Int
+    override function getSrcPos(dataEntry:Entry):Int
     {
-        return data_entry.src_pos();
+        return dataEntry.srcPos();
     }
 }
-/*
-from haxe.commands import HaxeGotoBaseCommand
-    
-
-*/

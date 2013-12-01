@@ -1,7 +1,7 @@
 package hxsublime.commands;
 
 import haxe.ds.StringMap;
-import hxsublime.project.Base.Projects;
+import hxsublime.project.Projects;
 import hxsublime.tools.HxSrcTools;
 import hxsublime.tools.ViewTools;
 import python.lib.Os;
@@ -49,13 +49,13 @@ private class State {
         
         var view = win.active_view();
 
-        var project = Projects.current_project(view);
+        var project = Projects.currentProject(view);
 
         var builds = project.builds.copy();
 
-        if (project.has_build())
+        if (project.hasBuild())
         {
-            builds.insert(0, project.get_build(view));
+            builds.insert(0, project.getBuild(view));
         }
 
         var pack = [];
@@ -63,7 +63,7 @@ private class State {
         if (builds.length == 0 && view != null && view.file_name() != null)
         {
             trace(view.file_name());
-            project.extract_build_args(view);
+            project.extractBuildArgs(view);
             builds = project.builds;
         }
 
@@ -88,7 +88,7 @@ private class State {
 
             for (b in builds)
             {
-                trace("build file: " + b.build_file);
+                trace("build file: " + b.buildFile());
                 var found = false;
                 for (cp in b.classpaths())
                 {
@@ -174,7 +174,7 @@ private class State {
             
             fn = Path.join( fn , p );
 
-            if (hxsublime.tools.HxSrcTools.Regex.is_type.match( p ) != null)
+            if (hxsublime.tools.HxSrcTools.Regex.isType.match( p ) != null)
             {
                 cl = p;
                 break;

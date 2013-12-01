@@ -1,10 +1,12 @@
 package hxsublime;
 
-import hxsublime.panel.Base.Panels;
+import hxsublime.panel.Panels;
 import python.lib.Codecs;
 import sublime.Sublime;
 
-class Log {
+class Log 
+{
+
 	public static function debug(msg:Dynamic) 
 	{
 		log(msg, false);
@@ -19,11 +21,11 @@ class Log {
 			f.write( msgStr + "\n" );
 			f.close();
 		}
-		else if (Settings.use_debug_panel()) 
+		else if (Settings.useDebugPanel()) 
 		{
 			
 			function f() {
-				Panels.debug_panel().writeln(msg);
+				Panels.debugPanel().writeln(msg);
 			}
 			Sublime.set_timeout(f, 100);
 		}
@@ -35,19 +37,3 @@ class Log {
 		}
 	}
 }
-
-/*
-import sublime
-
-import codecs
-
-from haxe.tools.stringtools import encode_utf8
-
-
-
-
-# debug should only be used for internal debugging
-# currently it's the same as log but this should change in the future (2 levels (debug, log))
-
-
-*/

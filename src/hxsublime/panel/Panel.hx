@@ -5,8 +5,8 @@ import sublime.View;
 
 typedef Panel = {
 
-	public var output_view:View;
-	public var output_view_id:Int;
+	public var outputView:View;
+	public var outputViewId:Int;
 
 	public function clear():Void;
 

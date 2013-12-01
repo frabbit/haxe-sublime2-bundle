@@ -16,13 +16,13 @@ import sublime.Sublime;
 import sublime.Window;
 import sublime.Region;
 import hxsublime.tools.Cache;
-import hxsublime.completion.Base;
+import hxsublime.completion.Completion;
 import hxsublime.tools.StringTools;
 import hxsublime.tools.PathTools;
 import hxsublime.tools.SublimeTools;
 import hxsublime.tools.ViewTools;
 import hxsublime.tools.ScopeTools;
-import hxsublime.project.Base;
+import hxsublime.project.Projects;
 import hxsublime.Settings;
 import hxsublime.Exceptions;
 import hxsublime.Log;
@@ -45,8 +45,8 @@ import hxsublime.commands.ShowDoc;
 import hxsublime.panel.TabPanel;
 import hxsublime.panel.SlidePanel;
 import hxsublime.panel.Tools;
-import hxsublime.completion.hxsl.Base;
-import hxsublime.completion.hxml.Base;
+import hxsublime.completion.hxsl.HxslCompletion;
+import hxsublime.completion.hxml.HxmlCompletion;
 import hxsublime.compiler.Server;
 import hxsublime.compiler.Output;
 
@@ -57,40 +57,10 @@ using Lambda;
 
 using StringTools;
 
-enum Hui {
-	Foo1(a:Int);
-	Foo2;
-}
-
 class Main{
 
 	public static function main () {
 		
-		// var z = function () return 1;
-
-		// z();
-
-		// trace(z());
-
-
-		// trace(1);
-
-		// trace(1 + "hey");
-
-		// trace("hey");
-
-		// trace({ foo : "bar"});
-		// var z = true;
-		//var t = switch (z) {
-		//	case true: 5;
-		//	case false: 7;
-		//}
-		var t = Foo1(5);
-		var z = switch (t) {
-			case Foo1(x) if (x > 2): true;
-			case _: false;
-		}
-		trace(t);
 	}
 
 

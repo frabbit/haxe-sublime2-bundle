@@ -1,7 +1,7 @@
 package hxsublime.compiler;
 
 import haxe.ds.StringMap;
-import hxsublime.panel.Base.Panels;
+import hxsublime.panel.Panels;
 import hxsublime.Settings;
 import hxsublime.tools.HxSrcTools;
 import python.lib.Builtin;
@@ -56,7 +56,7 @@ class Output {
 		
 		Macros.pyFor(i, types, {
 			var hint = i.text.strip();
-			var hint_types = HxSrcTools.split_function_signature(hint);
+			var hint_types = HxSrcTools.splitFunctionSignature(hint);
 			hints.push( hint_types );
 		});
 		
@@ -112,13 +112,13 @@ class Output {
 		var insert = name;
 		var label = name;
 		
-		var smart_snippets = Settings.smart_snippets_on_completion();
+		var smart_snippets = Settings.smartSnippetsOnCompletion();
 		var not_smart = !smart_snippets;
 
 
 
 		if (sig != null) {
-			var types = HxSrcTools.split_function_signature(sig);
+			var types = HxSrcTools.splitFunctionSignature(sig);
 
 			
 			
@@ -264,7 +264,7 @@ class Output {
 		if (errors.length > 0) 
 		{
 			
-			Panels.slide_panel().writeln(errors[0].message);
+			Panels.slidePanel().writeln(errors[0].message);
 			Sublime.status_message(errors[0].message);
 		}
 
@@ -272,7 +272,7 @@ class Output {
 	}
 
 
-	public static function get_completion_output(temp_file:String, orig_file:String, output:String, commas:Int) 
+	public static function getCompletionOutput(temp_file:String, orig_file:String, output:String, commas:Int) 
 	{
 		var r = parse_completion_output(temp_file, orig_file, output);
 		var hints = r._1, comps = r._2;
@@ -333,7 +333,7 @@ class Output {
 			
 		if (Re.findallDynamic(no_classes_found_in_trace, output).length > 0) 
 		{
-			var smart_snippets = Settings.smart_snippets_on_completion();
+			var smart_snippets = Settings.smartSnippetsOnCompletion();
 			var insert = null;
 			if (smart_snippets) {
 				insert = "${1:value:Dynamic}";
@@ -416,29 +416,3 @@ class Output {
 		return Tup2.create(status,errors);
 	}
 }
-
-/*
-
-import sublime
-import re
-import os
-
-from haxe import panel as hxpanel
-from haxe import settings as hxsettings
-
-from haxe.tools import hxsrctools
-
-from haxe.trace import trace
-
-from haxe.plugin import is_st2, is_st3
-
-from xml.etree import ElementTree
-from xml.etree.ElementTree import XMLTreeBuilder
-
-if is_st2:
-	from elementtree import SimpleXMLTreeBuilder # part of your codebase
-	ElementTree.XMLTreeBuilder = SimpleXMLTreeBuilder.TreeBuilder
-
-
-
-*/

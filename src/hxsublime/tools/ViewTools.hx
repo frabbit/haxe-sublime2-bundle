@@ -88,7 +88,7 @@ class ViewTools {
 	}
 
 
-	public static function find_view_by_name (name:String):Null<View> 
+	public static function findViewByName (name:String):Null<View> 
 	{
 		var windows = Sublime.windows();
 		for (w in windows) 

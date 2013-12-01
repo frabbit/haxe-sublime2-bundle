@@ -1,5 +1,6 @@
 package hxsublime.completion.hx;
-class Constants {
+class Constants 
+{
 	public static inline var COMPLETION_TRIGGER_MANUAL = 1;
 	public static inline var COMPLETION_TRIGGER_AUTO = 2;
 	public static inline var COMPLETION_TRIGGER_ASYNC = 3;

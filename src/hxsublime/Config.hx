@@ -3,9 +3,12 @@ package hxsublime;
 import haxe.ds.StringMap;
 import python.lib.Types;
 
-class Config {
+class Config 
+{
+    
     public static var target_packages = ["flash","flash8","neko","js","php","cpp","cs","java", "sys"];
     public static var targets = ["js","cpp","swf8","swf","neko","php","java","cs", "as3"];
+    
     public static var target_std_packages:StringMap<Array<String>> = [
         "js"   => ["js"],
         "cpp"  => ["cpp", "sys"],

@@ -5,7 +5,7 @@ import hxsublime.Haxelib.HaxeLibLibrary;
 import python.lib.Types;
 
 import hxsublime.Haxelib.HaxeLibManager;
-import hxsublime.project.Base.Projects;
+import hxsublime.project.Projects;
 import sublime.Sublime;
 import sublime.WindowCommand;
 
@@ -18,26 +18,26 @@ import sublime.WindowCommand;
     {
         var view = Sublime.active_window().active_view();
 
-        var project = Projects.current_project(view);
+        var project = Projects.currentProject(view);
 
         if (project != null) 
         {
-            var manager = project.haxelib_manager();
-            var libs = manager.search_libs();
-            var menu = this._prepare_menu(libs, manager);
-            var on_selected = this._entry_selected.bind(libs, manager);
-            trace(libs);
-            this.window.show_quick_panel(menu, on_selected);
+            var manager = project.haxelibManager();
+            var libs = manager.searchLibs();
+            var menu = this.createMenuItems(libs, manager);
+            
+            this.window.show_quick_panel(menu, onEntrySelected.bind(libs, manager));
         }
     }
 
-    public function _prepare_menu (libs:Array<String>, manager:HaxeLibManager) 
+    function createMenuItems (libs:Array<String>, manager:HaxeLibManager) 
     {
         var menu = [];
-        for (l in libs) {
-            if (manager.is_lib_installed(l))
+        for (l in libs) 
+        {
+            if (manager.isLibInstalled(l))
             {
-                menu.push( [ l + " [" + manager.get_lib(l).version + "]" , "Remove" ] );
+                menu.push( [ l + " [" + manager.getLib(l).version + "]" , "Remove" ] );
             }
             else 
             {
@@ -51,7 +51,7 @@ import sublime.WindowCommand;
         return menu;
     }
 
-    public function _entry_selected( libs:Array<String>, manager:HaxeLibManager, i:Int )
+    function onEntrySelected( libs:Array<String>, manager:HaxeLibManager, i:Int )
     {
         trace("install lib command selected " + Std.string(i));
         if (i < 0) {
@@ -60,13 +60,13 @@ import sublime.WindowCommand;
         if (i == libs.length) 
         {
             trace("upgrade all");
-            manager.upgrade_all();
+            manager.upgradeAll();
         }
             
         if (i == libs.length+1) 
         {
             trace("self update");
-            manager.self_update();
+            manager.selfUpdate();
         }
         else 
         {
@@ -74,23 +74,13 @@ import sublime.WindowCommand;
             if (manager.available().exists(lib)) 
             {
                 trace("remove " + lib);
-                manager.remove_lib(lib);
+                manager.removeLib(lib);
             }
             else 
             {
                 trace("install " + lib);
-                manager.install_lib(lib);
+                manager.installLib(lib);
             }
         }
     }
 }
-/*
-import sublime, sublime_plugin
-import functools
-
-from haxe import project as hxproject
-from haxe.trace import trace
-
-
-
-*/

@@ -1,8 +1,10 @@
 package hxsublime.build;
 
+import hxsublime.build.Build;
 import hxsublime.build.HxmlBuild;
 import hxsublime.Config;
 import hxsublime.Config.Target;
+import hxsublime.macros.LazyFunctionSupport;
 import hxsublime.project.Project;
 import hxsublime.tools.HxSrcTools.HaxeType;
 import python.lib.os.Path;
@@ -15,12 +17,12 @@ using StringTools;
 
 using python.lib.ArrayTools;
 
-class NmeBuild {
+class NmeBuild implements Build implements LazyFunctionSupport {
 
 	
 	var _title : String;
 	var _target:Target;
-	var _hxml_build : HxmlBuild;
+	var _hxmlBuild : HxmlBuild;
 
 	public var nmml : String;
 	public var project : Project;
@@ -30,16 +32,16 @@ class NmeBuild {
 		this._title = title;
 		this._target = target;
 		this.nmml = nmml;
-		this._hxml_build = cb;
+		this._hxmlBuild = cb;
 		this.project = project;
 	}
 
 	public function setHxml (hxml:String) {
-		this.hxml_build().setHxml(hxml);
+		this.hxmlBuild().setHxml(hxml);
 	}
 
-	public function make_hxml()  {
-		return this.hxml_build().make_hxml();
+	public function makeHxml()  {
+		return this.hxmlBuild().makeHxml();
 	}
 
 	@property
@@ -49,7 +51,7 @@ class NmeBuild {
 	}
 
 	@property
-	public function build_file()
+	public function buildFile()
 	{
 		return this.nmml;
 	}
@@ -66,29 +68,28 @@ class NmeBuild {
 		return this._target.plattform;
 	}
 
-	public function _get_hxml_build_with_nme_display()
+	function getHxmlBuildWithNmeDisplay()
 	{
 		var view = Sublime.active_window().active_view();
-		var display_cmd = this.get_build_command(this.project, view).copy();
+		var display_cmd = this.getBuildCommand(this.project, view).copy();
 		display_cmd.push("display");
-		//from haxe.build.tools import create_haxe_build_from_nmml
-		return Tools.create_haxe_build_from_nmml(this.project, this._target, this.nmml, display_cmd);
+		
+		return Tools.createHaxeBuildFromNmml(this.project, this._target, this.nmml, display_cmd);
 	}
 
-	@property
-	public function hxml_build ()
+	
+	public function hxmlBuild ()
 	{
-		trace("create hxml build");
-		if (this._hxml_build == null) 
+		
+		if (this._hxmlBuild == null) 
 		{
-			this._hxml_build = this._get_hxml_build_with_nme_display();
+			this._hxmlBuild = this.getHxmlBuildWithNmeDisplay();
 		}
 
-		return this._hxml_build;
-	
+		return this._hxmlBuild;
 	}
 
-	public function to_string() 
+	public function toString() 
 	{
 		var title = this.title();
 		var target = this.target().name;
@@ -96,12 +97,12 @@ class NmeBuild {
 		
 	}
 
-	public function set_std_bundle(std_bundle)
+	public function setStdBundle(std_bundle)
 	{
-		this.hxml_build().set_std_bundle(std_bundle);
+		this.hxmlBuild().setStdBundle(std_bundle);
 	}
 
-	public function _filter_platform_specific(packs_or_classes:Array<String>)
+	function _filter_platform_specific(packs_or_classes:Array<String>)
 	{
 	 	var res = [];
 	 	for (c in packs_or_classes) {
@@ -111,36 +112,36 @@ class NmeBuild {
 	 	}
 	 	return res;
 	}
-	public function get_types()
+	public function getTypes()
 	{
-		var bundle = this.hxml_build().get_types();
+		var bundle = this.hxmlBuild().getTypes();
 		return bundle;
 	}
 
 	@property
-	public function std_bundle()
+	public function stdBundle()
 	{
-		return this.hxml_build().std_bundle();
+		return this.hxmlBuild().stdBundle();
 	}
 
-	public function add_arg(arg)
+	public function addArg(arg)
 	{
-		this.hxml_build().add_arg(arg);
+		this.hxmlBuild().addArg(arg);
 	}
 
 	public function copy ()
 	{
-		var hxml_copy = if (this._hxml_build != null) this.hxml_build().copy() else null;
+		var hxmlCopy = if (this._hxmlBuild != null) this.hxmlBuild().copy() else null;
 
-		return new NmeBuild(this.project, this.title(), this.nmml, this._target, hxml_copy);
+		return new NmeBuild(this.project, this.title(), this.nmml, this._target, hxmlCopy);
 	}
 
-	public function get_relative_path(file:String)
+	public function getRelativePath(file:String)
 	{
-		return this.hxml_build().get_relative_path(file);
+		return this.hxmlBuild().getRelativePath(file);
 	}
 
-	public function get_build_folder()
+	public function getBuildFolder()
 	{
 		var r = null;
 		if (this.nmml != null) 
@@ -152,69 +153,70 @@ class NmeBuild {
 		return r;
 	}
 
-	public function set_auto_completion(display:String, macro_completion = false, no_output = true)
+	public function setAutoCompletion(display:String, macro_completion = false, no_output = true)
 	{
-		this.hxml_build().set_auto_completion(display, macro_completion, no_output);
+		this.hxmlBuild().setAutoCompletion(display, macro_completion, no_output);
 	}
 
-	public function set_times()
+	public function setTimes()
 	{
-		this.hxml_build().set_times();
+		this.hxmlBuild().setTimes();
 	}
 
-	public function add_define (define:String)
+	public function addDefine (define:String)
 	{
-		this.hxml_build().add_define(define);
+		this.hxmlBuild().addDefine(define);
 	}
 
-	public function add_classpath(cp:String)
+	public function addClasspath(cp:String)
 	{
-		this.hxml_build().add_classpath(cp);
+		this.hxmlBuild().addClasspath(cp);
 	}
 
 	public function run(project:Project, view:View, async:Bool, on_result:String->String->Void, server_mode:Null<Bool> = null)
 	{
-		this.hxml_build().run(project, view, async, on_result, server_mode);
+		this.hxmlBuild().run(project, view, async, on_result, server_mode);
 	}
 
-	public function _get_run_exec(project:Project, view:View)
+	function getExecutable(project:Project, view:View)
 	{
-		return project.nme_exec(view);
+		return project.nmeExec(view);
 	}
 
-	public function get_build_command(project:Project, view:View)
+	function getBuildCommand(project:Project, view:View)
 	{
-		return this._get_run_exec(project, view).copy();
+		return this.getExecutable(project, view).copy();
 	}
 
-	public function escape_cmd(cmd:Array<String>) {
-		return this.hxml_build().escape_cmd(cmd);
-	}
-
-	public function prepare_check_cmd(project:Project, server_mode:Bool, view:View)
+	public function escapeCmd(cmd:Array<String>) 
 	{
-		var r = this.prepare_build_cmd(project, server_mode, view);
+		return this.hxmlBuild().escapeCmd(cmd);
+	}
+
+	public function prepareCheckCmd(project:Project, server_mode:Bool, view:View)
+	{
+		var r = this.prepareBuildCmd(project, server_mode, view);
 		var cmd = r._1, folder = r._2;
 		cmd.push("--no-output");
 		return Tup2.create(cmd, folder);
 	}
 
-	public function prepare_build_cmd(project:Project, server_mode:Bool, view:View)
+	public function prepareBuildCmd(project:Project, server_mode:Bool, view:View)
 	{
-		return this._prepare_cmd(project, server_mode, view, "build");
+		return prepareCmd(project, server_mode, view, "build");
 	}
 
-	public function prepare_run_cmd (project:Project, server_mode:Bool, view:View)
+	public function prepareRunCmd (project:Project, server_mode:Bool, view:View)
 	{
-		return this._prepare_cmd(project, server_mode, view, "test");
+		return prepareCmd(project, server_mode, view, "test");
 	}
 
-	public function _prepare_cmd(project:Project, server_mode:Bool, view:View, command:String)
+	function prepareCmd(project:Project, server_mode:Bool, view:View, command:String)
 	{
-		var cmd = this.get_build_command(project, view);
+		var cmd = getBuildCommand(project, view);
 
 		cmd.push(command);
-		cmd.push(this.build_file());
+		cmd.push(this.buildFile());
 		cmd.push(this.target().plattform);
 		cmd.extend(this.target().args);
 
@@ -223,64 +225,44 @@ class NmeBuild {
 			cmd.extend(["--connect", Std.string(project.server.get_server_port())]);
 		}
 
-		return Tup2.create(cmd, this.get_build_folder());
+		return Tup2.create(cmd, this.getBuildFolder());
 	}
 
-	public function _prepare_run(project:Project, view, server_mode)
-	{
-		return this.hxml_build()._prepare_run(project, view, server_mode);
-	}
-
-	@property
+	
 	public function classpaths ()
 	{
-		return this.hxml_build().classpaths();
+		return this.hxmlBuild().classpaths();
 	}
 
-	@property
+	
 	public function args ()
 	{
-		return this.hxml_build().args();
+		return this.hxmlBuild().args();
 	}
 
-	public function is_type_available (type:HaxeType)
+	public function isTypeAvailable (type:HaxeType)
 	{
-		var pack = type.toplevel_pack();
-		return pack == null || this.is_pack_available(pack);
+		var pack = type.toplevelPack();
+		return pack == null || this.isPackAvailable(pack);
 	}
 
-	public function is_pack_available (pack:String)
+	public function isPackAvailable (pack:String)
 	{
-
 		if (pack == "") 
 		{
 			return true;
 		}
 
 		var pack = pack.split(".")[0];
-		var target = this.hxml_build().target;
+		var target = this.hxmlBuild().target;
 		
-		var tp = Config.target_packages.copy();
-		tp.extend(["native", "browser", "nme"]);
+		var tp = Config.target_packages.concat(["native", "browser", "nme"]);
 
-		var no_target_pack = !Lambda.has(tp, pack);
-		var is_nme_pack = pack == "nme";
+		var noTargetPack = !Lambda.has(tp, pack);
+		var isNmePack = pack == "nme";
 
-		var available = target == null || no_target_pack || is_nme_pack;
+		var available = target == null || noTargetPack || isNmePack;
 
 		return available;
 	}
 }
-
-/*
-
-import os
-import sublime 
-from haxe import config
-
-from haxe.log import log
-
-from haxe.tools.stringtools import encode_utf8
-
-
-*/

@@ -9,19 +9,19 @@ import sublime.Window;
 
 class TabPanel {
 	
-	public var win:Window;
-	public var output_view:View;
-	public var output_view_id:Int;
-	public var all:Array<String>;
-	public var panel_name:String;
-	public var panel_syntax:String;
+	var win:Window;
+	var all:Array<String>;
+	var panel_name:String;
+	var panel_syntax:String;
 
+	public var outputView:View;
+	public var outputViewId:Int;
 
 	public function new (win:Window, panel_name = "Haxe Output", panel_syntax = "Packages/Haxe/Haxe.tmLanguage") 
 	{
 		this.win = win;
-		this.output_view = null;
-		this.output_view_id = null;
+		this.outputView = null;
+		this.outputViewId = null;
 		this.all = [];
 		this.panel_name = panel_name;
 		this.panel_syntax = panel_syntax;
@@ -32,32 +32,34 @@ class TabPanel {
 		
 	}
 
-	public function write (msg:String, scope:String = null, show_timestamp=true):Void {
+	public function write (msg:String, scope:String = null, showTimestamp=true):Void 
+	{
 		
 		function f () 
 		{
 			var max = Std.int(Math.min(this.all.length, 300));
 			this.all = [for (i in 0...max) this.all[i]];
 			
-			var msg1 = if (show_timestamp) Tools.timestamp_msg(msg) else msg;
+			var msg1 = if (showTimestamp) Tools.timestampMsg(msg) else msg;
 			
-			if (Tools.valid_message(msg)) {
+			if (Tools.isValidMessage(msg)) 
+			{
 				this.all = [msg1].concat(all);
 
-				var v = this.output_view;
+				var v = this.outputView;
 
 				if (v == null) 
 				{
-					v = ViewTools.find_view_by_name(this.panel_name);
+					v = ViewTools.findViewByName(this.panel_name);
 					
 					if (v == null) 
 					{
-						v = make_tab_panel(this.win, this.panel_name, this.panel_syntax);
+						v = makeTabPanel(this.win, this.panel_name, this.panel_syntax);
 						ViewTools.replaceContent(v, this.all.join(""));
 					}
 
-					this.output_view = v;
-					this.output_view_id = v.id();
+					this.outputView = v;
+					this.outputViewId = v.id();
 				}
 
 				if (v != null) 
@@ -75,7 +77,7 @@ class TabPanel {
 	}
 
 	
-	public function writeln (msg:String, scope:String = null, show_timestamp=true):Void
+	public function writeln (msg:String, scope:String = null, showTimestamp=true):Void
 	{
 		this.write(msg + "\n");
 	}
@@ -84,24 +86,23 @@ class TabPanel {
 	public function status (title:String, msg:String):Void
 	{
 		
-		if (Tools.valid_message(msg)) {
+		if (Tools.isValidMessage(msg)) {
 			this.writeln(title + ": " + msg);
 		}
 	}
 
-	public static function make_tab_panel (win:Window, name:String, syntax:String) 
+	static function makeTabPanel (win:Window, name:String, syntax:String) 
 	{
 		var active = win.active_view();
 		var v = win.new_file();
 		v.set_name(name);
-		//v.set_read_only(true)
 		v.settings().set('word_wrap', true);
 		
-		v.settings().set("result_file_regex", Tools.haxe_file_regex());
-		//v.settings().set("result_line_regex", _haxe_file_regex())
+		v.settings().set("result_file_regex", Tools.haxeFileRegex());
 		v.settings().set("haxe_panel_win_id", win.id());
 		v.set_scratch(true);
 		v.set_syntax_file(syntax);
+
 		// always create the output panels on the last group (nicer)
 		var last_group = win.num_groups()-1;
 		win.set_view_index(v, last_group, 0);
@@ -110,19 +111,3 @@ class TabPanel {
 		return v;
 	}
 }
-
-/*
-
-import sublime
-
-from haxe.tools import viewtools
-
-from haxe.panel import tools as paneltools
-
-from haxe.tools.stringtools import encode_utf8,to_unicode, st2_encode_utf8, st3_encode_utf8
-
-
-
-
-
-*/

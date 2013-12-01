@@ -1,6 +1,6 @@
 package hxsublime.commands;
 
-import hxsublime.project.Base.Projects;
+import hxsublime.project.Projects;
 import hxsublime.Settings;
 import hxsublime.tools.ViewTools;
 import python.lib.Types.KwArgs;
@@ -20,7 +20,7 @@ using StringTools;
         trace("run HaxeSaveAllAndRunCommand");
         var view = this.view;
         view.window().run_command("save_all");
-        Projects.current_project(this.view).run_build( view );
+        Projects.currentProject(this.view).runBuild( view );
     }
 }
 
@@ -32,7 +32,7 @@ using StringTools;
         trace("run HaxeSaveAllAndCheckCommand");
         var view = this.view;
         view.window().run_command("save_all");
-        Projects.current_project(this.view).check_build( view );
+        Projects.currentProject(this.view).checkBuild( view );
     }
 }
 
@@ -43,7 +43,7 @@ using StringTools;
         trace("run HaxeSaveAllAndBuildCommand");
         var view = this.view;
         view.window().run_command("save_all");
-        Projects.current_project(this.view).just_build( view );
+        Projects.currentProject(this.view).justBuild( view );
     }
 }
 
@@ -53,16 +53,16 @@ using StringTools;
     {
         var view = this.view;
         trace("run HaxeRunBuildCommand");
-        var project = Projects.current_project(this.view);
+        var project = Projects.currentProject(this.view);
 
-        if (project.has_build()) 
+        if (project.hasBuild()) 
         {
-            project.run_build( view );
+            project.runBuild( view );
         }
         else 
         {
             trace("no builds selected");
-            project.extract_build_args(view, true);
+            project.extractBuildArgs(view, true);
         }
     }
 }
@@ -73,7 +73,7 @@ using StringTools;
     {
         trace("run HaxeSelectBuildCommand");
         var view = this.view;
-        Projects.current_project(this.view).select_build( view );
+        Projects.currentProject(this.view).selectBuild( view );
     }
 }
 
@@ -85,13 +85,13 @@ using StringTools;
         {
             if (ViewTools.isSupported(view) || view.file_name().endsWith(".erazor.html"))
             {
-                if (Settings.check_on_save()) 
+                if (Settings.checkOnSave()) 
                 {
-                    var project = Projects.current_project(view);
+                    var project = Projects.currentProject(view);
                 
-                    if (project.has_build())
+                    if (project.hasBuild())
                     {
-                        project.check_build( view );
+                        project.checkBuild( view );
                     }
                 }
             }

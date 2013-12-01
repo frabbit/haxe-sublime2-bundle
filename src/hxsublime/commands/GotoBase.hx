@@ -1,7 +1,7 @@
 package hxsublime.commands;
 
 import haxe.ds.StringMap;
-import hxsublime.project.Base.Projects;
+import hxsublime.project.Projects;
 import hxsublime.tools.HxSrcTools.HaxeType;
 import hxsublime.tools.ViewTools;
 import python.lib.Types.Tup2;
@@ -25,21 +25,21 @@ private class State
 {
     var selecting_build:Bool = false;
 
-    public function get_entries (types:StringMap<HaxeType>):Array<Array<String>>
+    function getEntries (types:StringMap<HaxeType>):Array<Array<String>>
     {
         return throw "abstract method";
     }
-    public function get_data (types:StringMap<HaxeType>):Array<Tup2<String, T>>
-    {
-        return throw "abstract method";
-    }
-
-    public function get_file(data_entry:T):String
+    function getData (types:StringMap<HaxeType>):Array<Tup2<String, T>>
     {
         return throw "abstract method";
     }
 
-    public function get_src_pos(data_entry:T):Int
+    function getFile(data_entry:T):String
+    {
+        return throw "abstract method";
+    }
+
+    function getSrcPos(data_entry:T):Int
     {
         return throw "abstract method";
     }
@@ -52,42 +52,42 @@ private class State
 
         var view = this.view;
 
-        var project = Projects.current_project(view);
+        var project = Projects.currentProject(view);
         
 
-        if (!project.has_build()) 
+        if (!project.hasBuild()) 
         {
-            project.extract_build_args(view, false);
+            project.extractBuildArgs(view, false);
         }
 
-        if (!project.has_build()) 
+        if (!project.hasBuild()) 
         {
-            project.extract_build_args(view, true);
+            project.extractBuildArgs(view, true);
             return;
         }
 
-        var build = project.get_build(view);
+        var build = project.getBuild(view);
 
-        var bundle = build.get_types().merge(build.std_bundle());
+        var bundle = build.getTypes().merge(build.stdBundle());
 
 
 
-        var bundle_types = bundle.all_types_and_enum_constructors_with_info();
+        var bundle_types = bundle.allTypesAndEnumConstructorsWithInfo();
 
         var filtered_types = new StringMap();
         
         for (k in bundle_types.keys())
         {
             var t = bundle_types.get(k);
-            if (build.is_type_available(t)) 
+            if (build.isTypeAvailable(t)) 
             {
                 filtered_types.set(k, t);
             }
         }
 
 
-        var function_list = this.get_entries(filtered_types);
-        var function_list_data = this.get_data(filtered_types);
+        var function_list = this.getEntries(filtered_types);
+        var function_list_data = this.getData(filtered_types);
         
 
         trace(Std.string(function_list));
@@ -116,7 +116,7 @@ private class State
             State._init_text = "";
         }
         
-        function on_selected (i:Int)
+        function onSelected (i:Int)
         {
             
             State._is_open = false;
@@ -126,9 +126,9 @@ private class State
                 var selected_type = function_list_data[i];
                 trace("selected field: " + Std.string(selected_type._1));
                 
-                var src_pos = this.get_src_pos(selected_type._2);
+                var src_pos = this.getSrcPos(selected_type._2);
 
-                var goto_file = this.get_file(selected_type._2);
+                var goto_file = this.getFile(selected_type._2);
 
                 State._find_decl_file = goto_file;
 
@@ -153,7 +153,7 @@ private class State
             }
         }
         State._is_open = true;    
-        win.show_quick_panel( function_list , on_selected  , Sublime.MONOSPACE_FONT );
+        win.show_quick_panel( function_list , onSelected  , Sublime.MONOSPACE_FONT );
     }
 
 
@@ -212,19 +212,3 @@ private class State
         }
     }
 }
-/*
-
-import sublime_plugin
-import sublime
-
-from haxe.trace import trace;
-from haxe import project as hxproject
-
-from haxe.tools import viewtools
-
-#shared between FindDelaration Command && Listener
-
-
-
-        
-*/

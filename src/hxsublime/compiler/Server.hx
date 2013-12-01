@@ -1,6 +1,6 @@
 package hxsublime.compiler;
 
-import hxsublime.panel.Base.Panels;
+import hxsublime.panel.Panels;
 import hxsublime.Plugin;
 import python.lib.Os;
 import python.lib.os.Path;
@@ -24,7 +24,7 @@ class Server
 
 	public function new (port:Int) {
 
-		this._use_wrapper = Settings.use_haxe_servermode_wrapper();
+		this._use_wrapper = Settings.useHaxeServermodeWrapper();
 		this._server_proc = null;
 		this._server_port = port;
 		this._orig_server_port = port;
@@ -164,7 +164,7 @@ class Server
 		
 		if (completeCallback != null) 
 		{
-			Panels.default_panel().writeln("stopping server on port: " + Std.string(old_port));
+			Panels.defaultPanel().writeln("stopping server on port: " + Std.string(old_port));
 			completeCallback();
 		}
 	}
@@ -173,25 +173,3 @@ class Server
 		this.stop();
 	}
 }
-
-
-/*
-import sublime
-import sys
-import os
-
-from subprocess import Popen, PIPE
-import time 
-from haxe.plugin import is_st3
-
-from haxe.plugin import STARTUP_INFO
-from haxe.log import log
-from haxe import plugin
-from haxe import panel as hxpanel
-from haxe import settings as hxsettings
-
-class Server ():
-	
-		
-		
-*/

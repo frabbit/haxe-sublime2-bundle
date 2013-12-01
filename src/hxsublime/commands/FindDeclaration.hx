@@ -1,9 +1,9 @@
 package hxsublime.commands;
 
 import hxsublime.build.Build;
-import hxsublime.panel.Base.Panels;
+import hxsublime.panel.Panels;
 import hxsublime.Plugin;
-import hxsublime.project.Base.Projects;
+import hxsublime.project.Projects;
 import hxsublime.project.Project;
 import hxsublime.Temp;
 import hxsublime.tools.HxSrcTools;
@@ -29,160 +29,156 @@ using python.lib.StringTools;
 {
     override public function run( edit:Edit, ?_:KwArgs ) 
     {
-
         this.run1(true);
     }
 
-    public function helper_method()
+    public function helperMethod()
     {
         return "hxsublime.FindDeclaration.__sublimeFindDecl";
     }
 
 
-    public function run1 (use_display:Bool, order:Int = 1)
+    public function run1 (useDisplay:Bool, order:Int = 1)
     {
         trace("run HaxeFindDeclarationCommand");
         var view = this.view;
 
-        var file_name = view.file_name();
-
-        if (file_name == null)
+        if (view.file_name() == null)
         {
             return;
         }
 
-        var project = Projects.current_project(view);
+        var project = Projects.currentProject(view);
         
 
-        if (!project.has_build())
+        if (!project.hasBuild())
         {
-            project.extract_build_args(view, false);
+            project.extractBuildArgs(view, false);
         }
 
-        if (!project.has_build())
+        if (!project.hasBuild())
         {
-            project.extract_build_args(view, true);
+            project.extractBuildArgs(view, true);
             return;
         }
 
 
 
-        var helper_method = this.helper_method();
+        var helperMethod = this.helperMethod();
         
         var src = ViewTools.getContent(view);
 
-        var file_name = Path.basename(view.file_name());
 
-        var package_match = Re.match(HxRegex.package_line, src);
+        var packageMatch = Re.match(HxRegex.package_line, src);
 
-        var using_pos = if (package_match == null) 0 else package_match.end(0);
+        var usingPos = if (packageMatch == null) 0 else packageMatch.end(0);
 
-        var using_insert = "using hxsublime.FindDeclaration;";
+        var usingInsert = "using hxsublime.FindDeclaration;";
 
-        var src_before_using = src.substring(0, using_pos);
-        var src_after_using = src.substr(using_pos);
+        var srcBeforeUsing = src.substring(0, usingPos);
+        //var src_after_using = src.substr(using_pos);
 
         
         var sel = view.sel()[0];
         var pos = sel.begin();
 
-        var expr_end = null;
-        var expr_start = null;
+        var exprEnd = null;
+        var exprStart = null;
 
         if (sel.end() == pos) 
         {
 
-            var r = Helper.get_word_at(view, src, pos);
+            var r = Helper.getWordAt(view, src, pos);
             var word_str = r._1, word_start = r._2, word_end = r._3;
 
             var chars = ["{", "+", "-", "(", "[", "*", "/", "=", ";", ":"];
             var res = HxSrcTools.reverse_search_next_char_on_same_nesting_level(src, chars, word_end-1);
             
-            res = HxSrcTools.skip_whitespace_or_comments(src, res._1+1);
+            res = HxSrcTools.skipWhitespaceOrComments(src, res._1+1);
 
 
 
-            expr_end = word_end;
-            expr_start = res._1;
+            exprEnd = word_end;
+            exprStart = res._1;
         }
         else 
         {
-            expr_start = pos;
-            expr_end = sel.end();
+            exprStart = pos;
+            exprEnd = sel.end();
         }
         
-        var src_before_expr = src.substring(using_pos,expr_start);
+        var srcBeforeExpr = src.substring(usingPos,exprStart);
 
-        var src_after_expr = src.substr(expr_end);
+        var srcAfterExpr = src.substr(exprEnd);
 
-        var expr_string = src.substring(expr_start,expr_end);
-
-
-        var display_str = if (use_display) ".|" else "";
-
-        var insert_before = helper_method + "(";
+        var exprString = src.substring(exprStart,exprEnd);
 
 
-        var order_str = Std.string(order);
-        var insert_after = ", " + order_str + ")" + display_str;
+        var displayStr = if (useDisplay) ".|" else "";
+
+        var insertBefore = helperMethod + "(";
 
 
-        var new_src = src_before_using + using_insert + src_before_expr + insert_before +  expr_string + insert_after + src_after_expr;
+        var orderStr = Std.string(order);
+        var insertAfter = ", " + orderStr + ")" + displayStr;
+
         
-        //trace(new_src);
+        var newSrc = srcBeforeUsing + usingInsert + srcBeforeExpr + insertBefore +  exprString + insertAfter + srcAfterExpr;
+        
+        //trace(newSrc);
 
-       var r = Helper.prepare_build(view, project, use_display, new_src);
-        var build = r._1, temp_path = r._2, temp_file = r._3;
+        var r = Helper.prepareBuild(view, project, useDisplay, newSrc);
+        var build = r._1, temp_path = r._2, tempFile = r._3;
 
         function cb (out:String, err:String)
         {
-            Temp.remove_path(temp_path);
+            Temp.removePath(temp_path);
 
-            var file_pos = Re.compile("\\|\\|\\|\\|\\|([^|]+)\\|\\|\\|\\|\\|", Re.I);
+            var filePos = Re.compile("\\|\\|\\|\\|\\|([^|]+)\\|\\|\\|\\|\\|", Re.I);
 
-            var res = Re.search(file_pos, out);
+            var res = Re.search(filePos, out);
             if (res != null) 
             {
                 //we've got a proper response
                 var json_str = res.group(1);
-                var json_res = Json.loads(json_str);
+                var jsonResult = Json.loads(json_str);
 
-                if (json_res.hasKey("error")) 
+                if (jsonResult.hasKey("error")) 
                 {
-                    var error = json_res.get("error", null);
+                    var error = jsonResult.get("error", null);
                     trace("nothing found (1), cannot find declaration");
-                    if (order == 1 && use_display)
+                    if (order == 1 && useDisplay)
                     {
                         this.run1(true, 2);   
                     }
-                    else if (order == 2 && use_display)
+                    else if (order == 2 && useDisplay)
                     {
                         this.run1(true, 3);
                     }
                 }    
                 else
                 {
-                    this.handle_successfull_result(view, json_res, using_insert, insert_before, insert_after, expr_end, build, temp_path, temp_file);
+                    this.handleSuccessfulResult(view, jsonResult, usingInsert, insertBefore, insertAfter, exprEnd, build, temp_path, tempFile);
                 }
             }
             else
             {
-                if (order == 1 && use_display)
+                if (order == 1 && useDisplay)
                 {
                     this.run1(true, 2);
                 }
-                else if (order == 2 && use_display) 
+                else if (order == 2 && useDisplay) 
                 {
                     this.run1(true, 3);
                 }
-                else if (use_display)
+                else if (useDisplay)
                 {
                     trace("nothing found yet (2), try again without display (workaround)");
                     this.run1(false);
                 }
                 else 
                 {
-                    Panels.default_panel().writeln("Cannot find declaration for expression " + expr_string.strip());
+                    Panels.defaultPanel().writeln("Cannot find declaration for expression " + exprString.strip());
                     trace("nothing found (3), cannot find declaration");
                 }
             }
@@ -191,34 +187,30 @@ using python.lib.StringTools;
         build.run(project, view, false, cb);
     }
 
-    public function handle_successfull_result(view:View, json_res:Dict<String, Dynamic>, using_insert:String, insert_before:String, insert_after:String, expr_end:Int, build:Build, temp_path:String, temp_file:String)
+    public function handleSuccessfulResult(view:View, jsonResult:Dict<String, Dynamic>, usingInsert:String, insertBefore:String, insertAfter:String, exprEnd:Int, build:Build, temp_path:String, tempFile:String)
     {
-        var file = json_res.get("file", null);
-        var min = json_res.get("min", 0);
-        var max = json_res.get("max", 0);
+        var file = jsonResult.get("file", null);
+        var min = jsonResult.get("min", 0);
+        var max = jsonResult.get("max", 0);
 
-        // abs_path = abs_path.replace(build.get_relative_path(temp_file), build.get_relative_path(view.file_name())
-        
-        var abs_path = PathTools.joinNorm(build.get_build_folder(), file);
-        var abs_path_temp = PathTools.joinNorm(build.get_build_folder(), build.get_relative_path(Path.join(temp_path, temp_file)));
+        var absPath = PathTools.joinNorm(build.getBuildFolder(), file);
 
-
-        if (abs_path == temp_file)
+        if (absPath == tempFile)
         {
-            if (min > expr_end)
+            if (min > exprEnd)
             {
-                min -= insert_after.length;
-                min -= insert_before.length;
+                min -= insertAfter.length;
+                min -= insertBefore.length;
             }
-            min -= using_insert.length;
+            min -= usingInsert.length;
             // we have manually stored a temp file with only \n line endings
             // so we don't have to adjust the real file position and the sublime
             // text position
         }
         else 
         {
-            var f = Codecs.open(abs_path, "r", "utf-8");
-            var real_source = f.read();
+            var f = Codecs.open(absPath, "r", "utf-8");
+            var realSrc = f.read();
             f.close();
             // line endings could be \r\n, but sublime text has only \n after
             // opening a file, so we have to calculate the offset betweet the
@@ -227,7 +219,7 @@ using python.lib.StringTools;
             var offset = 0;
             for (i in 0...min) 
             {
-                if (real_source.charAt(i) == "\r") 
+                if (realSrc.charAt(i) == "\r") 
                 {
                     offset += 1;
                 }
@@ -237,77 +229,75 @@ using python.lib.StringTools;
             min -= offset;
         }
 
-        if (abs_path == temp_file)
+        if (absPath == tempFile)
         {
             // file is active view
-            //abs_path = view.file_name();
-            var target_view = view;
+            //absPath = view.file_name();
+            var targetView = view;
 
 
             trace("line ending: " + Std.string(view.settings().get("line_ending")));
 
-            target_view.sel().clear();
-            target_view.sel().add(new Region(min));
+            targetView.sel().clear();
+            targetView.sel().add(new Region(min));
 
-            target_view.show(new Region(min));
+            targetView.show(new Region(min));
         }
         else 
         {
             //global find_decl_pos, find_decl_file
-            State.find_decl_file = abs_path;
-            State.find_decl_pos = min;
+            State.findDeclFile = absPath;
+            State.findDeclPos = min;
             // open file and listen => HaxeFindDeclarationListener
-            view.window().open_file(abs_path);
+            view.window().open_file(absPath);
         }
     }
 }
 //shared between FindDelaration Command and Listener
 private class State 
 {
-    public static var find_decl_file:Null<String> = null;
-    public static var find_decl_pos:Null<Int> = null;
+    public static var findDeclFile:Null<String> = null;
+    public static var findDeclPos:Null<Int> = null;
 }
 
 private class Helper 
 {
-
-
     static var plugin_path = Plugin.plugin_base_dir();
-    public static function get_word_at(view:View, src:String, pos:Int)
+
+    public static function getWordAt(view:View, src:String, pos:Int)
     {
         var word = view.word(pos);
 
-        var word_start = word.a;
-        var word_end = word.b;
+        var wordStart = word.a;
+        var wordEnd = word.b;
 
-        var word_str = src.substring(word_start,word_end);
+        var wordStr = src.substring(wordStart,wordEnd);
 
-        return Tup3.create(word_str, word_start, word_end);
+        return Tup3.create(wordStr, wordStart, wordEnd);
     }
 
-    public static function prepare_build(view:View, project:Project, use_display:Bool, new_src:String)
+    public static function prepareBuild(view:View, project:Project, useDisplay:Bool, newSrc:String)
     {
-        var build = project.get_build(view).copy();
-        build.add_arg(Tup2.create("-D", "no-inline"));
+        var build = project.getBuild(view).copy();
+        build.addArg(Tup2.create("-D", "no-inline"));
 
-        var r = Temp.create_temp_path_and_file(build, view.file_name(), new_src);
-        var temp_path = r._1, temp_file = r._2;
+        var r = Temp.createTempPathAndFile(build, view.file_name(), newSrc);
+        var tempPath = r._1, tempFile = r._2;
 
-        build.add_classpath(temp_path);
+        build.addClasspath(tempPath);
 
-        build.add_classpath(Path.join(plugin_path, "haxetools"));
+        build.addClasspath(Path.join(plugin_path, "haxetools"));
         
 
         trace(build.classpaths);
 
-        build.add_arg(Tup2.create("-dce", "no"));
+        build.addArg(Tup2.create("-dce", "no"));
 
-        if (use_display)
+        if (useDisplay)
         {
-            build.set_auto_completion(temp_file + "@0", false);
+            build.setAutoCompletion(tempFile + "@0", false);
         }
-
-        return Tup3.create(build, temp_path, temp_file);
+        return Tup3.create(build, tempPath, tempFile);
     }
 }
 
@@ -318,11 +308,11 @@ private class Helper
         //global find_decl_pos, find_decl_file
         if (view != null && view.file_name() != null) 
         {
-            if (view.file_name() == State.find_decl_file)
+            if (view.file_name() == State.findDeclFile)
             {
                 view.sel().clear();
 
-                var min = State.find_decl_pos;
+                var min = State.findDeclPos;
 
                 view.sel().add(new Region(min));
                 // move to line is delayed, seems to work better
@@ -333,42 +323,9 @@ private class Helper
                 }
                 Sublime.set_timeout(show, 70);
             }
-            State.find_decl_file = null;
-            State.find_decl_pos = null;
+            State.findDeclFile = null;
+            State.findDeclPos = null;
         }
     }
 }
 
-
-/*
-import sublime, sublime_plugin
-import os
-import re
-import json
-import codecs
-
-
-from haxe import temp as hxtemp
-from haxe import project as hxproject
-
-from haxe.plugin import plugin_base_dir
-
-from haxe.tools import viewtools
-from haxe.tools import pathtools
-from haxe.tools import 
-
-tools
-
-from haxe import panel
-
-from haxe.trace import trace
-
-
-
-# TODO cleanup this module
-
-
-
-
-
-*/

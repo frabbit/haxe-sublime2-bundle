@@ -953,10 +953,7 @@ def StringTools_statics_hex(n,digits = None):
 	
 StringTools.hex = StringTools_statics_hex
 def StringTools_statics_fastCodeAt(s,index):
-	if index < __builtin__.len(s):
-		return ord(s[index])
-	else:
-		return -1
+	return ord(s[index])
 StringTools.fastCodeAt = StringTools_statics_fastCodeAt
 def StringTools_statics_isEof(c):
 	return c == -1
@@ -2408,9 +2405,7 @@ class hxsublime_HaxeImportGenerator:
 
 
 	def __init__(self,panel,view):
-		haxe_Log.trace("construct", _Hx_AnonObject(fileName = "Codegen.hx" ,lineNumber = 36 ,className = "hxsublime.HaxeImportGenerator" ,methodName = "new" ))
 		self.view = view
-		haxe_Log.trace(Std.string(self.view), _Hx_AnonObject(fileName = "Codegen.hx" ,lineNumber = 38 ,className = "hxsublime.HaxeImportGenerator" ,methodName = "new" ))
 		self.panel = panel
 		self.start = None
 		self.size = None
@@ -2421,7 +2416,7 @@ class hxsublime_HaxeImportGenerator:
 	# var size
 	# var cname
 	# var view
-	def _get_end(self,src,offset):
+	def getEnd(self,src,offset):
 		end = __builtin__.len(src)
 		while offset < end:
 			c = src[offset]
@@ -2433,7 +2428,7 @@ class hxsublime_HaxeImportGenerator:
 		return offset - 1
 	
 
-	def _get_start(self,src,offset):
+	def getStart(self,src,offset):
 		found_word = 0
 		offset = offset - 1
 		while offset > 0:
@@ -2453,16 +2448,16 @@ class hxsublime_HaxeImportGenerator:
 		return offset + 2
 	
 
-	def _is_membername(self,token):
+	def isMemberName(self,token):
 		return token[0] >= "Z" or token == token.upper()
 
-	def _get_classname(self,view,src):
+	def getClassName(self,view,src):
 		loc = view.sel()[0]
 		end = __builtin__.max(loc.a, loc.b)
 		self.size = loc.size()
 		if self.size == 0:
-			end = self._get_end(src, end)
-			self.start = self._get_start(src, end)
+			end = self.getEnd(src, end)
+			self.start = self.getStart(src, end)
 			self.size = end - self.start
 		
 		else:
@@ -2470,7 +2465,7 @@ class hxsublime_HaxeImportGenerator:
 		s = view.substr(sublime_Region(self.start, end))
 		self.cname = s.rpartition(".")
 		
-		while not (self.cname[0] == "") and self._is_membername(self.cname[2]):
+		while not (self.cname[0] == "") and self.isMemberName(self.cname[2]):
 			def _hx_local_0():
 				_this = self.cname[2]
 				return __builtin__.len(_this)
@@ -2483,7 +2478,7 @@ class hxsublime_HaxeImportGenerator:
 		return self.cname
 	
 
-	def _compact_classname(self,edit,view):
+	def compactClassName(self,edit,view):
 		view.replace(edit, sublime_Region(self.start, self.start + self.size), self.cname[2])
 		view.sel().clear()
 		loc = None
@@ -2495,14 +2490,14 @@ class hxsublime_HaxeImportGenerator:
 		view.sel().add(sublime_Region(loc, loc))
 	
 
-	def _get_indent(self,src,index):
+	def getIndent(self,src,index):
 		if src[index] == "\n":
 			return index + 1
 		
 		return index
 	
 
-	def _insert_statement(self,edit,view,src,statement,regex):
+	def insertStatement(self,edit,view,src,statement,regex):
 		cname = self.cname[0] + self.cname[1] + self.cname[2]
 		clow = cname.lower()
 		last = None
@@ -2519,7 +2514,7 @@ class hxsublime_HaxeImportGenerator:
 			
 			if clow < _hx_local_1():
 				ins = python_lib_StringTools.format("{0}{1} {2};\n", [imp.group(1), statement, cname])
-				view.insert(edit, self._get_indent(src, imp.start(0)), ins)
+				view.insert(edit, self.getIndent(src, imp.start(0)), ins)
 				return
 			
 			
@@ -2542,17 +2537,17 @@ class hxsublime_HaxeImportGenerator:
 		
 	
 
-	def generate_statement(self,edit,statement,regex):
+	def generateStatement(self,edit,statement,regex):
 		view = self.view
 		src = view.substr(sublime_Region(0, view.size()))
-		cname = self._get_classname(view, src)
+		cname = self.getClassName(view, src)
 		if cname[1] == "" and statement == "import":
 			sublime_Sublime.status_message("Nothing to " + statement)
 			self.panel.writeln("Nothing to " + statement)
 			return
 		
 		
-		self._compact_classname(edit, view)
+		self.compactClassName(edit, view)
 		fcname = cname[0] + cname[1] + cname[2]
 		if python_lib_Re.search(statement + "\\s+${fcname};", src) is not None:
 			info = None
@@ -2565,23 +2560,23 @@ class hxsublime_HaxeImportGenerator:
 			return
 		
 		
-		self._insert_statement(edit, view, src, statement, regex)
+		self.insertStatement(edit, view, src, statement, regex)
 	
 
 
 
 
 
-def HaxeImportGenerator_statics_generate_using(view,edit):
-	p = hxsublime_HaxeImportGenerator(hxsublime_panel_Panels.default_panel(), view)
-	return p.generate_statement(edit, "using", hxsublime_tools_Regex.using_line)
+def HaxeImportGenerator_statics_generateUsing(view,edit):
+	p = hxsublime_HaxeImportGenerator(hxsublime_panel_Panels.defaultPanel(), view)
+	return p.generateStatement(edit, "using", hxsublime_tools_Regex.using_line)
 	
-hxsublime_HaxeImportGenerator.generate_using = HaxeImportGenerator_statics_generate_using
-def HaxeImportGenerator_statics_generate_import(view,edit):
-	p = hxsublime_HaxeImportGenerator(hxsublime_panel_Panels.default_panel(), view)
-	return p.generate_statement(edit, "import", hxsublime_tools_Regex.import_line)
+hxsublime_HaxeImportGenerator.generateUsing = HaxeImportGenerator_statics_generateUsing
+def HaxeImportGenerator_statics_generateImport(view,edit):
+	p = hxsublime_HaxeImportGenerator(hxsublime_panel_Panels.defaultPanel(), view)
+	return p.generateStatement(edit, "import", hxsublime_tools_Regex.import_line)
 	
-hxsublime_HaxeImportGenerator.generate_import = HaxeImportGenerator_statics_generate_import
+hxsublime_HaxeImportGenerator.generateImport = HaxeImportGenerator_statics_generateImport
 
 
 hxsublime_HaxeImportGenerator._hx_class = hxsublime_HaxeImportGenerator
@@ -2589,8 +2584,8 @@ hxsublime_HaxeImportGenerator._hx_class_name = "hxsublime.HaxeImportGenerator"
 _hx_classes['hxsublime.HaxeImportGenerator'] = hxsublime_HaxeImportGenerator
 hxsublime_HaxeImportGenerator._hx_fields = ["panel","start","size","cname","view"]
 hxsublime_HaxeImportGenerator._hx_props = []
-hxsublime_HaxeImportGenerator._hx_methods = ["_get_end","_get_start","_is_membername","_get_classname","_compact_classname","_get_indent","_insert_statement","generate_statement"]
-hxsublime_HaxeImportGenerator._hx_statics = ["generate_using","generate_import"]
+hxsublime_HaxeImportGenerator._hx_methods = ["getEnd","getStart","isMemberName","getClassName","compactClassName","getIndent","insertStatement","generateStatement"]
+hxsublime_HaxeImportGenerator._hx_statics = ["generateUsing","generateImport"]
 hxsublime_HaxeImportGenerator._hx_interfaces = []
 
 # print hxsublime.Config.NmeTarget
@@ -2796,7 +2791,7 @@ class hxsublime_Execute:
 
 
 
-def Execute_statics_run_cmd_async(args,callback,input = None,cwd = None,env = None):
+def Execute_statics_runCmdAsync(args,callback,input = None,cwd = None,env = None):
 	if input is None:
 		input = None
 	
@@ -2807,7 +2802,7 @@ def Execute_statics_run_cmd_async(args,callback,input = None,cwd = None,env = No
 		env = None
 	
 	def _hx_local_2():
-		r = hxsublime_Execute.run_cmd(args, input, cwd, env)
+		r = hxsublime_Execute.runCmd(args, input, cwd, env)
 		out = r[0]
 		err = r[1]
 		def _hx_local_0():
@@ -2820,11 +2815,11 @@ def Execute_statics_run_cmd_async(args,callback,input = None,cwd = None,env = No
 		
 		sublime_Sublime.set_timeout(_hx_local_0(), 1)
 	
-	in_thread = _hx_local_2
-	python_lib_ThreadLowLevel.start_new_thread(in_thread, __builtin__.tuple())
+	inMainThread = _hx_local_2
+	python_lib_ThreadLowLevel.start_new_thread(inMainThread, __builtin__.tuple())
 	
-hxsublime_Execute.run_cmd_async = Execute_statics_run_cmd_async
-def Execute_statics_run_cmd(args,input = None,cwd = None,env = None):
+hxsublime_Execute.runCmdAsync = Execute_statics_runCmdAsync
+def Execute_statics_runCmd(args,input = None,cwd = None,env = None):
 	if input is None:
 		input = None
 	
@@ -2860,7 +2855,7 @@ def Execute_statics_run_cmd(args,input = None,cwd = None,env = None):
 		
 		def _hx_local_1(s):
 			return s != ""
-		encoded_args = __builtin__.list(__builtin__.filter(_hx_local_1, args))
+		cmdArgs = __builtin__.list(__builtin__.filter(_hx_local_1, args))
 		p = None
 		o = _Hx_AnonObject(cwd = cwd ,stdout = python_lib_Subprocess.PIPE ,stderr = python_lib_Subprocess.PIPE ,stdin = python_lib_Subprocess.PIPE ,startupinfo = hxsublime_Plugin.startupInfo() ,env = env1 )
 		if Reflect.hasField(o, "bufsize"):
@@ -2915,7 +2910,7 @@ def Execute_statics_run_cmd(args,input = None,cwd = None,env = None):
 			o.creationflags = o.creationflags
 		else:
 			o.creationflags = 0
-		p = python_lib_subprocess_Popen(encoded_args, o.bufsize, o.executable, o.stdin, o.stdout, o.stderr, o.preexec_fn, o.close_fds, o.shell, o.cwd, o.env, o.universal_newlines, o.startupinfo, o.creationflags)
+		p = python_lib_subprocess_Popen(cmdArgs, o.bufsize, o.executable, o.stdin, o.stdout, o.stderr, o.preexec_fn, o.close_fds, o.shell, o.cwd, o.env, o.universal_newlines, o.startupinfo, o.creationflags)
 		
 		inputBytes = None
 		if input is not None:
@@ -2934,7 +2929,7 @@ def Execute_statics_run_cmd(args,input = None,cwd = None,env = None):
 		_hx_e1 = _hx_e.val if isinstance(_hx_e, _HxException) else _hx_e
 		if True:
 			e = _hx_e1
-			haxe_Log.trace(e, _Hx_AnonObject(fileName = "Execute.hx" ,lineNumber = 74 ,className = "hxsublime.Execute" ,methodName = "run_cmd" ))
+			haxe_Log.trace(e, _Hx_AnonObject(fileName = "Execute.hx" ,lineNumber = 68 ,className = "hxsublime.Execute" ,methodName = "runCmd" ))
 			p = args[0]
 			err = "Error while running " + p + ": in " + cwd + " (" + Std.string(e) + ")"
 			return ("", err)
@@ -2942,7 +2937,7 @@ def Execute_statics_run_cmd(args,input = None,cwd = None,env = None):
 		else:
 			raise _hx_e
 	
-hxsublime_Execute.run_cmd = Execute_statics_run_cmd
+hxsublime_Execute.runCmd = Execute_statics_runCmd
 
 
 hxsublime_Execute._hx_class = hxsublime_Execute
@@ -2951,7 +2946,7 @@ _hx_classes['hxsublime.Execute'] = hxsublime_Execute
 hxsublime_Execute._hx_fields = []
 hxsublime_Execute._hx_props = []
 hxsublime_Execute._hx_methods = []
-hxsublime_Execute._hx_statics = ["run_cmd_async","run_cmd"]
+hxsublime_Execute._hx_statics = ["runCmdAsync","runCmd"]
 hxsublime_Execute._hx_interfaces = []
 
 # print hxsublime.Haxelib.HaxeLibLibrary
@@ -2987,8 +2982,8 @@ class hxsublime_HaxeLibLibrary:
 
 	def extract_types(self):
 		if self.dev or self.classes is None and self.packages is None:
-			t = hxsublime_Types.extract_types(self.path)
-			self.classes = t.all_types()
+			t = hxsublime_Types.extractTypes(self.path)
+			self.classes = t.allTypes()
 			self.packages = t.packs()
 		
 		
@@ -3041,13 +3036,13 @@ class hxsublime_HaxeLibManager:
 			return None
 	
 
-	def get_completions(self):
+	def getCompletions(self):
 		comps = []
 		_it = self.available().keys()
 		while _it.hasNext():
 			k = _it.next()
 			lib = self.available().get(k)
-			haxe_Log.trace(lib, _Hx_AnonObject(fileName = "Haxelib.hx" ,lineNumber = 102 ,className = "hxsublime.HaxeLibManager" ,methodName = "get_completions" ))
+			haxe_Log.trace(lib, _Hx_AnonObject(fileName = "Haxelib.hx" ,lineNumber = 107 ,className = "hxsublime.HaxeLibManager" ,methodName = "getCompletions" ))
 			x = (lib.name + " [" + lib.version + "]", lib.name)
 			comps.append(x)
 			__builtin__.len(comps)
@@ -3059,21 +3054,21 @@ class hxsublime_HaxeLibManager:
 
 	def scan(self):
 		self.scanned = True
-		env = self.project.haxe_env()
-		cmd = self.project.haxelib_exec()
+		env = self.project.haxeEnv()
+		cmd = self.project.haxelibExec()
 		cmd.append("config")
 		__builtin__.len(cmd)
 		
-		r = hxsublime_Execute.run_cmd(cmd, None, None, env)
+		r = hxsublime_Execute.runCmd(cmd, None, None, env)
 		hlout = r[0]
 		hlerr = r[1]
 		self.basePath = hlout.strip(None)
 		self._available = haxe_ds_StringMap()
-		cmd1 = self.project.haxelib_exec()
+		cmd1 = self.project.haxelibExec()
 		cmd1.append("list")
 		__builtin__.len(cmd1)
 		
-		r1 = hxsublime_Execute.run_cmd(cmd1, None, None, env)
+		r1 = hxsublime_Execute.runCmd(cmd1, None, None, env)
 		hlout1 = r1[0]
 		hlerr1 = r1[1]
 		_g = 0
@@ -3098,72 +3093,72 @@ class hxsublime_HaxeLibManager:
 		
 	
 
-	def install_lib(self,lib):
-		cmd = self.project.haxelib_exec()
-		env = self.project.haxe_env()
+	def installLib(self,lib):
+		cmd = self.project.haxelibExec()
+		env = self.project.haxeEnv()
 		cmd.append("install")
 		__builtin__.len(cmd)
 		
 		cmd.append(lib)
 		__builtin__.len(cmd)
 		
-		haxe_Log.trace(Std.string(cmd), _Hx_AnonObject(fileName = "Haxelib.hx" ,lineNumber = 155 ,className = "hxsublime.HaxeLibManager" ,methodName = "install_lib" ))
-		hxsublime_Execute.run_cmd(cmd, None, None, env)
+		haxe_Log.trace(Std.string(cmd), _Hx_AnonObject(fileName = "Haxelib.hx" ,lineNumber = 160 ,className = "hxsublime.HaxeLibManager" ,methodName = "installLib" ))
+		hxsublime_Execute.runCmd(cmd, None, None, env)
 		self.scan()
 	
 
-	def remove_lib(self,lib):
-		cmd = self.project.haxelib_exec()
-		env = self.project.haxe_env()
+	def removeLib(self,lib):
+		cmd = self.project.haxelibExec()
+		env = self.project.haxeEnv()
 		cmd.append("remove")
 		__builtin__.len(cmd)
 		
 		cmd.append(lib)
 		__builtin__.len(cmd)
 		
-		haxe_Log.trace(Std.string(cmd), _Hx_AnonObject(fileName = "Haxelib.hx" ,lineNumber = 166 ,className = "hxsublime.HaxeLibManager" ,methodName = "remove_lib" ))
-		hxsublime_Execute.run_cmd(cmd, None, None, env)
+		haxe_Log.trace(Std.string(cmd), _Hx_AnonObject(fileName = "Haxelib.hx" ,lineNumber = 171 ,className = "hxsublime.HaxeLibManager" ,methodName = "removeLib" ))
+		hxsublime_Execute.runCmd(cmd, None, None, env)
 		self.scan()
 	
 
-	def upgrade_all(self):
-		cmd = self.project.haxelib_exec()
-		env = self.project.haxe_env()
+	def upgradeAll(self):
+		cmd = self.project.haxelibExec()
+		env = self.project.haxeEnv()
 		cmd.append("upgrade")
 		__builtin__.len(cmd)
 		
-		haxe_Log.trace(Std.string(cmd), _Hx_AnonObject(fileName = "Haxelib.hx" ,lineNumber = 176 ,className = "hxsublime.HaxeLibManager" ,methodName = "upgrade_all" ))
-		hxsublime_Execute.run_cmd(cmd, None, None, env)
+		haxe_Log.trace(Std.string(cmd), _Hx_AnonObject(fileName = "Haxelib.hx" ,lineNumber = 181 ,className = "hxsublime.HaxeLibManager" ,methodName = "upgradeAll" ))
+		hxsublime_Execute.runCmd(cmd, None, None, env)
 		self.scan()
 	
 
-	def self_update(self):
-		cmd = self.project.haxelib_exec()
-		env = self.project.haxe_env()
+	def selfUpdate(self):
+		cmd = self.project.haxelibExec()
+		env = self.project.haxeEnv()
 		cmd.append("thisupdate")
 		__builtin__.len(cmd)
 		
-		haxe_Log.trace(Std.string(cmd), _Hx_AnonObject(fileName = "Haxelib.hx" ,lineNumber = 186 ,className = "hxsublime.HaxeLibManager" ,methodName = "self_update" ))
-		hxsublime_Execute.run_cmd(cmd, None, None, env)
+		haxe_Log.trace(Std.string(cmd), _Hx_AnonObject(fileName = "Haxelib.hx" ,lineNumber = 191 ,className = "hxsublime.HaxeLibManager" ,methodName = "selfUpdate" ))
+		hxsublime_Execute.runCmd(cmd, None, None, env)
 		self.scan()
 	
 
-	def search_libs(self):
-		cmd = self.project.haxelib_exec()
-		env = self.project.haxe_env()
+	def searchLibs(self):
+		cmd = self.project.haxelibExec()
+		env = self.project.haxeEnv()
 		cmd.append("search")
 		__builtin__.len(cmd)
 		
 		cmd.append("_")
 		__builtin__.len(cmd)
 		
-		res = hxsublime_Execute.run_cmd(cmd, None, None, env)
+		res = hxsublime_Execute.runCmd(cmd, None, None, env)
 		out = res[0]
 		err = res[1]
-		return self._collect_libraries(out)
+		return self.parseLibraries(out)
 	
 
-	def _collect_libraries(self,out):
+	def parseLibraries(self,out):
 		x = None
 		_this = out.split("\n")
 		def _hx_local_0(x1):
@@ -3174,10 +3169,10 @@ class hxsublime_HaxeLibManager:
 		return x
 	
 
-	def is_lib_installed(self,lib):
+	def isLibInstalled(self,lib):
 		return self.available().exists(lib)
 
-	def get_lib(self,lib):
+	def getLib(self,lib):
 		return self.available().get(lib)
 
 
@@ -3193,7 +3188,7 @@ hxsublime_HaxeLibManager._hx_class_name = "hxsublime.HaxeLibManager"
 _hx_classes['hxsublime.HaxeLibManager'] = hxsublime_HaxeLibManager
 hxsublime_HaxeLibManager._hx_fields = ["_available","project","basePath","scanned"]
 hxsublime_HaxeLibManager._hx_props = []
-hxsublime_HaxeLibManager._hx_methods = ["available","get","get_completions","scan","install_lib","remove_lib","upgrade_all","self_update","search_libs","_collect_libraries","is_lib_installed","get_lib"]
+hxsublime_HaxeLibManager._hx_methods = ["available","get","getCompletions","scan","installLib","removeLib","upgradeAll","selfUpdate","searchLibs","parseLibraries","isLibInstalled","getLib"]
 hxsublime_HaxeLibManager._hx_statics = ["__meta__","libLine"]
 hxsublime_HaxeLibManager._hx_interfaces = []
 
@@ -3218,15 +3213,15 @@ def Log_statics_log(msg,to_file = False):
 		f.write(msgStr + "\n")
 		f.close()
 	
-	elif hxsublime_Settings.use_debug_panel():
+	elif hxsublime_Settings.useDebugPanel():
 		def _hx_local_0():
-			hxsublime_panel_Panels.debug_panel().writeln(msg)
+			hxsublime_panel_Panels.debugPanel().writeln(msg)
 		f = _hx_local_0
 		sublime_Sublime.set_timeout(f, 100)
 	
 	else:
 		try:
-			haxe_Log.trace(msgStr, _Hx_AnonObject(fileName = "Log.hx" ,lineNumber = 32 ,className = "hxsublime.Log" ,methodName = "log" ))
+			haxe_Log.trace(msgStr, _Hx_AnonObject(fileName = "Log.hx" ,lineNumber = 34 ,className = "hxsublime.Log" ,methodName = "log" ))
 		except Exception as _hx_e:
 			_hx_e1 = _hx_e.val if isinstance(_hx_e, _HxException) else _hx_e
 			if True:
@@ -3247,21 +3242,6 @@ hxsublime_Log._hx_methods = []
 hxsublime_Log._hx_statics = ["debug","log"]
 hxsublime_Log._hx_interfaces = []
 
-class hxsublime_Hui(_Hx_Enum):
-	def __init__(self, t, i, p): 
-		super(hxsublime_Hui,self).__init__(t, i, p)
-
-
-def _hxsublime_Hui_statics_Foo1 (a): 
-	return hxsublime_Hui("Foo1", 0, [a])
-hxsublime_Hui.Foo1 = _hxsublime_Hui_statics_Foo1
-
-hxsublime_Hui.Foo2 = hxsublime_Hui("Foo2", 1, list())
-hxsublime_Hui._hx_constructs = ["Foo1","Foo2"]
-hxsublime_Hui._hx_class = hxsublime_Hui
-hxsublime_Hui._hx_class_name = "hxsublime.Hui"
-_hx_classes['hxsublime.Hui'] = hxsublime_Hui
-
 # print hxsublime.Main.Main
 class hxsublime_Main:
 
@@ -3271,19 +3251,7 @@ class hxsublime_Main:
 
 
 def Main_statics_main():
-	t = hxsublime_Hui.Foo1(5)
-	z = None
-	if (t.index) == 0:
-		x = t.params[0]
-		if x > 2:
-			z = True
-		else:
-			z = False
-	
-	else:
-		z = False
-	haxe_Log.trace(t, _Hx_AnonObject(fileName = "Main.hx" ,lineNumber = 93 ,className = "hxsublime.Main" ,methodName = "main" ))
-	
+	None
 hxsublime_Main.main = Main_statics_main
 
 
@@ -3304,10 +3272,10 @@ class hxsublime_Plugin:
 
 
 
+hxsublime_Plugin._startupInfo = None
 def Plugin_statics_plugin_base_dir():
 	return python_lib_os_Path.abspath(python_lib_os_Path.join(python_lib_os_Path.dirname(__file__), "."))
 hxsublime_Plugin.plugin_base_dir = Plugin_statics_plugin_base_dir
-hxsublime_Plugin._startupInfo = None
 def Plugin_statics_startupInfo():
 	if hxsublime_Plugin._startupInfo is not None:
 		return hxsublime_Plugin._startupInfo
@@ -3335,7 +3303,7 @@ _hx_classes['hxsublime.Plugin'] = hxsublime_Plugin
 hxsublime_Plugin._hx_fields = []
 hxsublime_Plugin._hx_props = []
 hxsublime_Plugin._hx_methods = []
-hxsublime_Plugin._hx_statics = ["plugin_base_dir","_startupInfo","startupInfo"]
+hxsublime_Plugin._hx_statics = ["_startupInfo","plugin_base_dir","startupInfo"]
 hxsublime_Plugin._hx_interfaces = []
 
 # print hxsublime.Settings.Settings
@@ -3346,10 +3314,10 @@ class hxsublime_Settings:
 
 
 
-def Settings_statics_plugin_settings():
+def Settings_statics_pluginSettings():
 	return sublime_Sublime.load_settings("Haxe.sublime-settings")
-hxsublime_Settings.plugin_settings = Settings_statics_plugin_settings
-def Settings_statics_get_from_settings(id,settings,plugin):
+hxsublime_Settings.pluginSettings = Settings_statics_pluginSettings
+def Settings_statics_getFromSettings(id,settings,plugin):
 	prefix = None
 	if plugin:
 		prefix = "plugin_"
@@ -3365,7 +3333,7 @@ def Settings_statics_get_from_settings(id,settings,plugin):
 	
 	return res
 	
-hxsublime_Settings.get_from_settings = Settings_statics_get_from_settings
+hxsublime_Settings.getFromSettings = Settings_statics_getFromSettings
 def Settings_statics_get(id,view = None):
 	if view is None:
 		view = None
@@ -3380,16 +3348,16 @@ def Settings_statics_get(id,view = None):
 	res = None
 	if view is not None:
 		settings = view.settings()
-		res = hxsublime_Settings.get_from_settings(id, settings, False)
+		res = hxsublime_Settings.getFromSettings(id, settings, False)
 	
 	
 	if res is None:
-		res = hxsublime_Settings.get_from_settings(id, hxsublime_Settings.plugin_settings(), True)
+		res = hxsublime_Settings.getFromSettings(id, hxsublime_Settings.pluginSettings(), True)
 	
 	return res
 	
 hxsublime_Settings.get = Settings_statics_get
-def Settings_statics_get_bool(id,defaultVal,view = None):
+def Settings_statics_getBool(id,defaultVal,view = None):
 	if view is None:
 		view = None
 	
@@ -3399,10 +3367,10 @@ def Settings_statics_get_bool(id,defaultVal,view = None):
 	elif Std._hx_is(r, Bool):
 		return r
 	else:
-		return None
+		return defaultVal
 	
-hxsublime_Settings.get_bool = Settings_statics_get_bool
-def Settings_statics_get_int(id,defaultVal,view = None):
+hxsublime_Settings.getBool = Settings_statics_getBool
+def Settings_statics_getInt(id,defaultVal,view = None):
 	if view is None:
 		view = None
 	
@@ -3412,10 +3380,10 @@ def Settings_statics_get_int(id,defaultVal,view = None):
 	elif Std._hx_is(r, Int):
 		return r
 	else:
-		return None
+		return defaultVal
 	
-hxsublime_Settings.get_int = Settings_statics_get_int
-def Settings_statics_get_string(id,defaultVal,view = None):
+hxsublime_Settings.getInt = Settings_statics_getInt
+def Settings_statics_getString(id,defaultVal,view = None):
 	if view is None:
 		view = None
 	
@@ -3425,190 +3393,189 @@ def Settings_statics_get_string(id,defaultVal,view = None):
 	elif Std._hx_is(r, String):
 		return r
 	else:
-		return None
+		return defaultVal
 	
-hxsublime_Settings.get_string = Settings_statics_get_string
-def Settings_statics_no_fuzzy_completion(view = None):
+hxsublime_Settings.getString = Settings_statics_getString
+def Settings_statics_noFuzzyCompletion(view = None):
 	if view is None:
 		view = None
 	
-	return hxsublime_Settings.get_bool("haxe_completion_no_fuzzy", False, view)
+	return hxsublime_Settings.getBool("haxe_completion_no_fuzzy", False, view)
 	
-hxsublime_Settings.no_fuzzy_completion = Settings_statics_no_fuzzy_completion
-def Settings_statics_top_level_completions_on_demand(view = None):
+hxsublime_Settings.noFuzzyCompletion = Settings_statics_noFuzzyCompletion
+def Settings_statics_topLevelCompletionsOnDemand(view = None):
 	if view is None:
 		view = None
 	
-	return hxsublime_Settings.get_bool("haxe_completions_top_level_only_on_demand", False, view)
+	return hxsublime_Settings.getBool("haxe_completions_top_level_only_on_demand", False, view)
 	
-hxsublime_Settings.top_level_completions_on_demand = Settings_statics_top_level_completions_on_demand
-def Settings_statics_show_only_async_completions(view = None):
+hxsublime_Settings.topLevelCompletionsOnDemand = Settings_statics_topLevelCompletionsOnDemand
+def Settings_statics_showOnlyAsyncCompletions(view = None):
 	if view is None:
 		view = None
 	
-	return hxsublime_Settings.get_bool("haxe_completions_show_only_async", True, view)
+	return hxsublime_Settings.getBool("haxe_completions_show_only_async", True, view)
 	
-hxsublime_Settings.show_only_async_completions = Settings_statics_show_only_async_completions
-def Settings_statics_is_async_completion(view = None):
+hxsublime_Settings.showOnlyAsyncCompletions = Settings_statics_showOnlyAsyncCompletions
+def Settings_statics_isAsyncCompletion(view = None):
 	if view is None:
 		view = None
 	
-	r = hxsublime_Settings.get_bool("haxe_completion_async", True, view)
-	haxe_Log.trace("AAAAAASYNC:" + Std.string(r), _Hx_AnonObject(fileName = "Settings.hx" ,lineNumber = 134 ,className = "hxsublime.Settings" ,methodName = "is_async_completion" ))
+	r = hxsublime_Settings.getBool("haxe_completion_async", True, view)
 	return r
 	
-hxsublime_Settings.is_async_completion = Settings_statics_is_async_completion
-def Settings_statics_get_completion_delays(view = None):
+hxsublime_Settings.isAsyncCompletion = Settings_statics_isAsyncCompletion
+def Settings_statics_getCompletionDelays(view = None):
 	if view is None:
 		view = None
 	
-	a = hxsublime_Settings.get_int("haxe_completion_async_timing_hide", 60, view)
-	b = hxsublime_Settings.get_int("haxe_completion_async_timing_show", 150, view)
+	a = hxsublime_Settings.getInt("haxe_completion_async_timing_hide", 60, view)
+	b = hxsublime_Settings.getInt("haxe_completion_async_timing_show", 150, view)
 	return (a, b)
 	
 	
-hxsublime_Settings.get_completion_delays = Settings_statics_get_completion_delays
-def Settings_statics_show_completion_times(view = None):
+hxsublime_Settings.getCompletionDelays = Settings_statics_getCompletionDelays
+def Settings_statics_showCompletionTimes(view = None):
 	if view is None:
 		view = None
 	
-	return hxsublime_Settings.get_bool("haxe_completion_show_times", False, view)
+	return hxsublime_Settings.getBool("haxe_completion_show_times", False, view)
 	
-hxsublime_Settings.show_completion_times = Settings_statics_show_completion_times
-def Settings_statics_haxe_exec(view = None):
+hxsublime_Settings.showCompletionTimes = Settings_statics_showCompletionTimes
+def Settings_statics_haxeExec(view = None):
 	if view is None:
 		view = None
 	
-	return hxsublime_Settings.get_string("haxe_exec", "haxe", view)
+	return hxsublime_Settings.getString("haxe_exec", "haxe", view)
 	
-hxsublime_Settings.haxe_exec = Settings_statics_haxe_exec
-def Settings_statics_use_haxe_servermode(view = None):
+hxsublime_Settings.haxeExec = Settings_statics_haxeExec
+def Settings_statics_useHaxeServermode(view = None):
 	if view is None:
 		view = None
 	
-	return hxsublime_Settings.get_bool("haxe_use_servermode", True, view)
+	return hxsublime_Settings.getBool("haxe_use_servermode", True, view)
 	
-hxsublime_Settings.use_haxe_servermode = Settings_statics_use_haxe_servermode
-def Settings_statics_use_haxe_servermode_wrapper(view = None):
+hxsublime_Settings.useHaxeServermode = Settings_statics_useHaxeServermode
+def Settings_statics_useHaxeServermodeWrapper(view = None):
 	if view is None:
 		view = None
 	
-	return hxsublime_Settings.get_bool("haxe_use_servermode_wrapper", False, view)
+	return hxsublime_Settings.getBool("haxe_use_servermode_wrapper", False, view)
 	
-hxsublime_Settings.use_haxe_servermode_wrapper = Settings_statics_use_haxe_servermode_wrapper
-def Settings_statics_haxe_sdk_path(view = None):
+hxsublime_Settings.useHaxeServermodeWrapper = Settings_statics_useHaxeServermodeWrapper
+def Settings_statics_haxeSdkPath(view = None):
 	if view is None:
 		view = None
 	
-	return hxsublime_Settings.get_string("haxe_sdk_path", None, view)
+	return hxsublime_Settings.getString("haxe_sdk_path", None, view)
 	
-hxsublime_Settings.haxe_sdk_path = Settings_statics_haxe_sdk_path
-def Settings_statics_open_with_default_app(view = None):
+hxsublime_Settings.haxeSdkPath = Settings_statics_haxeSdkPath
+def Settings_statics_openWithDefaultApp(view = None):
 	if view is None:
 		view = None
 	
-	return hxsublime_Settings.get_string("haxe_open_with_default_app", None, view)
+	return hxsublime_Settings.getString("haxe_open_with_default_app", None, view)
 	
-hxsublime_Settings.open_with_default_app = Settings_statics_open_with_default_app
-def Settings_statics_haxe_inst_path(view = None):
+hxsublime_Settings.openWithDefaultApp = Settings_statics_openWithDefaultApp
+def Settings_statics_haxeInstPath(view = None):
 	if view is None:
 		view = None
 	
-	tmp = hxsublime_Settings.haxe_sdk_path(view)
+	tmp = hxsublime_Settings.haxeSdkPath(view)
 	defaultVal = None
 	if tmp is not None:
-		defaultVal = python_lib_os_Path.normpath(hxsublime_Settings.haxe_sdk_path(view)) + python_lib_os_Path.sep + "haxe"
+		defaultVal = python_lib_os_Path.normpath(hxsublime_Settings.haxeSdkPath(view)) + python_lib_os_Path.sep + "haxe"
 	else:
 		defaultVal = None
-	if tmp is None and hxsublime_Settings.haxe_exec(view) != "haxe":
-		defaultVal = python_lib_os_Path.normpath(python_lib_os_Path.dirname(hxsublime_Settings.haxe_exec(view)))
+	if tmp is None and hxsublime_Settings.haxeExec(view) != "haxe":
+		defaultVal = python_lib_os_Path.normpath(python_lib_os_Path.dirname(hxsublime_Settings.haxeExec(view)))
 	
-	return hxsublime_Settings.get_string("haxe_inst_path", defaultVal, view)
+	return hxsublime_Settings.getString("haxe_inst_path", defaultVal, view)
 	
-hxsublime_Settings.haxe_inst_path = Settings_statics_haxe_inst_path
-def Settings_statics_neko_inst_path(view = None):
+hxsublime_Settings.haxeInstPath = Settings_statics_haxeInstPath
+def Settings_statics_nekoInstPath(view = None):
 	if view is None:
 		view = None
 	
-	tmp = hxsublime_Settings.haxe_sdk_path(view)
+	tmp = hxsublime_Settings.haxeSdkPath(view)
 	defaultVal = None
 	if tmp is not None:
-		defaultVal = python_lib_os_Path.normpath(hxsublime_Settings.haxe_sdk_path(view)) + python_lib_os_Path.sep + "default"
+		defaultVal = python_lib_os_Path.normpath(hxsublime_Settings.haxeSdkPath(view)) + python_lib_os_Path.sep + "default"
 	else:
 		defaultVal = None
-	return hxsublime_Settings.get_string("neko_inst_path", defaultVal, view)
+	return hxsublime_Settings.getString("neko_inst_path", defaultVal, view)
 	
-hxsublime_Settings.neko_inst_path = Settings_statics_neko_inst_path
-def Settings_statics_haxe_library_path(view = None):
+hxsublime_Settings.nekoInstPath = Settings_statics_nekoInstPath
+def Settings_statics_haxeLibraryPath(view = None):
 	if view is None:
 		view = None
 	
-	return hxsublime_Settings.get_string("haxe_library_path", None, view)
+	return hxsublime_Settings.getString("haxe_library_path", None, view)
 	
-hxsublime_Settings.haxe_library_path = Settings_statics_haxe_library_path
-def Settings_statics_haxelib_exec(view = None):
+hxsublime_Settings.haxeLibraryPath = Settings_statics_haxeLibraryPath
+def Settings_statics_haxelibExec(view = None):
 	if view is None:
 		view = None
 	
-	return hxsublime_Settings.get_string("haxe_haxelib_exec", "haxelib", view)
+	return hxsublime_Settings.getString("haxe_haxelib_exec", "haxelib", view)
 	
-hxsublime_Settings.haxelib_exec = Settings_statics_haxelib_exec
-def Settings_statics_smart_snippets(view = None):
+hxsublime_Settings.haxelibExec = Settings_statics_haxelibExec
+def Settings_statics_smartSnippets(view = None):
 	if view is None:
 		view = None
 	
-	return hxsublime_Settings.get_bool("haxe_completion_smart_snippets", True, view)
+	return hxsublime_Settings.getBool("haxe_completion_smart_snippets", True, view)
 	
-hxsublime_Settings.smart_snippets = Settings_statics_smart_snippets
-def Settings_statics_smart_snippets_on_completion(view = None):
+hxsublime_Settings.smartSnippets = Settings_statics_smartSnippets
+def Settings_statics_smartSnippetsOnCompletion(view = None):
 	if view is None:
 		view = None
 	
-	return hxsublime_Settings.get_bool("haxe_completion_smart_snippets_on_completion", False, view)
+	return hxsublime_Settings.getBool("haxe_completion_smart_snippets_on_completion", False, view)
 	
-hxsublime_Settings.smart_snippets_on_completion = Settings_statics_smart_snippets_on_completion
-def Settings_statics_smart_snippets_just_current(view = None):
+hxsublime_Settings.smartSnippetsOnCompletion = Settings_statics_smartSnippetsOnCompletion
+def Settings_statics_smartSnippetsJustCurrent(view = None):
 	if view is None:
 		view = None
 	
-	return hxsublime_Settings.get_bool("haxe_completion_smart_snippets_just_current", False, view)
+	return hxsublime_Settings.getBool("haxe_completion_smart_snippets_just_current", False, view)
 	
-hxsublime_Settings.smart_snippets_just_current = Settings_statics_smart_snippets_just_current
-def Settings_statics_use_debug_panel(view = None):
+hxsublime_Settings.smartSnippetsJustCurrent = Settings_statics_smartSnippetsJustCurrent
+def Settings_statics_useDebugPanel(view = None):
 	if view is None:
 		view = None
 	
-	return hxsublime_Settings.get_bool("haxe_use_debug_panel", False, view)
+	return hxsublime_Settings.getBool("haxe_use_debug_panel", False, view)
 	
-hxsublime_Settings.use_debug_panel = Settings_statics_use_debug_panel
-def Settings_statics_check_on_save(view = None):
+hxsublime_Settings.useDebugPanel = Settings_statics_useDebugPanel
+def Settings_statics_checkOnSave(view = None):
 	if view is None:
 		view = None
 	
-	return hxsublime_Settings.get_bool("haxe_check_on_save", True, view)
+	return hxsublime_Settings.getBool("haxe_check_on_save", True, view)
 	
-hxsublime_Settings.check_on_save = Settings_statics_check_on_save
-def Settings_statics_use_slide_panel(view = None):
+hxsublime_Settings.checkOnSave = Settings_statics_checkOnSave
+def Settings_statics_useSlidePanel(view = None):
 	if view is None:
 		view = None
 	
-	return hxsublime_Settings.get_bool("haxe_use_slide_panel", True, view)
+	return hxsublime_Settings.getBool("haxe_use_slide_panel", True, view)
 	
-hxsublime_Settings.use_slide_panel = Settings_statics_use_slide_panel
-def Settings_statics_use_haxe_servermode_for_builds(view = None):
+hxsublime_Settings.useSlidePanel = Settings_statics_useSlidePanel
+def Settings_statics_useHaxeServermodeForBuilds(view = None):
 	if view is None:
 		view = None
 	
-	return hxsublime_Settings.get_bool("haxe_use_servermode_for_builds", False, view)
+	return hxsublime_Settings.getBool("haxe_use_servermode_for_builds", False, view)
 	
-hxsublime_Settings.use_haxe_servermode_for_builds = Settings_statics_use_haxe_servermode_for_builds
-def Settings_statics_use_offset_completion(view = None):
+hxsublime_Settings.useHaxeServermodeForBuilds = Settings_statics_useHaxeServermodeForBuilds
+def Settings_statics_useOffsetCompletion(view = None):
 	if view is None:
 		view = None
 	
-	return hxsublime_Settings.get_bool("haxe_use_offset_completion", False, view)
+	return hxsublime_Settings.getBool("haxe_use_offset_completion", False, view)
 	
-hxsublime_Settings.use_offset_completion = Settings_statics_use_offset_completion
+hxsublime_Settings.useOffsetCompletion = Settings_statics_useOffsetCompletion
 
 
 hxsublime_Settings._hx_class = hxsublime_Settings
@@ -3617,7 +3584,7 @@ _hx_classes['hxsublime.Settings'] = hxsublime_Settings
 hxsublime_Settings._hx_fields = []
 hxsublime_Settings._hx_props = []
 hxsublime_Settings._hx_methods = []
-hxsublime_Settings._hx_statics = ["plugin_settings","get_from_settings","get","get_bool","get_int","get_string","no_fuzzy_completion","top_level_completions_on_demand","show_only_async_completions","is_async_completion","get_completion_delays","show_completion_times","haxe_exec","use_haxe_servermode","use_haxe_servermode_wrapper","haxe_sdk_path","open_with_default_app","haxe_inst_path","neko_inst_path","haxe_library_path","haxelib_exec","smart_snippets","smart_snippets_on_completion","smart_snippets_just_current","use_debug_panel","check_on_save","use_slide_panel","use_haxe_servermode_for_builds","use_offset_completion"]
+hxsublime_Settings._hx_statics = ["pluginSettings","getFromSettings","get","getBool","getInt","getString","noFuzzyCompletion","topLevelCompletionsOnDemand","showOnlyAsyncCompletions","isAsyncCompletion","getCompletionDelays","showCompletionTimes","haxeExec","useHaxeServermode","useHaxeServermodeWrapper","haxeSdkPath","openWithDefaultApp","haxeInstPath","nekoInstPath","haxeLibraryPath","haxelibExec","smartSnippets","smartSnippetsOnCompletion","smartSnippetsJustCurrent","useDebugPanel","checkOnSave","useSlidePanel","useHaxeServermodeForBuilds","useOffsetCompletion"]
 hxsublime_Settings._hx_interfaces = []
 
 # print hxsublime.Temp.Temp
@@ -3628,8 +3595,8 @@ class hxsublime_Temp:
 
 
 
-def Temp_statics_get_temp_path_id(build):
-	path = build.get_build_folder()
+def Temp_statics_getTempPathId(build):
+	path = build.getBuildFolder()
 	if path is None:
 		raise _HxException(hxsublime_ExtractBuildPathException(build))
 	
@@ -3644,19 +3611,19 @@ def Temp_statics_get_temp_path_id(build):
 	temp_path = python_lib_os_Path.join(python_lib_Tempfile.gettempdir(), "haxe_sublime_hx" + path1 + "_")
 	return temp_path
 	
-hxsublime_Temp.get_temp_path_id = Temp_statics_get_temp_path_id
-def Temp_statics_create_temp_path(build):
-	temp_path = hxsublime_Temp.get_temp_path_id(build)
+hxsublime_Temp.getTempPathId = Temp_statics_getTempPathId
+def Temp_statics_createTempPath(build):
+	temp_path = hxsublime_Temp.getTempPathId(build)
 	hxsublime_tools_PathTools.removeDir(temp_path)
 	python_lib_Os.makedirs(temp_path)
 	return temp_path
 	
-hxsublime_Temp.create_temp_path = Temp_statics_create_temp_path
-def Temp_statics_create_file(temp_path,build,orig_file,content):
-	relative = build.get_relative_path(orig_file)
-	haxe_Log.trace(relative, _Hx_AnonObject(fileName = "Temp.hx" ,lineNumber = 47 ,className = "hxsublime.Temp" ,methodName = "create_file" ))
-	haxe_Log.trace(orig_file, _Hx_AnonObject(fileName = "Temp.hx" ,lineNumber = 48 ,className = "hxsublime.Temp" ,methodName = "create_file" ))
-	haxe_Log.trace("relative:" + Std.string(relative), _Hx_AnonObject(fileName = "Temp.hx" ,lineNumber = 49 ,className = "hxsublime.Temp" ,methodName = "create_file" ))
+hxsublime_Temp.createTempPath = Temp_statics_createTempPath
+def Temp_statics_createFile(temp_path,build,orig_file,content):
+	relative = build.getRelativePath(orig_file)
+	haxe_Log.trace(relative, _Hx_AnonObject(fileName = "Temp.hx" ,lineNumber = 47 ,className = "hxsublime.Temp" ,methodName = "createFile" ))
+	haxe_Log.trace(orig_file, _Hx_AnonObject(fileName = "Temp.hx" ,lineNumber = 48 ,className = "hxsublime.Temp" ,methodName = "createFile" ))
+	haxe_Log.trace("relative:" + Std.string(relative), _Hx_AnonObject(fileName = "Temp.hx" ,lineNumber = 49 ,className = "hxsublime.Temp" ,methodName = "createFile" ))
 	if relative is None:
 		raise _HxException(hxsublime_GetRelativePathException(build, orig_file))
 	
@@ -3668,21 +3635,21 @@ def Temp_statics_create_file(temp_path,build,orig_file,content):
 	f = python_lib_Codecs.open(new_file, "wb", "utf-8", "ignore")
 	f.write(content)
 	f.close()
-	haxe_Log.trace(new_file, _Hx_AnonObject(fileName = "Temp.hx" ,lineNumber = 63 ,className = "hxsublime.Temp" ,methodName = "create_file" ))
+	haxe_Log.trace(new_file, _Hx_AnonObject(fileName = "Temp.hx" ,lineNumber = 65 ,className = "hxsublime.Temp" ,methodName = "createFile" ))
 	return new_file
 	
-hxsublime_Temp.create_file = Temp_statics_create_file
-def Temp_statics_create_temp_path_and_file(build,orig_file,content):
-	temp_path = hxsublime_Temp.create_temp_path(build)
-	temp_file = hxsublime_Temp.create_file(temp_path, build, orig_file, content)
+hxsublime_Temp.createFile = Temp_statics_createFile
+def Temp_statics_createTempPathAndFile(build,orig_file,content):
+	temp_path = hxsublime_Temp.createTempPath(build)
+	temp_file = hxsublime_Temp.createFile(temp_path, build, orig_file, content)
 	return (temp_path, temp_file)
 	
-hxsublime_Temp.create_temp_path_and_file = Temp_statics_create_temp_path_and_file
-def Temp_statics_remove_path(temp_path):
+hxsublime_Temp.createTempPathAndFile = Temp_statics_createTempPathAndFile
+def Temp_statics_removePath(temp_path):
 	if temp_path is not None:
 		hxsublime_tools_PathTools.removeDir(temp_path)
 	
-hxsublime_Temp.remove_path = Temp_statics_remove_path
+hxsublime_Temp.removePath = Temp_statics_removePath
 
 
 hxsublime_Temp._hx_class = hxsublime_Temp
@@ -3691,7 +3658,7 @@ _hx_classes['hxsublime.Temp'] = hxsublime_Temp
 hxsublime_Temp._hx_fields = []
 hxsublime_Temp._hx_props = []
 hxsublime_Temp._hx_methods = []
-hxsublime_Temp._hx_statics = ["get_temp_path_id","create_temp_path","create_file","create_temp_path_and_file","remove_path"]
+hxsublime_Temp._hx_statics = ["getTempPathId","createTempPath","createFile","createTempPathAndFile","removePath"]
 hxsublime_Temp._hx_interfaces = []
 
 # print hxsublime.Types.Types
@@ -3702,7 +3669,7 @@ class hxsublime_Types:
 
 
 
-def Types_statics_find_types(classpaths,libs,base_path,filtered_classes = None,filtered_packages = None,include_private_types = True):
+def Types_statics_findTypes(classpaths,libs,base_path,filtered_classes = None,filtered_packages = None,include_private_types = True):
 	if filtered_classes is None:
 		filtered_classes = None
 	
@@ -3712,7 +3679,7 @@ def Types_statics_find_types(classpaths,libs,base_path,filtered_classes = None,f
 	if include_private_types is None:
 		include_private_types = True
 	
-	bundle = hxsublime_tools_HxSrcTools.empty_type_bundle()
+	bundle = hxsublime_tools_HxSrcTools.emptyTypeBundle()
 	cp = []
 	cp = cp + classpaths
 	_g = 0
@@ -3732,21 +3699,21 @@ def Types_statics_find_types(classpaths,libs,base_path,filtered_classes = None,f
 		_g = _g + 1
 		p = python_lib_os_Path.join(base_path, path)
 		if python_lib_os_Path.exists(p):
-			b = hxsublime_Types.extract_types(p, filtered_classes, filtered_packages, 0, [], include_private_types)
+			b = hxsublime_Types.extractTypes(p, filtered_classes, filtered_packages, 0, [], include_private_types)
 			bundle = bundle.merge(b)
 		
 		else:
-			hxsublime_panel_Panels.default_panel().writeln("Error: The classpath " + p + " does not exist, in case of nme or openfl you need have to build (CTRL + ENTER) the project first (the build creates these paths)")
+			hxsublime_panel_Panels.defaultPanel().writeln("Error: The classpath " + p + " does not exist, in case of nme or openfl you need have to build (CTRL + ENTER) the project first (the build creates these paths)")
 	
 	
 	return bundle
 	
-hxsublime_Types.find_types = Types_statics_find_types
-hxsublime_Types.valid_package = python_lib_Re.compile("^[_a-z][a-zA-Z0-9_]*$")
-def Types_statics_is_valid_package(pack):
-	return hxsublime_Types.valid_package.match(pack) is not None and pack != "_std"
-hxsublime_Types.is_valid_package = Types_statics_is_valid_package
-def Types_statics_extract_types(path,filtered_classes = None,filtered_packages = None,depth = 0,pack = None,include_private_types = True):
+hxsublime_Types.findTypes = Types_statics_findTypes
+hxsublime_Types.validPackageRegex = python_lib_Re.compile("^[_a-z][a-zA-Z0-9_]*$")
+def Types_statics_isValidPackage(pack):
+	return hxsublime_Types.validPackageRegex.match(pack) is not None and pack != "_std"
+hxsublime_Types.isValidPackage = Types_statics_isValidPackage
+def Types_statics_extractTypes(path,filtered_classes = None,filtered_packages = None,depth = 0,pack = None,include_private_types = True):
 	if filtered_classes is None:
 		filtered_classes = None
 	
@@ -3771,7 +3738,8 @@ def Types_statics_extract_types(path,filtered_classes = None,filtered_packages =
 	if filtered_packages is None:
 		filtered_packages = []
 	
-	bundle = hxsublime_tools_HxSrcTools.empty_type_bundle()
+	bundle = hxsublime_tools_HxSrcTools.emptyTypeBundle()
+	bundles = []
 	_g = 0
 	_g1 = python_lib_Glob.glob(python_lib_os_Path.join(path, "*.hx"))
 	while _g < len(_g1):
@@ -3784,8 +3752,10 @@ def Types_statics_extract_types(path,filtered_classes = None,filtered_packages =
 		if not Lambda.has(filtered_classes, cl):
 			file = python_lib_os_Path.join(path, f)
 			if python_lib_os_Path.exists(file):
-				module_bundle = hxsublime_Types.extract_types_from_file(file, cl, include_private_types)
-				bundle = bundle.merge(module_bundle)
+				module_bundle = hxsublime_Types.extractTypesFromFile(file, cl, include_private_types)
+				bundles.append(module_bundle)
+				__builtin__.len(bundles)
+				
 			
 			
 		
@@ -3797,7 +3767,7 @@ def Types_statics_extract_types(path,filtered_classes = None,filtered_packages =
 	while _g < len(_g1):
 		f = _g1[_g]
 		_g = _g + 1
-		if hxsublime_Types.is_valid_package(f):
+		if hxsublime_Types.isValidPackage(f):
 			r = python_lib_os_Path.splitext(f)
 			cl = r[0]
 			ext = r[1]
@@ -3812,19 +3782,22 @@ def Types_statics_extract_types(path,filtered_classes = None,filtered_packages =
 				next_pack.append(f)
 				__builtin__.len(next_pack)
 				
-				sub_bundle = hxsublime_Types.extract_types(python_lib_os_Path.join(path, f), filtered_classes, filtered_packages, depth + 1, next_pack, include_private_types)
-				bundle = bundle.merge(sub_bundle)
+				sub_bundle = hxsublime_Types.extractTypes(python_lib_os_Path.join(path, f), filtered_classes, filtered_packages, depth + 1, next_pack, include_private_types)
+				bundles.append(sub_bundle)
+				__builtin__.len(bundles)
+				
 			
 			
 		
 		
 	
 	
+	bundle = bundle.mergeAll(bundles)
 	return bundle
 	
-hxsublime_Types.extract_types = Types_statics_extract_types
-hxsublime_Types.file_type_cache = haxe_ds_StringMap()
-def Types_statics_extract_types_from_file(file,module_name = None,include_private_types = True):
+hxsublime_Types.extractTypes = Types_statics_extractTypes
+hxsublime_Types.fileTypeCache = haxe_ds_StringMap()
+def Types_statics_extractTypesFromFile(file,module_name = None,include_private_types = True):
 	if module_name is None:
 		module_name = None
 	
@@ -3833,11 +3806,11 @@ def Types_statics_extract_types_from_file(file,module_name = None,include_privat
 	
 	mtime = python_lib_os_Path.getmtime(file)
 	def _hx_local_0():
-		_this = hxsublime_Types.file_type_cache.get(file)
+		_this = hxsublime_Types.fileTypeCache.get(file)
 		return _this[0]
 	
-	if hxsublime_Types.file_type_cache.exists(file) and _hx_local_0() == mtime:
-		_this = hxsublime_Types.file_type_cache.get(file)
+	if hxsublime_Types.fileTypeCache.exists(file) and _hx_local_0() == mtime:
+		_this = hxsublime_Types.fileTypeCache.get(file)
 		return _this[1]
 	
 	
@@ -3848,12 +3821,12 @@ def Types_statics_extract_types_from_file(file,module_name = None,include_privat
 	
 	s = python_lib_Codecs.open(file, "r", "utf-8", "ignore")
 	src_with_comments = s.read()
-	src = hxsublime_tools_HxSrcTools.strip_comments(src_with_comments)
-	bundle = hxsublime_tools_HxSrcTools.get_types_from_src(src, module_name, file, src_with_comments)
-	hxsublime_Types.file_type_cache.set(file, (mtime, bundle))
+	src = hxsublime_tools_HxSrcTools.stripComments(src_with_comments)
+	bundle = hxsublime_tools_HxSrcTools.getTypesFromSrc(src, module_name, file, src_with_comments)
+	hxsublime_Types.fileTypeCache.set(file, (mtime, bundle))
 	return bundle
 	
-hxsublime_Types.extract_types_from_file = Types_statics_extract_types_from_file
+hxsublime_Types.extractTypesFromFile = Types_statics_extractTypesFromFile
 
 
 hxsublime_Types._hx_class = hxsublime_Types
@@ -3862,47 +3835,93 @@ _hx_classes['hxsublime.Types'] = hxsublime_Types
 hxsublime_Types._hx_fields = []
 hxsublime_Types._hx_props = []
 hxsublime_Types._hx_methods = []
-hxsublime_Types._hx_statics = ["find_types","valid_package","is_valid_package","extract_types","file_type_cache","extract_types_from_file"]
+hxsublime_Types._hx_statics = ["findTypes","validPackageRegex","isValidPackage","extractTypes","fileTypeCache","extractTypesFromFile"]
 hxsublime_Types._hx_interfaces = []
+
+# print hxsublime.build.Build.Build
+class hxsublime_build_Build:
+
+	# var setHxml
+	# var getRelativePath
+	# var setStdBundle
+	# var toString
+	# var copy
+	# var buildFile
+	# var addClasspath
+	# var makeHxml
+	# var prepareCheckCmd
+	# var prepareBuildCmd
+	# var prepareRunCmd
+	# var escapeCmd
+	# var isTypeAvailable
+	# var isPackAvailable
+	# var getTypes
+	# var getBuildFolder
+	# var setAutoCompletion
+	# var setTimes
+	# var run
+	# var stdBundle
+	# var target
+	# var classpaths
+	# var args
+	# var addArg
+	pass
+
+
+
+
+
+
+hxsublime_build_Build._hx_class = hxsublime_build_Build
+hxsublime_build_Build._hx_class_name = "hxsublime.build.Build"
+_hx_classes['hxsublime.build.Build'] = hxsublime_build_Build
+hxsublime_build_Build._hx_fields = []
+hxsublime_build_Build._hx_props = []
+hxsublime_build_Build._hx_methods = ["setHxml","getRelativePath","setStdBundle","toString","copy","buildFile","addClasspath","makeHxml","prepareCheckCmd","prepareBuildCmd","prepareRunCmd","escapeCmd","isTypeAvailable","isPackAvailable","getTypes","getBuildFolder","setAutoCompletion","setTimes","run","stdBundle","target","classpaths","args","addArg"]
+hxsublime_build_Build._hx_statics = []
+hxsublime_build_Build._hx_interfaces = []
 
 # print hxsublime.build.HxmlBuild.HxmlBuild
 class hxsublime_build_HxmlBuild:
 
 
 	def __init__(self,hxml,build_file):
-		self.show_times = False
-		self._std_bundle = hxsublime_tools_HxSrcTools.empty_type_bundle()
+		self._showTimes = False
+		self._stdBundle = hxsublime_tools_HxSrcTools.emptyTypeBundle()
 		self._args = []
 		self.main = None
 		self._target = None
 		self.output = "dummy.js"
 		self._hxml = hxml
-		self._build_file = build_file
+		self._buildFile = build_file
 		self._classpaths = []
 		self.libs = []
-		self.type_bundle = None
-		self._update_time = None
-		self.mode_completion = False
+		self.typeBundle = None
+		self._updateTime = None
+		self.modeCompletion = False
 		self.defines = []
 		self.name = None
 	
-	# var show_times
-	# var _std_bundle
+	# var _showTimes
+	# var _stdBundle
 	# var _args
+	# var _hxml
+	# var _buildFile
+	# var libs
+	# var _updateTime
+	# var defines
+	# var _classpaths
+	# var typeBundle
+	# var modeCompletion
+	# var name
 	# var main
 	# var _target
 	# var output
-	# var _hxml
-	# var _build_file
-	# var _classpaths
-	# var libs
-	# var type_bundle
-	# var _update_time
-	# var mode_completion
-	# var defines
-	# var name
-	def std_bundle(self):
-		return self._std_bundle
+	def getClassPaths(self):
+		return self._classpaths
+
+	def stdBundle(self):
+		return self._stdBundle
 
 	def target(self):
 		return _Hx_AnonObject(name = self._target ,plattform = self._target ,args = [] )
@@ -3919,20 +3938,20 @@ class hxsublime_build_HxmlBuild:
 	def setHxml(self,hxml):
 		self._hxml = hxml
 
-	def build_file(self):
-		return self._build_file
+	def buildFile(self):
+		return self._buildFile
 
-	def add_define(self,define):
+	def addDefine(self,define):
 		_this = self.defines
 		_this.append(define)
 		__builtin__.len(_this)
 		
 	
 
-	def set_main(self,main):
+	def setMain(self,main):
 		self.main = main
 
-	def get_name(self):
+	def getName(self):
 		n = None
 		if self.name is not None:
 			n = self.name
@@ -3943,14 +3962,14 @@ class hxsublime_build_HxmlBuild:
 		return n
 	
 
-	def set_std_bundle(self,std_bundle):
-		self._std_bundle = std_bundle
+	def setStdBundle(self,stdBundle):
+		self._stdBundle = stdBundle
 
 	def args(self):
 		return self._args
 
 	def equals(self,other):
-		return self.args() == other._args() and self.main == other.main and self.name == other.name and self._target == other._target and self.output == other.output and self.hxml == other.hxml and self.classpaths == other.classpaths and self.libs == other.libs and self.show_times == other.show_times and self.mode_completion == other.mode_completion and self.defines == other.defines and self._build_file == other._build_file
+		return self.args() == other._args() and self.main == other.main and self.name == other.name and self._target == other._target and self.output == other.output and self.hxml() == other.hxml() and self.classpaths() == other.classpaths() and self.libs == other.libs and self._showTimes == other._showTimes and self.modeCompletion == other.modeCompletion and self.defines == other.defines and self._buildFile == other._buildFile
 
 	def merge(self,other_build):
 		ob = other_build
@@ -3971,8 +3990,8 @@ class hxsublime_build_HxmlBuild:
 	
 
 	def copy(self):
-		self.get_types()
-		hb = hxsublime_build_HxmlBuild(self._hxml, self.build_file())
+		self.getTypes()
+		hb = hxsublime_build_HxmlBuild(self._hxml, self.buildFile())
 		_this = self.args()
 		hb._args = __builtin__.list(_this)
 		
@@ -3981,33 +4000,33 @@ class hxsublime_build_HxmlBuild:
 		hb._target = self._target
 		hb.output = self.output
 		hb.defines = __builtin__.list(self.defines)
-		hb._std_bundle = self._std_bundle
+		hb._stdBundle = self._stdBundle
 		hb._classpaths = __builtin__.list(self._classpaths)
 		hb.libs = __builtin__.list(self.libs)
-		hb.type_bundle = self.type_bundle
-		hb._update_time = self._update_time
-		hb.show_times = self.show_times
-		hb.mode_completion = self.mode_completion
+		hb.typeBundle = self.typeBundle
+		hb._updateTime = self._updateTime
+		hb._showTimes = self._showTimes
+		hb.modeCompletion = self.modeCompletion
 		return hb
 	
 
-	def add_arg(self,arg):
+	def addArg(self,arg):
 		_this = self._args
 		_this.append(arg)
 		__builtin__.len(_this)
 		
 	
 
-	def get_build_folder(self):
-		if self.build_file is not None:
-			return python_lib_os_Path.dirname(self.build_file())
+	def getBuildFolder(self):
+		if self.buildFile() is not None:
+			return python_lib_os_Path.dirname(self.buildFile())
 		else:
 			return None
 
-	def set_build_cwd(self):
-		self.set_cwd(self.get_build_folder())
+	def setBuildCwd(self):
+		self.setCwd(self.getBuildFolder())
 
-	def align_drive_letter(self,path):
+	def alignDriveLetter(self,path):
 		is_win = sublime_Sublime.platform() == "windows"
 		if is_win:
 			reg = python_lib_Re.compile("^([a-z]):(.*)$")
@@ -4025,8 +4044,8 @@ class hxsublime_build_HxmlBuild:
 		return path
 	
 
-	def add_classpath(self,cp):
-		cp1 = self.align_drive_letter(cp)
+	def addClasspath(self,cp):
+		cp1 = self.alignDriveLetter(cp)
 		if not Lambda.has(self._classpaths, cp1):
 			_this = self._classpaths
 			_this.append(cp1)
@@ -4043,21 +4062,21 @@ class hxsublime_build_HxmlBuild:
 		
 	
 
-	def add_lib(self,lib):
+	def addLib(self,lib):
 		_this = self.libs
 		_this.append(lib)
 		__builtin__.len(_this)
 		
 		
-		self.add_arg(("-lib", lib.name))
+		self.addArg(("-lib", lib.name))
 	
 
-	def get_classpath_of_file(self,file):
-		file1 = self.align_drive_letter(file)
+	def getClasspathOfFile(self,file):
+		file1 = self.alignDriveLetter(file)
 		cps = __builtin__.list(self._classpaths)
-		build_folder = self.get_build_folder()
+		build_folder = self.getBuildFolder()
 		if build_folder is not None and not Lambda.has(cps, build_folder):
-			haxe_Log.trace("add build folder to classpaths: " + build_folder + ", classpaths: " + Std.string(cps), _Hx_AnonObject(fileName = "HxmlBuild.hx" ,lineNumber = 230 ,className = "hxsublime.build.HxmlBuild" ,methodName = "get_classpath_of_file" ))
+			haxe_Log.trace("add build folder to classpaths: " + build_folder + ", classpaths: " + Std.string(cps), _Hx_AnonObject(fileName = "HxmlBuild.hx" ,lineNumber = 244 ,className = "hxsublime.build.HxmlBuild" ,methodName = "getClasspathOfFile" ))
 			cps.append(build_folder)
 			__builtin__.len(cps)
 			
@@ -4076,21 +4095,16 @@ class hxsublime_build_HxmlBuild:
 		return None
 	
 
-	def is_file_in_classpath(self,file):
-		file = self.align_drive_letter(file)
-		return self.get_classpath_of_file(file) is not None
-	
-
-	def get_relative_path(self,file):
-		file = self.align_drive_letter(file)
-		cp = self.get_classpath_of_file(file)
-		haxe_Log.trace(file, _Hx_AnonObject(fileName = "HxmlBuild.hx" ,lineNumber = 258 ,className = "hxsublime.build.HxmlBuild" ,methodName = "get_relative_path" ))
-		haxe_Log.trace(StringTools.replace(file, cp, ""), _Hx_AnonObject(fileName = "HxmlBuild.hx" ,lineNumber = 259 ,className = "hxsublime.build.HxmlBuild" ,methodName = "get_relative_path" ))
+	def getRelativePath(self,file):
+		file = self.alignDriveLetter(file)
+		cp = self.getClasspathOfFile(file)
+		haxe_Log.trace(file, _Hx_AnonObject(fileName = "HxmlBuild.hx" ,lineNumber = 270 ,className = "hxsublime.build.HxmlBuild" ,methodName = "getRelativePath" ))
+		haxe_Log.trace(StringTools.replace(file, cp, ""), _Hx_AnonObject(fileName = "HxmlBuild.hx" ,lineNumber = 271 ,className = "hxsublime.build.HxmlBuild" ,methodName = "getRelativePath" ))
 		def _hx_local_0():
 			_this = StringTools.replace(file, cp, "")
 			return python_Tools.substr(_this, 1, None)
 		
-		haxe_Log.trace(_hx_local_0(), _Hx_AnonObject(fileName = "HxmlBuild.hx" ,lineNumber = 260 ,className = "hxsublime.build.HxmlBuild" ,methodName = "get_relative_path" ))
+		haxe_Log.trace(_hx_local_0(), _Hx_AnonObject(fileName = "HxmlBuild.hx" ,lineNumber = 272 ,className = "hxsublime.build.HxmlBuild" ,methodName = "getRelativePath" ))
 		if cp is not None:
 			_this = StringTools.replace(file, cp, "")
 			return python_Tools.substr(_this, 1, None)
@@ -4099,7 +4113,7 @@ class hxsublime_build_HxmlBuild:
 			return None
 	
 
-	def target_to_string(self):
+	def targetToString(self):
 		target = None
 		if self._target is None:
 			target = "js"
@@ -4112,16 +4126,16 @@ class hxsublime_build_HxmlBuild:
 		return target
 	
 
-	def to_string(self):
+	def toString(self):
 		out = python_lib_os_Path.basename(self.output)
-		main = self.get_name()
-		target = self.target_to_string()
+		main = self.getName()
+		target = self.targetToString()
 		return "" + main + " (" + target + " - " + out + ")"
 	
 
-	def make_hxml(self):
+	def makeHxml(self):
 		outp = "# Autogenerated " + Std.string(self.hxml) + "\n\n"
-		outp = outp + "# " + self.to_string() + "\n"
+		outp = outp + "# " + self.toString() + "\n"
 		outp = outp + "-main " + self.main + "\n"
 		_g = 0
 		_g1 = self._args
@@ -4140,7 +4154,7 @@ class hxsublime_build_HxmlBuild:
 		return outp.strip(None)
 	
 
-	def set_cwd(self,cwd):
+	def setCwd(self,cwd):
 		_this = self._args
 		x = ("--cwd", cwd)
 		_this.append(x)
@@ -4148,8 +4162,8 @@ class hxsublime_build_HxmlBuild:
 		
 	
 
-	def set_times(self):
-		self.show_times = True
+	def setTimes(self):
+		self._showTimes = True
 		_this = self._args
 		x = ("--times", "")
 		_this.append(x)
@@ -4170,7 +4184,7 @@ class hxsublime_build_HxmlBuild:
 		
 	
 
-	def set_server_mode(self,server_port = 6000):
+	def setServerMode(self,server_port = 6000):
 		if server_port is None:
 			server_port = 6000
 		
@@ -4184,7 +4198,7 @@ class hxsublime_build_HxmlBuild:
 		
 	
 
-	def get_command_args(self,haxe_path):
+	def getCommandArgs(self,haxe_path):
 		cmd = __builtin__.list(haxe_path)
 		_g = 0
 		_g1 = self._args
@@ -4223,20 +4237,20 @@ class hxsublime_build_HxmlBuild:
 		return cmd
 	
 
-	def set_auto_completion(self,display,macro_completion = False,no_output = True):
-		if macro_completion is None:
-			macro_completion = False
+	def setAutoCompletion(self,display,macroCompletion = False,noOutput = True):
+		if macroCompletion is None:
+			macroCompletion = False
 		
-		if no_output is None:
-			no_output = True
+		if noOutput is None:
+			noOutput = True
 		
-		self.mode_completion = True
+		self.modeCompletion = True
 		args = self._args
 		self.main = None
 		def _hx_local_0(x):
 			return x[0] != "-cs" and x[0] != "-x" and x[0] != "-js" and x[0] != "-php" and x[0] != "-cpp" and x[0] != "-swf" and x[0] != "-java"
 		filterTargets = _hx_local_0
-		if macro_completion:
+		if macroCompletion:
 			_this = __builtin__.list(__builtin__.filter(filterTargets, args))
 			args = __builtin__.list(_this)
 		
@@ -4253,18 +4267,18 @@ class hxsublime_build_HxmlBuild:
 		
 		def _hx_local_2(x):
 			return x[0] != "-cmd" and x[0] != "-dce"
-		filter_commands_and_dce = _hx_local_2
-		args = __builtin__.list(__builtin__.filter(filter_commands_and_dce, args))
-		if not self.show_times:
+		filterCommandsAndDce = _hx_local_2
+		args = __builtin__.list(__builtin__.filter(filterCommandsAndDce, args))
+		if not self._showTimes:
 			def _hx_local_3(x):
 				return x[0] != "--times"
-			filter_times = _hx_local_3
-			_this = __builtin__.list(__builtin__.filter(filter_times, args))
+			filterTimes = _hx_local_3
+			_this = __builtin__.list(__builtin__.filter(filterTimes, args))
 			args = __builtin__.list(_this)
 			
 		
 		
-		if macro_completion:
+		if macroCompletion:
 			x = ("-neko", "__temp.n")
 			args.append(x)
 			__builtin__.len(args)
@@ -4276,7 +4290,7 @@ class hxsublime_build_HxmlBuild:
 		__builtin__.len(args)
 		
 		
-		if no_output:
+		if noOutput:
 			x = ("--no-output", "")
 			args.append(x)
 			__builtin__.len(args)
@@ -4286,28 +4300,30 @@ class hxsublime_build_HxmlBuild:
 		self._args = args
 	
 
-	def _update_types(self):
-		haxe_Log.trace("update types for classpaths:" + Std.string(self._classpaths), _Hx_AnonObject(fileName = "HxmlBuild.hx" ,lineNumber = 415 ,className = "hxsublime.build.HxmlBuild" ,methodName = "_update_types" ))
-		haxe_Log.trace("update types for libs:" + Std.string(self.libs), _Hx_AnonObject(fileName = "HxmlBuild.hx" ,lineNumber = 416 ,className = "hxsublime.build.HxmlBuild" ,methodName = "_update_types" ))
-		self.type_bundle = hxsublime_Types.find_types(self._classpaths, self.libs, self.get_build_folder(), [], [], False)
+	def updateTypes(self):
+		haxe_Log.trace("update types for classpaths:" + Std.string(self._classpaths), _Hx_AnonObject(fileName = "HxmlBuild.hx" ,lineNumber = 425 ,className = "hxsublime.build.HxmlBuild" ,methodName = "updateTypes" ))
+		haxe_Log.trace("update types for libs:" + Std.string(self.libs), _Hx_AnonObject(fileName = "HxmlBuild.hx" ,lineNumber = 426 ,className = "hxsublime.build.HxmlBuild" ,methodName = "updateTypes" ))
+		self.typeBundle = hxsublime_Types.findTypes(self._classpaths, self.libs, self.getBuildFolder(), [], [], False)
 	
 
-	def _should_refresh_types(self,now):
-		return self.type_bundle is None or self._update_time is None or now - self._update_time > 10
+	def shouldRefreshTypes(self,now):
+		return self.typeBundle is None or self._updateTime is None or now - self._updateTime > 10
 
-	def get_types(self):
+	def getTypes(self):
 		now = python_lib_Time.time()
-		if self._should_refresh_types(now):
-			haxe_Log.trace("UPDATE THE TYPES NOW", _Hx_AnonObject(fileName = "HxmlBuild.hx" ,lineNumber = 437 ,className = "hxsublime.build.HxmlBuild" ,methodName = "get_types" ))
-			self._update_time = now
-			self._update_types()
+		if self.shouldRefreshTypes(now):
+			haxe_Log.trace("UPDATE THE TYPES NOW", _Hx_AnonObject(fileName = "HxmlBuild.hx" ,lineNumber = 444 ,className = "hxsublime.build.HxmlBuild" ,methodName = "getTypes" ))
+			self._updateTime = now
+			self.updateTypes()
+			runTime = python_lib_Time.time() - now
+			haxe_Log.trace("update types time: " + Std.string(runTime), _Hx_AnonObject(fileName = "HxmlBuild.hx" ,lineNumber = 448 ,className = "hxsublime.build.HxmlBuild" ,methodName = "getTypes" ))
 		
 		
-		return self.type_bundle
+		return self.typeBundle
 	
 
-	def prepare_check_cmd(self,project,server_mode,view):
-		r = self.prepare_build_cmd(project, server_mode, view)
+	def prepareCheckCmd(self,project,server_mode,view):
+		r = self.prepareBuildCmd(project, server_mode, view)
 		cmd = r[0]
 		build_folder = r[1]
 		cmd.append("--no-output")
@@ -4316,30 +4332,30 @@ class hxsublime_build_HxmlBuild:
 		return (cmd, build_folder)
 	
 
-	def absolute_output(self):
+	def absoluteOutput(self):
 		if python_lib_os_Path.isabs(self.output):
 			return self.output
 		else:
-			return self.get_build_folder() + "/" + self.output
+			return python_lib_os_Path.join(self.getBuildFolder(), self.output)
 
-	def prepare_run_cmd(self,project,server_mode,view):
-		r = self._prepare_run(project, view, server_mode)
+	def prepareRunCmd(self,project,server_mode,view):
+		r = self.prepareRun(project, view, server_mode)
 		cmd = r[0]
 		build_folder = r[1]
 		nekox_file = r[2]
-		haxe_Log.trace(self.args, _Hx_AnonObject(fileName = "HxmlBuild.hx" ,lineNumber = 468 ,className = "hxsublime.build.HxmlBuild" ,methodName = "prepare_run_cmd" ))
-		haxe_Log.trace(cmd, _Hx_AnonObject(fileName = "HxmlBuild.hx" ,lineNumber = 469 ,className = "hxsublime.build.HxmlBuild" ,methodName = "prepare_run_cmd" ))
-		haxe_Log.trace(build_folder, _Hx_AnonObject(fileName = "HxmlBuild.hx" ,lineNumber = 470 ,className = "hxsublime.build.HxmlBuild" ,methodName = "prepare_run_cmd" ))
-		haxe_Log.trace(nekox_file, _Hx_AnonObject(fileName = "HxmlBuild.hx" ,lineNumber = 471 ,className = "hxsublime.build.HxmlBuild" ,methodName = "prepare_run_cmd" ))
-		default_open_ext = hxsublime_Settings.open_with_default_app()
+		haxe_Log.trace(self.args, _Hx_AnonObject(fileName = "HxmlBuild.hx" ,lineNumber = 477 ,className = "hxsublime.build.HxmlBuild" ,methodName = "prepareRunCmd" ))
+		haxe_Log.trace(cmd, _Hx_AnonObject(fileName = "HxmlBuild.hx" ,lineNumber = 478 ,className = "hxsublime.build.HxmlBuild" ,methodName = "prepareRunCmd" ))
+		haxe_Log.trace(build_folder, _Hx_AnonObject(fileName = "HxmlBuild.hx" ,lineNumber = 479 ,className = "hxsublime.build.HxmlBuild" ,methodName = "prepareRunCmd" ))
+		haxe_Log.trace(nekox_file, _Hx_AnonObject(fileName = "HxmlBuild.hx" ,lineNumber = 480 ,className = "hxsublime.build.HxmlBuild" ,methodName = "prepareRunCmd" ))
+		default_open_ext = hxsublime_Settings.openWithDefaultApp()
 		if nekox_file is not None:
 			cmd.extend(["-cmd", "neko " + nekox_file])
 		elif self._target == "swf" and default_open_ext is not None:
-			x = ["-cmd", default_open_ext + " " + self.absolute_output()]
+			x = ["-cmd", default_open_ext + " " + self.absoluteOutput()]
 			cmd.extend(x)
 		
 		elif self._target == "neko":
-			x = ["-cmd", "neko " + self.absolute_output()]
+			x = ["-cmd", "neko " + self.absoluteOutput()]
 			cmd.extend(x)
 		
 		elif self._target == "cpp":
@@ -4349,35 +4365,35 @@ class hxsublime_build_HxmlBuild:
 				exe = python_Tools.substr(self.main, sep_index + 1, None)
 			else:
 				exe = self.main
-			x = ["-cmd", python_lib_os_Path.join(self.absolute_output(), exe) + "-debug"]
+			x = ["-cmd", python_lib_os_Path.join(self.absoluteOutput(), exe) + "-debug"]
 			cmd.extend(x)
 			
 		
 		elif self._target == "js" and Lambda.has(self.defines, "nodejs"):
-			x = ["-cmd", "nodejs " + self.absolute_output()]
+			x = ["-cmd", "nodejs " + self.absoluteOutput()]
 			cmd.extend(x)
 		
 		elif self._target == "java":
 			sep_index = None
-			_this = self.absolute_output()
+			_this = self.absoluteOutput()
 			sep_index = _this.rfind(python_lib_os_Path.sep, None)
 			
 			jar = None
 			if sep_index == -1:
-				jar = self.absolute_output() + ".jar"
+				jar = self.absoluteOutput() + ".jar"
 			else:
 				def _hx_local_0():
-					_this = self.absolute_output()
+					_this = self.absoluteOutput()
 					return python_Tools.substr(_this, sep_index + 1, None)
 				
 				jar = _hx_local_0() + ".jar"
 			
-			x = ["-cmd", "java -jar " + python_lib_os_Path.join(self.absolute_output(), jar)]
+			x = ["-cmd", "java -jar " + python_lib_os_Path.join(self.absoluteOutput(), jar)]
 			cmd.extend(x)
 			
 		
 		elif self._target == "cs":
-			x = ["-cmd", "cd " + self.absolute_output()]
+			x = ["-cmd", "cd " + self.absoluteOutput()]
 			cmd.extend(x)
 			
 			cmd.extend(["-cmd", "gmcs -recurse:*.cs -main:" + self.main + " -out:" + self.main + ".exe-debug"])
@@ -4389,24 +4405,24 @@ class hxsublime_build_HxmlBuild:
 		return (cmd, build_folder)
 	
 
-	def prepare_build_cmd(self,project,server_mode,view):
-		r = self._prepare_run(project, view, server_mode)
+	def prepareBuildCmd(self,project,server_mode,view):
+		r = self.prepareRun(project, view, server_mode)
 		cmd = r[0]
 		build_folder = r[1]
 		return (cmd, build_folder)
 	
 
-	def _prepare_run(self,project,view,server_mode = None):
+	def prepareRun(self,project,view,server_mode = None):
 		if server_mode is None:
 			server_mode = None
 		
 		if server_mode is None:
-			server_mode = project.is_server_mode()
+			server_mode = project.isServerMode()
 		else:
 			server_mode = server_mode
-		run_exec = self._get_run_exec(project, view)
+		run_exec = self.getExecutable(project, view)
 		b = self.copy()
-		nekox_file_name = None
+		nekoxFileName = None
 		_g1 = 0
 		_g = __builtin__.len(b._args)
 		while _g1 < _g:
@@ -4420,28 +4436,28 @@ class hxsublime_build_HxmlBuild:
 			i = _hx_local_1()
 			a = b._args[i]
 			if a[0] == "-x":
-				nekox_file_name = a[1] + ".n"
-				b._args[i] = ("-neko", nekox_file_name)
+				nekoxFileName = a[1] + ".n"
+				b._args[i] = ("-neko", nekoxFileName)
 			
 			
 		
 		
 		if server_mode:
-			project.start_server(view)
-			b.set_server_mode(project.server.get_server_port())
+			project.startServer(view)
+			b.setServerMode(project.server.get_server_port())
 		
 		
-		b.set_build_cwd()
-		cmd = b.get_command_args(run_exec)
-		b1 = self.get_build_folder()
-		return (cmd, b1, nekox_file_name)
+		b.setBuildCwd()
+		cmd = b.getCommandArgs(run_exec)
+		b1 = self.getBuildFolder()
+		return (cmd, b1, nekoxFileName)
 		
 	
 
-	def _get_run_exec(self,project,view):
-		return project.haxe_exec(view)
+	def getExecutable(self,project,view):
+		return project.haxeExec(view)
 
-	def escape_cmd(self,cmd):
+	def escapeCmd(self,cmd):
 		print_cmd = __builtin__.list(cmd)
 		l = __builtin__.len(print_cmd)
 		_g = 0
@@ -4463,13 +4479,13 @@ class hxsublime_build_HxmlBuild:
 		return print_cmd
 	
 
-	def _run_async(self,project,view,callback,server_mode = None):
+	def runAsync(self,project,view,callback,server_mode = None):
 		if server_mode is None:
 			server_mode = None
 		
 		_g = self
-		env = project.haxe_env(view)
-		r = self._prepare_run(project, view, server_mode)
+		env = project.haxeEnv(view)
+		r = self.prepareRun(project, view, server_mode)
 		cmd = r[0]
 		build_folder = r[1]
 		nekox_file_name = r[2]
@@ -4492,48 +4508,48 @@ class hxsublime_build_HxmlBuild:
 		
 		
 		def _hx_local_2(out,err):
-			_g._on_run_complete(out, err, build_folder, nekox_file_name)
+			_g.onRunComplete(out, err, build_folder, nekox_file_name)
 			callback(out, err)
 		
 		cb = _hx_local_2
-		hxsublime_Execute.run_cmd_async(cmd, cb, "", build_folder, env)
+		hxsublime_Execute.runCmdAsync(cmd, cb, "", build_folder, env)
 	
 
-	def _run_sync(self,project,view,server_mode = None):
+	def runSync(self,project,view,server_mode = None):
 		if server_mode is None:
 			server_mode = None
 		
-		env = project.haxe_env(view)
-		r = self._prepare_run(project, view, server_mode)
+		env = project.haxeEnv(view)
+		r = self.prepareRun(project, view, server_mode)
 		cmd = r[0]
 		build_folder = r[1]
 		nekox_file_name = r[2]
-		haxe_Log.trace(" ".join(cmd), _Hx_AnonObject(fileName = "HxmlBuild.hx" ,lineNumber = 605 ,className = "hxsublime.build.HxmlBuild" ,methodName = "_run_sync" ))
-		r1 = hxsublime_Execute.run_cmd(cmd, "", build_folder, env)
+		haxe_Log.trace(" ".join(cmd), _Hx_AnonObject(fileName = "HxmlBuild.hx" ,lineNumber = 614 ,className = "hxsublime.build.HxmlBuild" ,methodName = "runSync" ))
+		r1 = hxsublime_Execute.runCmd(cmd, "", build_folder, env)
 		out = r1[0]
 		err = r1[1]
-		self._on_run_complete(out, err, build_folder, nekox_file_name)
+		self.onRunComplete(out, err, build_folder, nekox_file_name)
 		return (out, err)
 	
 
-	def _on_run_complete(self,out,err,build_folder,nekox_file_name):
-		haxe_Log.trace("---------------cmd-------------------", _Hx_AnonObject(fileName = "HxmlBuild.hx" ,lineNumber = 617 ,className = "hxsublime.build.HxmlBuild" ,methodName = "_on_run_complete" ))
-		haxe_Log.trace("out:" + out, _Hx_AnonObject(fileName = "HxmlBuild.hx" ,lineNumber = 618 ,className = "hxsublime.build.HxmlBuild" ,methodName = "_on_run_complete" ))
-		haxe_Log.trace("err:" + err, _Hx_AnonObject(fileName = "HxmlBuild.hx" ,lineNumber = 619 ,className = "hxsublime.build.HxmlBuild" ,methodName = "_on_run_complete" ))
-		haxe_Log.trace("---------compiler-output-------------", _Hx_AnonObject(fileName = "HxmlBuild.hx" ,lineNumber = 620 ,className = "hxsublime.build.HxmlBuild" ,methodName = "_on_run_complete" ))
+	def onRunComplete(self,out,err,build_folder,nekox_file_name):
+		haxe_Log.trace("---------------cmd-------------------", _Hx_AnonObject(fileName = "HxmlBuild.hx" ,lineNumber = 626 ,className = "hxsublime.build.HxmlBuild" ,methodName = "onRunComplete" ))
+		haxe_Log.trace("out:" + out, _Hx_AnonObject(fileName = "HxmlBuild.hx" ,lineNumber = 627 ,className = "hxsublime.build.HxmlBuild" ,methodName = "onRunComplete" ))
+		haxe_Log.trace("err:" + err, _Hx_AnonObject(fileName = "HxmlBuild.hx" ,lineNumber = 628 ,className = "hxsublime.build.HxmlBuild" ,methodName = "onRunComplete" ))
+		haxe_Log.trace("---------compiler-output-------------", _Hx_AnonObject(fileName = "HxmlBuild.hx" ,lineNumber = 629 ,className = "hxsublime.build.HxmlBuild" ,methodName = "onRunComplete" ))
 		if nekox_file_name is not None:
-			self._run_neko_x(build_folder, nekox_file_name)
+			self.runNekoX(build_folder, nekox_file_name)
 		
 	
 
-	def _run_neko_x(self,build_folder,neko_file_name):
+	def runNekoX(self,build_folder,neko_file_name):
 		neko_file = python_lib_os_Path.join(build_folder, neko_file_name)
-		haxe_Log.trace("run nekox: " + neko_file, _Hx_AnonObject(fileName = "HxmlBuild.hx" ,lineNumber = 631 ,className = "hxsublime.build.HxmlBuild" ,methodName = "_run_neko_x" ))
-		r = hxsublime_Execute.run_cmd(["neko", neko_file])
+		haxe_Log.trace("run nekox: " + neko_file, _Hx_AnonObject(fileName = "HxmlBuild.hx" ,lineNumber = 640 ,className = "hxsublime.build.HxmlBuild" ,methodName = "runNekoX" ))
+		r = hxsublime_Execute.runCmd(["neko", neko_file])
 		out = r[0]
 		err = r[1]
-		hxsublime_panel_Panels.default_panel().writeln(out)
-		hxsublime_panel_Panels.default_panel().writeln(err)
+		hxsublime_panel_Panels.defaultPanel().writeln(out)
+		hxsublime_panel_Panels.defaultPanel().writeln(err)
 	
 
 	def run(self,project,view,async,callback,server_mode = None):
@@ -4541,24 +4557,24 @@ class hxsublime_build_HxmlBuild:
 			server_mode = None
 		
 		if async:
-			haxe_Log.trace("RUN ASYNC COMPLETION", _Hx_AnonObject(fileName = "HxmlBuild.hx" ,lineNumber = 641 ,className = "hxsublime.build.HxmlBuild" ,methodName = "run" ))
-			self._run_async(project, view, callback, server_mode)
+			haxe_Log.trace("RUN ASYNC COMPLETION", _Hx_AnonObject(fileName = "HxmlBuild.hx" ,lineNumber = 651 ,className = "hxsublime.build.HxmlBuild" ,methodName = "run" ))
+			self.runAsync(project, view, callback, server_mode)
 		
 		else:
-			haxe_Log.trace("RUN SYNC COMPLETION", _Hx_AnonObject(fileName = "HxmlBuild.hx" ,lineNumber = 645 ,className = "hxsublime.build.HxmlBuild" ,methodName = "run" ))
-			r = self._run_sync(project, view, server_mode)
+			haxe_Log.trace("RUN SYNC COMPLETION", _Hx_AnonObject(fileName = "HxmlBuild.hx" ,lineNumber = 656 ,className = "hxsublime.build.HxmlBuild" ,methodName = "run" ))
+			r = self.runSync(project, view, server_mode)
 			out = r[0]
 			err = r[1]
 			callback(out, err)
 		
 	
 
-	def is_type_available(self,type):
-		pack = type.toplevel_pack()
-		return pack is None or self.is_pack_available(pack)
+	def isTypeAvailable(self,type):
+		pack = type.toplevelPack()
+		return pack is None or self.isPackAvailable(pack)
 	
 
-	def is_pack_available(self,pack):
+	def isPackAvailable(self,pack):
 		if pack == "":
 			return True
 		
@@ -4579,253 +4595,16 @@ class hxsublime_build_HxmlBuild:
 
 
 
-hxsublime_build_HxmlBuild.__meta__ = _Hx_AnonObject(fields = _Hx_AnonObject(is_type_available = _Hx_AnonObject(lazyFunction = None ) ,is_pack_available = _Hx_AnonObject(lazyFunction = None ) ) )
 
 
 hxsublime_build_HxmlBuild._hx_class = hxsublime_build_HxmlBuild
 hxsublime_build_HxmlBuild._hx_class_name = "hxsublime.build.HxmlBuild"
 _hx_classes['hxsublime.build.HxmlBuild'] = hxsublime_build_HxmlBuild
-hxsublime_build_HxmlBuild._hx_fields = ["show_times","_std_bundle","_args","main","_target","output","_hxml","_build_file","_classpaths","libs","type_bundle","_update_time","mode_completion","defines","name"]
+hxsublime_build_HxmlBuild._hx_fields = ["_showTimes","_stdBundle","_args","_hxml","_buildFile","libs","_updateTime","defines","_classpaths","typeBundle","modeCompletion","name","main","_target","output"]
 hxsublime_build_HxmlBuild._hx_props = []
-hxsublime_build_HxmlBuild._hx_methods = ["std_bundle","target","classpaths","hxml","title","setHxml","build_file","add_define","set_main","get_name","set_std_bundle","args","equals","merge","copy","add_arg","get_build_folder","set_build_cwd","align_drive_letter","add_classpath","add_lib","get_classpath_of_file","is_file_in_classpath","get_relative_path","target_to_string","to_string","make_hxml","set_cwd","set_times","set_server_mode","get_command_args","set_auto_completion","_update_types","_should_refresh_types","get_types","prepare_check_cmd","absolute_output","prepare_run_cmd","prepare_build_cmd","_prepare_run","_get_run_exec","escape_cmd","_run_async","_run_sync","_on_run_complete","_run_neko_x","run","is_type_available","is_pack_available"]
-hxsublime_build_HxmlBuild._hx_statics = ["__meta__"]
-hxsublime_build_HxmlBuild._hx_interfaces = []
-
-# print hxsublime.build.NmeBuild.NmeBuild
-class hxsublime_build_NmeBuild:
-
-
-	def __init__(self,project,title,nmml,target,cb = None):
-		if cb is None:
-			cb = None
-		
-		self._title = title
-		self._target = target
-		self.nmml = nmml
-		self._hxml_build = cb
-		self.project = project
-	
-	# var _title
-	# var _target
-	# var _hxml_build
-	# var nmml
-	# var project
-	def setHxml(self,hxml):
-		self.hxml_build().setHxml(hxml)
-
-	def make_hxml(self):
-		return self.hxml_build().make_hxml()
-
-	def title(self):
-		return self._title
-
-	def build_file(self):
-		return self.nmml
-
-	def target(self):
-		return self._target
-
-	def plattform(self):
-		return self._target.plattform
-
-	def _get_hxml_build_with_nme_display(self):
-		view = sublime_Sublime.active_window().active_view()
-		display_cmd = None
-		_this = self.get_build_command(self.project, view)
-		display_cmd = __builtin__.list(_this)
-		
-		display_cmd.append("display")
-		__builtin__.len(display_cmd)
-		
-		return hxsublime_build_Tools.create_haxe_build_from_nmml(self.project, self._target, self.nmml, display_cmd)
-	
-
-	def hxml_build(self):
-		haxe_Log.trace("create hxml build", _Hx_AnonObject(fileName = "NmeBuild.hx" ,lineNumber = 81 ,className = "hxsublime.build.NmeBuild" ,methodName = "hxml_build" ))
-		if self._hxml_build is None:
-			self._hxml_build = self._get_hxml_build_with_nme_display()
-		
-		return self._hxml_build
-	
-
-	def to_string(self):
-		title = self.title()
-		target = self.target().name
-		return "" + title + " (NME - " + target + ")"
-	
-
-	def set_std_bundle(self,std_bundle):
-		self.hxml_build().set_std_bundle(std_bundle)
-
-	def _filter_platform_specific(self,packs_or_classes):
-		res = []
-		_g = 0
-		while _g < len(packs_or_classes):
-			c = packs_or_classes[_g]
-			_g = _g + 1
-			if not StringTools.startsWith(c, "native") and not StringTools.startsWith(c, "browser") and not StringTools.startsWith(c, "flash") and not StringTools.startsWith(c, "flash9") and not StringTools.startsWith(c, "flash8"):
-				res.append(c)
-				__builtin__.len(res)
-			
-			
-		
-		
-		return res
-	
-
-	def get_types(self):
-		bundle = self.hxml_build().get_types()
-		return bundle
-	
-
-	def std_bundle(self):
-		return self.hxml_build().std_bundle()
-
-	def add_arg(self,arg):
-		self.hxml_build().add_arg(arg)
-
-	def copy(self):
-		hxml_copy = None
-		if self._hxml_build is not None:
-			hxml_copy = self.hxml_build().copy()
-		else:
-			hxml_copy = None
-		return hxsublime_build_NmeBuild(self.project, self.title(), self.nmml, self._target, hxml_copy)
-	
-
-	def get_relative_path(self,file):
-		return self.hxml_build().get_relative_path(file)
-
-	def get_build_folder(self):
-		r = None
-		if self.nmml is not None:
-			r = python_lib_os_Path.dirname(self.nmml)
-		
-		haxe_Log.trace("build_folder: " + Std.string(r), _Hx_AnonObject(fileName = "NmeBuild.hx" ,lineNumber = 150 ,className = "hxsublime.build.NmeBuild" ,methodName = "get_build_folder" ))
-		haxe_Log.trace("nmml: " + Std.string(self.nmml), _Hx_AnonObject(fileName = "NmeBuild.hx" ,lineNumber = 151 ,className = "hxsublime.build.NmeBuild" ,methodName = "get_build_folder" ))
-		return r
-	
-
-	def set_auto_completion(self,display,macro_completion = False,no_output = True):
-		if macro_completion is None:
-			macro_completion = False
-		
-		if no_output is None:
-			no_output = True
-		
-		self.hxml_build().set_auto_completion(display, macro_completion, no_output)
-	
-
-	def set_times(self):
-		self.hxml_build().set_times()
-
-	def add_define(self,define):
-		self.hxml_build().add_define(define)
-
-	def add_classpath(self,cp):
-		self.hxml_build().add_classpath(cp)
-
-	def run(self,project,view,async,on_result,server_mode = None):
-		if server_mode is None:
-			server_mode = None
-		
-		self.hxml_build().run(project, view, async, on_result, server_mode)
-	
-
-	def _get_run_exec(self,project,view):
-		return project.nme_exec(view)
-
-	def get_build_command(self,project,view):
-		_this = self._get_run_exec(project, view)
-		return __builtin__.list(_this)
-	
-
-	def escape_cmd(self,cmd):
-		return self.hxml_build().escape_cmd(cmd)
-
-	def prepare_check_cmd(self,project,server_mode,view):
-		r = self.prepare_build_cmd(project, server_mode, view)
-		cmd = r[0]
-		folder = r[1]
-		cmd.append("--no-output")
-		__builtin__.len(cmd)
-		
-		return (cmd, folder)
-	
-
-	def prepare_build_cmd(self,project,server_mode,view):
-		return self._prepare_cmd(project, server_mode, view, "build")
-
-	def prepare_run_cmd(self,project,server_mode,view):
-		return self._prepare_cmd(project, server_mode, view, "test")
-
-	def _prepare_cmd(self,project,server_mode,view,command):
-		cmd = self.get_build_command(project, view)
-		cmd.append(command)
-		__builtin__.len(cmd)
-		
-		x = self.build_file()
-		cmd.append(x)
-		__builtin__.len(cmd)
-		
-		
-		cmd.append(self.target().plattform)
-		__builtin__.len(cmd)
-		
-		cmd.extend(self.target().args)
-		if server_mode:
-			x = ["--connect", Std.string(project.server.get_server_port())]
-			cmd.extend(x)
-		
-		
-		b = self.get_build_folder()
-		return (cmd, b)
-		
-	
-
-	def _prepare_run(self,project,view,server_mode):
-		return self.hxml_build()._prepare_run(project, view, server_mode)
-
-	def classpaths(self):
-		return self.hxml_build().classpaths()
-
-	def args(self):
-		return self.hxml_build().args()
-
-	def is_type_available(self,type):
-		pack = type.toplevel_pack()
-		return pack is None or self.is_pack_available(pack)
-	
-
-	def is_pack_available(self,pack):
-		if pack == "":
-			return True
-		
-		pack1 = pack.split(".")[0]
-		target = self.hxml_build().target
-		tp = __builtin__.list(hxsublime_Config.target_packages)
-		tp.extend(["native", "browser", "nme"])
-		no_target_pack = not Lambda.has(tp, pack1)
-		is_nme_pack = pack1 == "nme"
-		available = target is None or no_target_pack or is_nme_pack
-		return available
-	
-
-
-
-
-
-hxsublime_build_NmeBuild.__meta__ = _Hx_AnonObject(fields = _Hx_AnonObject(title = _Hx_AnonObject(property = None ) ,build_file = _Hx_AnonObject(property = None ) ,target = _Hx_AnonObject(property = None ) ,plattform = _Hx_AnonObject(property = None ) ,hxml_build = _Hx_AnonObject(property = None ) ,std_bundle = _Hx_AnonObject(property = None ) ,classpaths = _Hx_AnonObject(property = None ) ,args = _Hx_AnonObject(property = None ) ) )
-
-
-hxsublime_build_NmeBuild._hx_class = hxsublime_build_NmeBuild
-hxsublime_build_NmeBuild._hx_class_name = "hxsublime.build.NmeBuild"
-_hx_classes['hxsublime.build.NmeBuild'] = hxsublime_build_NmeBuild
-hxsublime_build_NmeBuild._hx_fields = ["_title","_target","_hxml_build","nmml","project"]
-hxsublime_build_NmeBuild._hx_props = []
-hxsublime_build_NmeBuild._hx_methods = ["setHxml","make_hxml","title","build_file","target","plattform","_get_hxml_build_with_nme_display","hxml_build","to_string","set_std_bundle","_filter_platform_specific","get_types","std_bundle","add_arg","copy","get_relative_path","get_build_folder","set_auto_completion","set_times","add_define","add_classpath","run","_get_run_exec","get_build_command","escape_cmd","prepare_check_cmd","prepare_build_cmd","prepare_run_cmd","_prepare_cmd","_prepare_run","classpaths","args","is_type_available","is_pack_available"]
-hxsublime_build_NmeBuild._hx_statics = ["__meta__"]
-hxsublime_build_NmeBuild._hx_interfaces = []
+hxsublime_build_HxmlBuild._hx_methods = ["getClassPaths","stdBundle","target","classpaths","hxml","title","setHxml","buildFile","addDefine","setMain","getName","setStdBundle","args","equals","merge","copy","addArg","getBuildFolder","setBuildCwd","alignDriveLetter","addClasspath","addLib","getClasspathOfFile","getRelativePath","targetToString","toString","makeHxml","setCwd","setTimes","setServerMode","getCommandArgs","setAutoCompletion","updateTypes","shouldRefreshTypes","getTypes","prepareCheckCmd","absoluteOutput","prepareRunCmd","prepareBuildCmd","prepareRun","getExecutable","escapeCmd","runAsync","runSync","onRunComplete","runNekoX","run","isTypeAvailable","isPackAvailable"]
+hxsublime_build_HxmlBuild._hx_statics = []
+hxsublime_build_HxmlBuild._hx_interfaces = [hxsublime_build_Build]
 
 # print hxsublime.macros.LazyFunctionSupport.LazyFunctionSupport
 class hxsublime_macros_LazyFunctionSupport:
@@ -4846,6 +4625,237 @@ hxsublime_macros_LazyFunctionSupport._hx_methods = []
 hxsublime_macros_LazyFunctionSupport._hx_statics = []
 hxsublime_macros_LazyFunctionSupport._hx_interfaces = []
 
+# print hxsublime.build.NmeBuild.NmeBuild
+class hxsublime_build_NmeBuild:
+
+
+	def __init__(self,project,title,nmml,target,cb = None):
+		if cb is None:
+			cb = None
+		
+		self._title = title
+		self._target = target
+		self.nmml = nmml
+		self._hxmlBuild = cb
+		self.project = project
+	
+	# var _title
+	# var _target
+	# var _hxmlBuild
+	# var nmml
+	# var project
+	def setHxml(self,hxml):
+		self.hxmlBuild().setHxml(hxml)
+
+	def makeHxml(self):
+		return self.hxmlBuild().makeHxml()
+
+	def title(self):
+		return self._title
+
+	def buildFile(self):
+		return self.nmml
+
+	def target(self):
+		return self._target
+
+	def plattform(self):
+		return self._target.plattform
+
+	def getHxmlBuildWithNmeDisplay(self):
+		view = sublime_Sublime.active_window().active_view()
+		display_cmd = None
+		_this = self.getBuildCommand(self.project, view)
+		display_cmd = __builtin__.list(_this)
+		
+		display_cmd.append("display")
+		__builtin__.len(display_cmd)
+		
+		return hxsublime_build_Tools.createHaxeBuildFromNmml(self.project, self._target, self.nmml, display_cmd)
+	
+
+	def hxmlBuild(self):
+		if self._hxmlBuild is None:
+			self._hxmlBuild = self.getHxmlBuildWithNmeDisplay()
+		
+		return self._hxmlBuild
+	
+
+	def toString(self):
+		title = self.title()
+		target = self.target().name
+		return "" + title + " (NME - " + target + ")"
+	
+
+	def setStdBundle(self,std_bundle):
+		self.hxmlBuild().setStdBundle(std_bundle)
+
+	def _filter_platform_specific(self,packs_or_classes):
+		res = []
+		_g = 0
+		while _g < len(packs_or_classes):
+			c = packs_or_classes[_g]
+			_g = _g + 1
+			if not StringTools.startsWith(c, "native") and not StringTools.startsWith(c, "browser") and not StringTools.startsWith(c, "flash") and not StringTools.startsWith(c, "flash9") and not StringTools.startsWith(c, "flash8"):
+				res.append(c)
+				__builtin__.len(res)
+			
+			
+		
+		
+		return res
+	
+
+	def getTypes(self):
+		bundle = self.hxmlBuild().getTypes()
+		return bundle
+	
+
+	def stdBundle(self):
+		return self.hxmlBuild().stdBundle()
+
+	def addArg(self,arg):
+		self.hxmlBuild().addArg(arg)
+
+	def copy(self):
+		hxmlCopy = None
+		if self._hxmlBuild is not None:
+			hxmlCopy = self.hxmlBuild().copy()
+		else:
+			hxmlCopy = None
+		return hxsublime_build_NmeBuild(self.project, self.title(), self.nmml, self._target, hxmlCopy)
+	
+
+	def getRelativePath(self,file):
+		return self.hxmlBuild().getRelativePath(file)
+
+	def getBuildFolder(self):
+		r = None
+		if self.nmml is not None:
+			r = python_lib_os_Path.dirname(self.nmml)
+		
+		haxe_Log.trace("build_folder: " + Std.string(r), _Hx_AnonObject(fileName = "NmeBuild.hx" ,lineNumber = 151 ,className = "hxsublime.build.NmeBuild" ,methodName = "getBuildFolder" ))
+		haxe_Log.trace("nmml: " + Std.string(self.nmml), _Hx_AnonObject(fileName = "NmeBuild.hx" ,lineNumber = 152 ,className = "hxsublime.build.NmeBuild" ,methodName = "getBuildFolder" ))
+		return r
+	
+
+	def setAutoCompletion(self,display,macro_completion = False,no_output = True):
+		if macro_completion is None:
+			macro_completion = False
+		
+		if no_output is None:
+			no_output = True
+		
+		self.hxmlBuild().setAutoCompletion(display, macro_completion, no_output)
+	
+
+	def setTimes(self):
+		self.hxmlBuild().setTimes()
+
+	def addDefine(self,define):
+		self.hxmlBuild().addDefine(define)
+
+	def addClasspath(self,cp):
+		self.hxmlBuild().addClasspath(cp)
+
+	def run(self,project,view,async,on_result,server_mode = None):
+		if server_mode is None:
+			server_mode = None
+		
+		self.hxmlBuild().run(project, view, async, on_result, server_mode)
+	
+
+	def getExecutable(self,project,view):
+		return project.nmeExec(view)
+
+	def getBuildCommand(self,project,view):
+		_this = self.getExecutable(project, view)
+		return __builtin__.list(_this)
+	
+
+	def escapeCmd(self,cmd):
+		return self.hxmlBuild().escapeCmd(cmd)
+
+	def prepareCheckCmd(self,project,server_mode,view):
+		r = self.prepareBuildCmd(project, server_mode, view)
+		cmd = r[0]
+		folder = r[1]
+		cmd.append("--no-output")
+		__builtin__.len(cmd)
+		
+		return (cmd, folder)
+	
+
+	def prepareBuildCmd(self,project,server_mode,view):
+		return self.prepareCmd(project, server_mode, view, "build")
+
+	def prepareRunCmd(self,project,server_mode,view):
+		return self.prepareCmd(project, server_mode, view, "test")
+
+	def prepareCmd(self,project,server_mode,view,command):
+		cmd = self.getBuildCommand(project, view)
+		cmd.append(command)
+		__builtin__.len(cmd)
+		
+		x = self.buildFile()
+		cmd.append(x)
+		__builtin__.len(cmd)
+		
+		
+		cmd.append(self.target().plattform)
+		__builtin__.len(cmd)
+		
+		cmd.extend(self.target().args)
+		if server_mode:
+			x = ["--connect", Std.string(project.server.get_server_port())]
+			cmd.extend(x)
+		
+		
+		b = self.getBuildFolder()
+		return (cmd, b)
+		
+	
+
+	def classpaths(self):
+		return self.hxmlBuild().classpaths()
+
+	def args(self):
+		return self.hxmlBuild().args()
+
+	def isTypeAvailable(self,type):
+		pack = type.toplevelPack()
+		return pack is None or self.isPackAvailable(pack)
+	
+
+	def isPackAvailable(self,pack):
+		if pack == "":
+			return True
+		
+		pack1 = pack.split(".")[0]
+		target = self.hxmlBuild().target
+		tp = hxsublime_Config.target_packages + ["native", "browser", "nme"]
+		noTargetPack = not Lambda.has(tp, pack1)
+		isNmePack = pack1 == "nme"
+		available = target is None or noTargetPack or isNmePack
+		return available
+	
+
+
+
+
+
+hxsublime_build_NmeBuild.__meta__ = _Hx_AnonObject(fields = _Hx_AnonObject(title = _Hx_AnonObject(property = None ) ,buildFile = _Hx_AnonObject(property = None ) ,target = _Hx_AnonObject(property = None ) ,plattform = _Hx_AnonObject(property = None ) ,stdBundle = _Hx_AnonObject(property = None ) ) )
+
+
+hxsublime_build_NmeBuild._hx_class = hxsublime_build_NmeBuild
+hxsublime_build_NmeBuild._hx_class_name = "hxsublime.build.NmeBuild"
+_hx_classes['hxsublime.build.NmeBuild'] = hxsublime_build_NmeBuild
+hxsublime_build_NmeBuild._hx_fields = ["_title","_target","_hxmlBuild","nmml","project"]
+hxsublime_build_NmeBuild._hx_props = []
+hxsublime_build_NmeBuild._hx_methods = ["setHxml","makeHxml","title","buildFile","target","plattform","getHxmlBuildWithNmeDisplay","hxmlBuild","toString","setStdBundle","_filter_platform_specific","getTypes","stdBundle","addArg","copy","getRelativePath","getBuildFolder","setAutoCompletion","setTimes","addDefine","addClasspath","run","getExecutable","getBuildCommand","escapeCmd","prepareCheckCmd","prepareBuildCmd","prepareRunCmd","prepareCmd","classpaths","args","isTypeAvailable","isPackAvailable"]
+hxsublime_build_NmeBuild._hx_statics = ["__meta__"]
+hxsublime_build_NmeBuild._hx_interfaces = [hxsublime_macros_LazyFunctionSupport,hxsublime_build_Build]
+
 # print hxsublime.build.OpenFlBuild.OpenFlBuild
 class hxsublime_build_OpenFlBuild(hxsublime_build_NmeBuild):
 
@@ -4858,50 +4868,34 @@ class hxsublime_build_OpenFlBuild(hxsublime_build_NmeBuild):
 	
 	def copy(self):
 		hxml_copy = None
-		if self._hxml_build is not None:
-			hxml_copy = self.hxml_build().copy()
+		if self._hxmlBuild is not None:
+			hxml_copy = self.hxmlBuild().copy()
 		else:
 			hxml_copy = None
 		r = hxsublime_build_OpenFlBuild(self.project, self.title(), self.nmml, self.target(), hxml_copy)
 		return r
 	
 
-	def _get_run_exec(self,project,view):
-		return project.openfl_exec(view)
+	def getExecutable(self,project,view):
+		return project.openflExec(view)
 
-	def filter_platform_specific(self,packs_or_classes):
-		res = []
-		_g = 0
-		while _g < len(packs_or_classes):
-			c = packs_or_classes[_g]
-			_g = _g + 1
-			if not hxsublime_tools_StringTools.startsWithAny(c, ["native", "browser", "nme"]):
-				res.append(c)
-				__builtin__.len(res)
-			
-			
-		
-		
-		return res
-	
-
-	def to_string(self):
+	def toString(self):
 		out = self.title()
 		target = self.target().name
 		return "" + out + " (OpenFL - " + target + ")"
 	
 
-	def is_type_available(self,type):
-		pack = type.toplevel_pack()
-		return pack is None or self.is_pack_available(pack)
+	def isTypeAvailable(self,type):
+		pack = type.toplevelPack()
+		return pack is None or self.isPackAvailable(pack)
 	
 
-	def is_pack_available(self,pack):
+	def isPackAvailable(self,pack):
 		if pack == "":
 			return True
 		
 		pack1 = pack.split(".")[0]
-		target = self.hxml_build().target
+		target = self.hxmlBuild().target
 		tp = __builtin__.list(hxsublime_Config.target_packages)
 		tp.extend(["native", "browser", "nme"])
 		no_target_pack = not Lambda.has(tp, pack1)
@@ -4921,7 +4915,7 @@ hxsublime_build_OpenFlBuild._hx_class_name = "hxsublime.build.OpenFlBuild"
 _hx_classes['hxsublime.build.OpenFlBuild'] = hxsublime_build_OpenFlBuild
 hxsublime_build_OpenFlBuild._hx_fields = []
 hxsublime_build_OpenFlBuild._hx_props = []
-hxsublime_build_OpenFlBuild._hx_methods = ["copy","_get_run_exec","filter_platform_specific","to_string","is_type_available","is_pack_available"]
+hxsublime_build_OpenFlBuild._hx_methods = ["copy","getExecutable","toString","isTypeAvailable","isPackAvailable"]
 hxsublime_build_OpenFlBuild._hx_statics = []
 hxsublime_build_OpenFlBuild._hx_interfaces = [hxsublime_macros_LazyFunctionSupport]
 hxsublime_build_OpenFlBuild._hx_super = hxsublime_build_NmeBuild
@@ -4935,15 +4929,15 @@ class hxsublime_build_Tools:
 
 
 hxsublime_build_Tools._extract_tag = python_lib_Re.compile("<([a-z0-9_-]+).*?\\s(name|main|title|file)=\"([ a-z0-9_./-]+)\"", python_lib_Re.I)
-def Tools_statics__hxml_buffer_to_builds(project,hxml_buffer,folder,build_path,build_file = None,hxml = None):
-	if build_file is None:
-		build_file = None
+def Tools_statics_hxmlBufferToBuilds(project,hxml_buffer,folder,build_path,buildFile = None,hxml = None):
+	if buildFile is None:
+		buildFile = None
 	
 	if hxml is None:
 		hxml = None
 	
 	builds = []
-	current_build = hxsublime_build_HxmlBuild(hxml, build_file)
+	currentBuild = hxsublime_build_HxmlBuild(hxml, buildFile)
 	f = hxml_buffer
 	while True:
 		l = f.readline()
@@ -4955,7 +4949,7 @@ def Tools_statics__hxml_buffer_to_builds(project,hxml_buffer,folder,build_path,b
 		
 		l = l.strip(None)
 		if StringTools.startsWith(l, "#build-name="):
-			current_build.name = python_Tools.substr(l, 12, None)
+			currentBuild.name = python_Tools.substr(l, 12, None)
 			continue
 		
 		
@@ -4963,25 +4957,29 @@ def Tools_statics__hxml_buffer_to_builds(project,hxml_buffer,folder,build_path,b
 			continue
 		
 		if StringTools.startsWith(l, "--next"):
-			if __builtin__.len(current_build._classpaths) == 0:
-				haxe_Log.trace("no classpaths", _Hx_AnonObject(fileName = "Tools.hx" ,lineNumber = 71 ,className = "hxsublime.build.Tools" ,methodName = "_hxml_buffer_to_builds" ))
-				current_build.add_classpath(build_path)
+			def _hx_local_0():
+				_this = currentBuild.getClassPaths()
+				return __builtin__.len(_this)
+			
+			if _hx_local_0() == 0:
+				haxe_Log.trace("no classpaths", _Hx_AnonObject(fileName = "Tools.hx" ,lineNumber = 70 ,className = "hxsublime.build.Tools" ,methodName = "hxmlBufferToBuilds" ))
+				currentBuild.addClasspath(build_path)
 			
 			
-			builds.append(current_build)
+			builds.append(currentBuild)
 			__builtin__.len(builds)
 			
-			current_build = hxsublime_build_HxmlBuild(hxml, build_file)
+			currentBuild = hxsublime_build_HxmlBuild(hxml, buildFile)
 			continue
 		
 		
 		if StringTools.endsWith(l, ".hxml"):
-			haxe_Log.trace("found ref of hxml file:" + l, _Hx_AnonObject(fileName = "Tools.hx" ,lineNumber = 83 ,className = "hxsublime.build.Tools" ,methodName = "_hxml_buffer_to_builds" ))
+			haxe_Log.trace("found ref of hxml file:" + l, _Hx_AnonObject(fileName = "Tools.hx" ,lineNumber = 82 ,className = "hxsublime.build.Tools" ,methodName = "hxmlBufferToBuilds" ))
 			path = python_lib_os_Path.dirname(hxml)
-			sub_builds = hxsublime_build_Tools._hxml_to_builds(project, path + python_lib_Os.sep + l, folder)
-			if __builtin__.len(sub_builds) == 1:
-				b = sub_builds[0]
-				current_build.merge(b)
+			subBuilds = hxsublime_build_Tools.hxmlToBuilds(project, path + python_lib_Os.sep + l, folder)
+			if __builtin__.len(subBuilds) == 1:
+				b = subBuilds[0]
+				currentBuild.merge(b)
 			
 			
 		
@@ -4989,7 +4987,7 @@ def Tools_statics__hxml_buffer_to_builds(project,hxml_buffer,folder,build_path,b
 		if StringTools.startsWith(l, "-main"):
 			spl = l.split(" ")
 			if __builtin__.len(spl) == 2:
-				current_build.main = spl[1]
+				currentBuild.main = spl[1]
 			else:
 				sublime_Sublime.status_message("Invalid build.hxml : no Main class")
 		
@@ -4997,12 +4995,12 @@ def Tools_statics__hxml_buffer_to_builds(project,hxml_buffer,folder,build_path,b
 		if StringTools.startsWith(l, "-lib"):
 			spl = l.split(" ")
 			if __builtin__.len(spl) == 2:
-				lib = project.haxelib_manager().get(spl[1])
+				lib = project.haxelibManager().get(spl[1])
 				if lib is not None:
-					current_build.add_lib(lib)
+					currentBuild.addLib(lib)
 				else:
-					current_build.add_arg(("-lib", spl[1]))
-					hxsublime_panel_Panels.default_panel().writeln("Error: haxelib library " + Std.string(spl[1]) + " is not installed")
+					currentBuild.addArg(("-lib", spl[1]))
+					hxsublime_panel_Panels.defaultPanel().writeln("Error: haxelib library " + Std.string(spl[1]) + " is not installed")
 				
 			
 			else:
@@ -5011,33 +5009,33 @@ def Tools_statics__hxml_buffer_to_builds(project,hxml_buffer,folder,build_path,b
 		
 		if StringTools.startsWith(l, "-cmd"):
 			spl = l.split(" ")
-			def _hx_local_0():
+			def _hx_local_1():
 				b = None
 				_this = spl[1:None]
 				b = " ".join(_this)
 				
 				return ("-cmd", b)
 			
-			current_build.add_arg(_hx_local_0())
+			currentBuild.addArg(_hx_local_1())
 		
 		
 		if StringTools.startsWith(l, "--macro"):
 			spl = l.split(" ")
-			def _hx_local_1():
+			def _hx_local_2():
 				b = None
 				_this = spl[1:None]
 				b = " ".join(_this)
 				
 				return ("--macro", b)
 			
-			current_build.add_arg(_hx_local_1())
+			currentBuild.addArg(_hx_local_2())
 		
 		
 		if StringTools.startsWith(l, "-D"):
 			x = l.split(" ")
 			tup = (x[0], x[1])
-			current_build.add_arg(tup)
-			current_build.add_define(tup[1])
+			currentBuild.addArg(tup)
+			currentBuild.addDefine(tup[1])
 			continue
 		
 		
@@ -5053,7 +5051,7 @@ def Tools_statics__hxml_buffer_to_builds(project,hxml_buffer,folder,build_path,b
 					p2 = ""
 				else:
 					p2 = x[1]
-				current_build.add_arg((x[0], p2))
+				currentBuild.addArg((x[0], p2))
 				break
 			
 			
@@ -5066,14 +5064,14 @@ def Tools_statics__hxml_buffer_to_builds(project,hxml_buffer,folder,build_path,b
 			_g = _g + 1
 			if StringTools.startsWith(l, "-" + flag):
 				spl = l.split(" ")
-				def _hx_local_2():
+				def _hx_local_3():
 					_this = spl[1:None]
 					return " ".join(_this)
 				
-				outp = python_lib_os_Path.join(folder, _hx_local_2())
-				current_build.add_arg(("-" + flag, outp))
+				outp = python_lib_os_Path.join(folder, _hx_local_3())
+				currentBuild.addArg(("-" + flag, outp))
 				if flag == "x":
-					current_build._target = "neko"
+					currentBuild._target = "neko"
 				
 				break
 			
@@ -5089,9 +5087,9 @@ def Tools_statics__hxml_buffer_to_builds(project,hxml_buffer,folder,build_path,b
 				spl = l.split(" ")
 				spl.pop(0)
 				outp = " ".join(spl)
-				current_build.add_arg(("-" + flag, outp))
-				current_build._target = flag
-				current_build.output = outp
+				currentBuild.addArg(("-" + flag, outp))
+				currentBuild._target = flag
+				currentBuild.output = outp
 				break
 			
 			
@@ -5102,20 +5100,24 @@ def Tools_statics__hxml_buffer_to_builds(project,hxml_buffer,folder,build_path,b
 			cp.pop(0)
 			classpath = " ".join(cp)
 			abs_classpath = hxsublime_tools_PathTools.joinNorm(build_path, classpath)
-			current_build.add_classpath(abs_classpath)
+			currentBuild.addClasspath(abs_classpath)
 		
 		
 	
-	if __builtin__.len(current_build._classpaths) == 0:
-		current_build.add_classpath(build_path)
+	def _hx_local_4():
+		_this = currentBuild.getClassPaths()
+		return __builtin__.len(_this)
 	
-	builds.append(current_build)
+	if _hx_local_4() == 0:
+		currentBuild.addClasspath(build_path)
+	
+	builds.append(currentBuild)
 	__builtin__.len(builds)
 	
 	return builds
 	
-hxsublime_build_Tools._hxml_buffer_to_builds = Tools_statics__hxml_buffer_to_builds
-def Tools_statics__find_build_files_in_folder(folder,extension):
+hxsublime_build_Tools.hxmlBufferToBuilds = Tools_statics_hxmlBufferToBuilds
+def Tools_statics_findBuildFiles(folder,extension):
 	if not python_lib_os_Path.isdir(folder):
 		return []
 	
@@ -5145,18 +5147,18 @@ def Tools_statics__find_build_files_in_folder(folder,extension):
 	
 	return files
 	
-hxsublime_build_Tools._find_build_files_in_folder = Tools_statics__find_build_files_in_folder
-def Tools_statics__hxml_to_builds(project,hxml,folder):
+hxsublime_build_Tools.findBuildFiles = Tools_statics_findBuildFiles
+def Tools_statics_hxmlToBuilds(project,hxml,folder):
 	build_path = python_lib_os_Path.dirname(hxml)
 	hxml_buffer = python_lib_Codecs.open(hxml, "r+", "utf-8", "ignore")
 	def _hx_local_1():
 		def _hx_local_0():
 			return hxml_buffer.readline()
-		return hxsublime_build_Tools._hxml_buffer_to_builds(project, _Hx_AnonObject(readline = _hx_local_0 ), folder, build_path, hxml, hxml)
+		return hxsublime_build_Tools.hxmlBufferToBuilds(project, _Hx_AnonObject(readline = _hx_local_0 ), folder, build_path, hxml, hxml)
 	
 	return _hx_local_1()
 	
-hxsublime_build_Tools._hxml_to_builds = Tools_statics__hxml_to_builds
+hxsublime_build_Tools.hxmlToBuilds = Tools_statics_hxmlToBuilds
 def Tools_statics__find_nme_project_title(nmml_file):
 	f = python_lib_Codecs.open(nmml_file, "r+", "utf-8", "ignore")
 	title = None
@@ -5184,7 +5186,7 @@ def Tools_statics__find_nme_project_title(nmml_file):
 	return title
 	
 hxsublime_build_Tools._find_nme_project_title = Tools_statics__find_nme_project_title
-def Tools_statics_create_haxe_build_from_nmml(project,target,nmml,display_cmd):
+def Tools_statics_createHaxeBuildFromNmml(project,target,nmml,display_cmd):
 	cmd = __builtin__.list(display_cmd)
 	cmd.append(nmml)
 	__builtin__.len(cmd)
@@ -5194,36 +5196,36 @@ def Tools_statics_create_haxe_build_from_nmml(project,target,nmml,display_cmd):
 	
 	cmd.extend(target.args)
 	nmml_dir = python_lib_os_Path.dirname(nmml)
-	r = hxsublime_Execute.run_cmd(cmd, None, nmml_dir)
+	r = hxsublime_Execute.runCmd(cmd, None, nmml_dir)
 	out = r[0]
 	err = r[1]
 	io = python_lib_io_StringIO(out)
 	def _hx_local_1():
 		def _hx_local_0():
 			return io.readline()
-		return hxsublime_build_Tools._hxml_buffer_to_builds(project, _Hx_AnonObject(readline = _hx_local_0 ), nmml_dir, nmml_dir, nmml, None)[0]
+		return hxsublime_build_Tools.hxmlBufferToBuilds(project, _Hx_AnonObject(readline = _hx_local_0 ), nmml_dir, nmml_dir, nmml, None)[0]
 	
 	return _hx_local_1()
 	
-hxsublime_build_Tools.create_haxe_build_from_nmml = Tools_statics_create_haxe_build_from_nmml
-def Tools_statics_find_hxml_projects(project,folder):
+hxsublime_build_Tools.createHaxeBuildFromNmml = Tools_statics_createHaxeBuildFromNmml
+def Tools_statics_findHxmlProjects(project,folder):
 	builds = []
-	found = hxsublime_build_Tools._find_build_files_in_folder(folder, "hxml")
+	found = hxsublime_build_Tools.findBuildFiles(folder, "hxml")
 	_g = 0
 	while _g < len(found):
 		build = found[_g]
 		_g = _g + 1
 		hxml_file = build[0]
 		hxml_folder = build[1]
-		b = hxsublime_build_Tools._hxml_to_builds(project, hxml_file, hxml_folder)
+		b = hxsublime_build_Tools.hxmlToBuilds(project, hxml_file, hxml_folder)
 		builds.extend(b)
 	
 	
 	return builds
 	
-hxsublime_build_Tools.find_hxml_projects = Tools_statics_find_hxml_projects
-def Tools_statics_find_nme_projects(project,folder):
-	found = hxsublime_build_Tools._find_build_files_in_folder(folder, "nmml")
+hxsublime_build_Tools.findHxmlProjects = Tools_statics_findHxmlProjects
+def Tools_statics_findNmeProjects(project,folder):
+	found = hxsublime_build_Tools.findBuildFiles(folder, "nmml")
 	builds = []
 	_g = 0
 	while _g < len(found):
@@ -5249,9 +5251,9 @@ def Tools_statics_find_nme_projects(project,folder):
 	
 	return builds
 	
-hxsublime_build_Tools.find_nme_projects = Tools_statics_find_nme_projects
-def Tools_statics_find_openfl_projects(project,folder):
-	found = hxsublime_build_Tools._find_build_files_in_folder(folder, "xml")
+hxsublime_build_Tools.findNmeProjects = Tools_statics_findNmeProjects
+def Tools_statics_findOpenflProjects(project,folder):
+	found = hxsublime_build_Tools.findBuildFiles(folder, "xml")
 	builds = []
 	_g = 0
 	while _g < len(found):
@@ -5277,7 +5279,7 @@ def Tools_statics_find_openfl_projects(project,folder):
 	
 	return builds
 	
-hxsublime_build_Tools.find_openfl_projects = Tools_statics_find_openfl_projects
+hxsublime_build_Tools.findOpenflProjects = Tools_statics_findOpenflProjects
 
 
 hxsublime_build_Tools._hx_class = hxsublime_build_Tools
@@ -5286,7 +5288,7 @@ _hx_classes['hxsublime.build.Tools'] = hxsublime_build_Tools
 hxsublime_build_Tools._hx_fields = []
 hxsublime_build_Tools._hx_props = []
 hxsublime_build_Tools._hx_methods = []
-hxsublime_build_Tools._hx_statics = ["_extract_tag","_hxml_buffer_to_builds","_find_build_files_in_folder","_hxml_to_builds","_find_nme_project_title","create_haxe_build_from_nmml","find_hxml_projects","find_nme_projects","find_openfl_projects"]
+hxsublime_build_Tools._hx_statics = ["_extract_tag","hxmlBufferToBuilds","findBuildFiles","hxmlToBuilds","_find_nme_project_title","createHaxeBuildFromNmml","findHxmlProjects","findNmeProjects","findOpenflProjects"]
 hxsublime_build_Tools._hx_interfaces = []
 
 # print sublime.Command.Command
@@ -5306,7 +5308,7 @@ class hxsublime_commands_HaxeSaveAllAndRunCommand(sublime_TextCommand):
 		haxe_Log.trace("run HaxeSaveAllAndRunCommand", _Hx_AnonObject(fileName = "Build.hx" ,lineNumber = 20 ,className = "hxsublime.commands.HaxeSaveAllAndRunCommand" ,methodName = "run" ))
 		view = self.view
 		view.window().run_command("save_all")
-		hxsublime_project_Projects.current_project(self.view).run_build(view)
+		hxsublime_project_Projects.currentProject(self.view).runBuild(view)
 	
 
 
@@ -5339,7 +5341,7 @@ class hxsublime_commands_HaxeSaveAllAndCheckCommand(sublime_TextCommand):
 		haxe_Log.trace("run HaxeSaveAllAndCheckCommand", _Hx_AnonObject(fileName = "Build.hx" ,lineNumber = 32 ,className = "hxsublime.commands.HaxeSaveAllAndCheckCommand" ,methodName = "run" ))
 		view = self.view
 		view.window().run_command("save_all")
-		hxsublime_project_Projects.current_project(self.view).check_build(view)
+		hxsublime_project_Projects.currentProject(self.view).checkBuild(view)
 	
 
 
@@ -5371,7 +5373,7 @@ class hxsublime_commands_HaxeSaveAllAndBuildCommand(sublime_TextCommand):
 		haxe_Log.trace("run HaxeSaveAllAndBuildCommand", _Hx_AnonObject(fileName = "Build.hx" ,lineNumber = 43 ,className = "hxsublime.commands.HaxeSaveAllAndBuildCommand" ,methodName = "run" ))
 		view = self.view
 		view.window().run_command("save_all")
-		hxsublime_project_Projects.current_project(self.view).just_build(view)
+		hxsublime_project_Projects.currentProject(self.view).justBuild(view)
 	
 
 
@@ -5402,12 +5404,12 @@ class hxsublime_commands_HaxeRunBuildCommand(sublime_TextCommand):
 		
 		view = self.view
 		haxe_Log.trace("run HaxeRunBuildCommand", _Hx_AnonObject(fileName = "Build.hx" ,lineNumber = 55 ,className = "hxsublime.commands.HaxeRunBuildCommand" ,methodName = "run" ))
-		project = hxsublime_project_Projects.current_project(self.view)
-		if project.has_build():
-			project.run_build(view)
+		project = hxsublime_project_Projects.currentProject(self.view)
+		if project.hasBuild():
+			project.runBuild(view)
 		else:
 			haxe_Log.trace("no builds selected", _Hx_AnonObject(fileName = "Build.hx" ,lineNumber = 64 ,className = "hxsublime.commands.HaxeRunBuildCommand" ,methodName = "run" ))
-			project.extract_build_args(view, True)
+			project.extractBuildArgs(view, True)
 		
 	
 
@@ -5439,7 +5441,7 @@ class hxsublime_commands_HaxeSelectBuildCommand(sublime_TextCommand):
 		
 		haxe_Log.trace("run HaxeSelectBuildCommand", _Hx_AnonObject(fileName = "Build.hx" ,lineNumber = 74 ,className = "hxsublime.commands.HaxeSelectBuildCommand" ,methodName = "run" ))
 		view = self.view
-		hxsublime_project_Projects.current_project(self.view).select_build(view)
+		hxsublime_project_Projects.currentProject(self.view).selectBuild(view)
 	
 
 
@@ -5467,10 +5469,10 @@ class hxsublime_commands_HaxeBuildOnSaveListener(sublime_EventListener):
 		haxe_Log.trace("on_post_save", _Hx_AnonObject(fileName = "Build.hx" ,lineNumber = 83 ,className = "hxsublime.commands.HaxeBuildOnSaveListener" ,methodName = "on_post_save" ))
 		if view is not None and view.file_name() is not None:
 			if hxsublime_tools_ViewTools.isSupported(view) or StringTools.endsWith(view.file_name(), ".erazor.html"):
-				if hxsublime_Settings.check_on_save():
-					project = hxsublime_project_Projects.current_project(view)
-					if project.has_build():
-						project.check_build(view)
+				if hxsublime_Settings.checkOnSave():
+					project = hxsublime_project_Projects.currentProject(view)
+					if project.hasBuild():
+						project.checkBuild(view)
 					
 		
 				
@@ -5505,7 +5507,7 @@ class hxsublime_commands_HaxeAsyncTriggeredCompletionCommand(sublime_TextCommand
 			kwArgs = None
 		
 		options = hxsublime_completion_hx_CompletionOptions(3, 2, 1)
-		hxsublime_completion_hx_Base.trigger_completion(self.view, options)
+		hxsublime_completion_hx_HxCompletion.triggerCompletion(self.view, options)
 	
 
 
@@ -5564,13 +5566,13 @@ class hxsublime_commands_HaxeDisplayCompletionCommand(sublime_TextCommand):
 			self.view.run_command("insert", _hx_local_0())
 		
 		
-		haxe_Log.trace("RUN - HaxeDisplayCompletionCommand", _Hx_AnonObject(fileName = "Completion.hx" ,lineNumber = 42 ,className = "hxsublime.commands.HaxeDisplayCompletionCommand" ,methodName = "run" ))
+		haxe_Log.trace("RUN - HaxeDisplayCompletionCommand", _Hx_AnonObject(fileName = "Completion.hx" ,lineNumber = 40 ,className = "hxsublime.commands.HaxeDisplayCompletionCommand" ,methodName = "run" ))
 		if input_char == ":":
 			return
 		
-		if hxsublime_commands_Helper.is_valid_completion(self.view, edit, input_char):
+		if hxsublime_commands_Helper.isValidCompletion(self.view, edit, input_char):
 			options = hxsublime_completion_hx_CompletionOptions(1, 2, 1)
-			hxsublime_completion_hx_Base.trigger_completion(self.view, options)
+			hxsublime_completion_hx_HxCompletion.triggerCompletion(self.view, options)
 		
 		
 	
@@ -5601,9 +5603,9 @@ class hxsublime_commands_HaxeDisplayMacroCompletionCommand(sublime_TextCommand):
 		if kwArgs is None:
 			kwArgs = None
 		
-		haxe_Log.trace("RUN - HaxeDisplayMacroCompletionCommand", _Hx_AnonObject(fileName = "Completion.hx" ,lineNumber = 61 ,className = "hxsublime.commands.HaxeDisplayMacroCompletionCommand" ,methodName = "run" ))
+		haxe_Log.trace("RUN - HaxeDisplayMacroCompletionCommand", _Hx_AnonObject(fileName = "Completion.hx" ,lineNumber = 60 ,className = "hxsublime.commands.HaxeDisplayMacroCompletionCommand" ,methodName = "run" ))
 		options = hxsublime_completion_hx_CompletionOptions(1, 2, 1)
-		hxsublime_completion_hx_Base.trigger_completion(self.view, options)
+		hxsublime_completion_hx_HxCompletion.triggerCompletion(self.view, options)
 	
 
 
@@ -5632,9 +5634,9 @@ class hxsublime_commands_HaxeHintDisplayCompletionCommand(sublime_TextCommand):
 		if kwArgs is None:
 			kwArgs = None
 		
-		haxe_Log.trace("RUN - HaxeHintDisplayCompletionCommand", _Hx_AnonObject(fileName = "Completion.hx" ,lineNumber = 76 ,className = "hxsublime.commands.HaxeHintDisplayCompletionCommand" ,methodName = "run" ))
+		haxe_Log.trace("RUN - HaxeHintDisplayCompletionCommand", _Hx_AnonObject(fileName = "Completion.hx" ,lineNumber = 74 ,className = "hxsublime.commands.HaxeHintDisplayCompletionCommand" ,methodName = "run" ))
 		options = hxsublime_completion_hx_CompletionOptions(1, 2, 2)
-		hxsublime_completion_hx_Base.trigger_completion(self.view, options)
+		hxsublime_completion_hx_HxCompletion.triggerCompletion(self.view, options)
 	
 
 
@@ -5663,9 +5665,9 @@ class hxsublime_commands_HaxeMacroHintDisplayCompletionCommand(sublime_TextComma
 		if kwArgs is None:
 			kwArgs = None
 		
-		haxe_Log.trace("RUN - HaxeMacroHintDisplayCompletionCommand", _Hx_AnonObject(fileName = "Completion.hx" ,lineNumber = 91 ,className = "hxsublime.commands.HaxeMacroHintDisplayCompletionCommand" ,methodName = "run" ))
+		haxe_Log.trace("RUN - HaxeMacroHintDisplayCompletionCommand", _Hx_AnonObject(fileName = "Completion.hx" ,lineNumber = 89 ,className = "hxsublime.commands.HaxeMacroHintDisplayCompletionCommand" ,methodName = "run" ))
 		options = hxsublime_completion_hx_CompletionOptions(1, 1, 2)
-		hxsublime_completion_hx_Base.trigger_completion(self.view, options)
+		hxsublime_completion_hx_HxCompletion.triggerCompletion(self.view, options)
 	
 
 
@@ -5692,21 +5694,21 @@ class hxsublime_commands_Helper:
 
 
 
-def Helper_statics_is_valid_completion(view,edit,input_char):
+def Helper_statics_isValidCompletion(view,edit,inputChar):
 	valid = True
-	if input_char == "(":
+	if inputChar == "(":
 		src = hxsublime_tools_ViewTools.getContentUntilFirstCursor(view)
-		if hxsublime_commands_Helper.is_open_parenthesis_after_function_definition(src):
-			haxe_Log.trace("Invalid Completion is open par after function", _Hx_AnonObject(fileName = "Completion.hx" ,lineNumber = 114 ,className = "hxsublime.commands.Helper" ,methodName = "is_valid_completion" ))
+		if hxsublime_commands_Helper.isOpenParensAfterFunctionDefinition(src):
+			haxe_Log.trace("Invalid Completion is open par after function", _Hx_AnonObject(fileName = "Completion.hx" ,lineNumber = 112 ,className = "hxsublime.commands.Helper" ,methodName = "isValidCompletion" ))
 			valid = False
 		
 		
 	
 	
-	if input_char == ",":
+	if inputChar == ",":
 		src = hxsublime_tools_ViewTools.getContentUntilFirstCursor(view)
-		if hxsublime_commands_Helper.is_comma_after_open_parenthesis_of_function_definition(src):
-			haxe_Log.trace("Invalid Completion is open par after function", _Hx_AnonObject(fileName = "Completion.hx" ,lineNumber = 124 ,className = "hxsublime.commands.Helper" ,methodName = "is_valid_completion" ))
+		if hxsublime_commands_Helper.isCommaAfterOpenParensInFunctionDefinition(src):
+			haxe_Log.trace("Invalid Completion is open par after function", _Hx_AnonObject(fileName = "Completion.hx" ,lineNumber = 122 ,className = "hxsublime.commands.Helper" ,methodName = "isValidCompletion" ))
 			valid = False
 		
 		
@@ -5714,34 +5716,29 @@ def Helper_statics_is_valid_completion(view,edit,input_char):
 	
 	return valid
 	
-hxsublime_commands_Helper.is_valid_completion = Helper_statics_is_valid_completion
-hxsublime_commands_Helper.anon_func = python_lib_Re.compile("^function(\\s+[a-zA-Z0-9$_]*\\s+)?\\s*\\($")
-def Helper_statics_is_open_parenthesis_after_function_definition(src):
-	last_function = src.rfind("function", None)
-	src_part = python_Tools.substr(src, last_function, None)
-	match = python_lib_Re.match(hxsublime_commands_Helper.anon_func, src_part)
-	haxe_Log.trace(Std.string(match), _Hx_AnonObject(fileName = "Completion.hx" ,lineNumber = 140 ,className = "hxsublime.commands.Helper" ,methodName = "is_open_parenthesis_after_function_definition" ))
-	haxe_Log.trace(src_part, _Hx_AnonObject(fileName = "Completion.hx" ,lineNumber = 141 ,className = "hxsublime.commands.Helper" ,methodName = "is_open_parenthesis_after_function_definition" ))
+hxsublime_commands_Helper.isValidCompletion = Helper_statics_isValidCompletion
+hxsublime_commands_Helper.anonFunc = python_lib_Re.compile("^function(\\s+[a-zA-Z0-9$_]*\\s+)?\\s*\\($")
+def Helper_statics_isOpenParensAfterFunctionDefinition(src):
+	lastFunction = src.rfind("function", None)
+	srcPart = python_Tools.substr(src, lastFunction, None)
+	match = python_lib_Re.match(hxsublime_commands_Helper.anonFunc, srcPart)
 	return match is not None
 	
-hxsublime_commands_Helper.is_open_parenthesis_after_function_definition = Helper_statics_is_open_parenthesis_after_function_definition
-def Helper_statics_is_comma_after_open_parenthesis_of_function_definition(src):
-	haxe_Log.trace("src_full:" + src, _Hx_AnonObject(fileName = "Completion.hx" ,lineNumber = 148 ,className = "hxsublime.commands.Helper" ,methodName = "is_comma_after_open_parenthesis_of_function_definition" ))
+hxsublime_commands_Helper.isOpenParensAfterFunctionDefinition = Helper_statics_isOpenParensAfterFunctionDefinition
+def Helper_statics_isCommaAfterOpenParensInFunctionDefinition(src):
 	found = hxsublime_tools_HxSrcTools.reverse_search_next_char_on_same_nesting_level(src, ["("], __builtin__.len(src) - 1)
-	haxe_Log.trace("match:" + Std.string(found), _Hx_AnonObject(fileName = "Completion.hx" ,lineNumber = 152 ,className = "hxsublime.commands.Helper" ,methodName = "is_comma_after_open_parenthesis_of_function_definition" ))
 	res = False
 	if found is not None:
-		src_until_comma = None
+		srcUntilComma = None
 		endIndex = found[0] + 1
-		src_until_comma = python_Tools.substring(src, 0, endIndex)
+		srcUntilComma = python_Tools.substring(src, 0, endIndex)
 		
-		haxe_Log.trace("src_until_comma: " + src_until_comma, _Hx_AnonObject(fileName = "Completion.hx" ,lineNumber = 158 ,className = "hxsublime.commands.Helper" ,methodName = "is_comma_after_open_parenthesis_of_function_definition" ))
-		res = hxsublime_commands_Helper.is_open_parenthesis_after_function_definition(src_until_comma)
+		res = hxsublime_commands_Helper.isOpenParensAfterFunctionDefinition(srcUntilComma)
 	
 	
 	return res
 	
-hxsublime_commands_Helper.is_comma_after_open_parenthesis_of_function_definition = Helper_statics_is_comma_after_open_parenthesis_of_function_definition
+hxsublime_commands_Helper.isCommaAfterOpenParensInFunctionDefinition = Helper_statics_isCommaAfterOpenParensInFunctionDefinition
 
 
 hxsublime_commands_Helper._hx_class = hxsublime_commands_Helper
@@ -5750,7 +5747,7 @@ _hx_classes['hxsublime.commands.Helper'] = hxsublime_commands_Helper
 hxsublime_commands_Helper._hx_fields = []
 hxsublime_commands_Helper._hx_props = []
 hxsublime_commands_Helper._hx_methods = []
-hxsublime_commands_Helper._hx_statics = ["is_valid_completion","anon_func","is_open_parenthesis_after_function_definition","is_comma_after_open_parenthesis_of_function_definition"]
+hxsublime_commands_Helper._hx_statics = ["isValidCompletion","anonFunc","isOpenParensAfterFunctionDefinition","isCommaAfterOpenParensInFunctionDefinition"]
 hxsublime_commands_Helper._hx_interfaces = []
 
 # print sublime.WindowCommand.WindowCommand
@@ -5764,8 +5761,8 @@ class hxsublime_commands_HaxeRestartServerCommand(sublime_WindowCommand):
 	def run(self,**kwArgs):
 		haxe_Log.trace("run HaxeRestartServerCommand", _Hx_AnonObject(fileName = "CompletionServer.hx" ,lineNumber = 14 ,className = "hxsublime.commands.HaxeRestartServerCommand" ,methodName = "run" ))
 		view = sublime_Sublime.active_window().active_view()
-		project = hxsublime_project_Projects.current_project(view)
-		project.restart_server(view)
+		project = hxsublime_project_Projects.currentProject(view)
+		project.restartServer(view)
 	
 
 
@@ -5821,15 +5818,15 @@ class hxsublime_commands_HaxeCreateTypeCommand(sublime_WindowCommand):
 		t = python_lib_Types_KwArgs_Impl_.get(kwArgs, "t", "class")
 		haxe_Log.trace("createtype", _Hx_AnonObject(fileName = "CreateType.hx" ,lineNumber = 47 ,className = "hxsublime.commands.HaxeCreateTypeCommand" ,methodName = "run" ))
 		view = self.win.active_view()
-		project = hxsublime_project_Projects.current_project(view)
+		project = hxsublime_project_Projects.currentProject(view)
 		builds = __builtin__.list(project.builds)
-		if project.has_build():
-			builds.insert(0, project.get_build(view))
+		if project.hasBuild():
+			builds.insert(0, project.getBuild(view))
 		
 		pack = []
 		if __builtin__.len(builds) == 0 and view is not None and view.file_name() is not None:
 			haxe_Log.trace(view.file_name(), _Hx_AnonObject(fileName = "CreateType.hx" ,lineNumber = 65 ,className = "hxsublime.commands.HaxeCreateTypeCommand" ,methodName = "run" ))
-			project.extract_build_args(view)
+			project.extractBuildArgs(view)
 			builds = project.builds
 		
 		
@@ -5854,7 +5851,7 @@ class hxsublime_commands_HaxeCreateTypeCommand(sublime_WindowCommand):
 			while _g11 < len(builds):
 				b = builds[_g11]
 				_g11 = _g11 + 1
-				haxe_Log.trace("build file: " + Std.string(b.build_file), _Hx_AnonObject(fileName = "CreateType.hx" ,lineNumber = 91 ,className = "hxsublime.commands.HaxeCreateTypeCommand" ,methodName = "run" ))
+				haxe_Log.trace("build file: " + b.buildFile(), _Hx_AnonObject(fileName = "CreateType.hx" ,lineNumber = 91 ,className = "hxsublime.commands.HaxeCreateTypeCommand" ,methodName = "run" ))
 				found = False
 				_g2 = 0
 				_g3 = b.classpaths()
@@ -5933,7 +5930,7 @@ class hxsublime_commands_HaxeCreateTypeCommand(sublime_WindowCommand):
 		while __builtin__.len(parts) > 0:
 			p = parts.pop(0)
 			fn = python_lib_os_Path.join(fn, p)
-			if hxsublime_tools_Regex.is_type.match(p) is not None:
+			if hxsublime_tools_Regex.isType.match(p) is not None:
 				cl = p
 				break
 			
@@ -6368,129 +6365,125 @@ class hxsublime_commands_HaxeFindDeclarationCommand(sublime_TextCommand):
 		self.run1(True)
 	
 
-	def helper_method(self):
+	def helperMethod(self):
 		return "hxsublime.FindDeclaration.__sublimeFindDecl"
 
-	def run1(self,use_display,order = 1):
+	def run1(self,useDisplay,order = 1):
 		if order is None:
 			order = 1
 		
 		_g = self
-		haxe_Log.trace("run HaxeFindDeclarationCommand", _Hx_AnonObject(fileName = "FindDeclaration.hx" ,lineNumber = 44 ,className = "hxsublime.commands.HaxeFindDeclarationCommand" ,methodName = "run1" ))
+		haxe_Log.trace("run HaxeFindDeclarationCommand", _Hx_AnonObject(fileName = "FindDeclaration.hx" ,lineNumber = 43 ,className = "hxsublime.commands.HaxeFindDeclarationCommand" ,methodName = "run1" ))
 		view = self.view
-		file_name = view.file_name()
-		if file_name is None:
+		if view.file_name() is None:
 			return
 		
-		project = hxsublime_project_Projects.current_project(view)
-		if not project.has_build():
-			project.extract_build_args(view, False)
+		project = hxsublime_project_Projects.currentProject(view)
+		if not project.hasBuild():
+			project.extractBuildArgs(view, False)
 		
-		if not project.has_build():
-			project.extract_build_args(view, True)
+		if not project.hasBuild():
+			project.extractBuildArgs(view, True)
 			return
 		
 		
-		helper_method = self.helper_method()
+		helperMethod = self.helperMethod()
 		src = hxsublime_tools_ViewTools.getContent(view)
-		file_name1 = python_lib_os_Path.basename(view.file_name())
-		package_match = python_lib_Re.match(hxsublime_tools_Regex.package_line, src)
-		using_pos = None
-		if package_match is None:
-			using_pos = 0
+		packageMatch = python_lib_Re.match(hxsublime_tools_Regex.package_line, src)
+		usingPos = None
+		if packageMatch is None:
+			usingPos = 0
 		else:
-			using_pos = package_match.end(0)
-		using_insert = "using hxsublime.FindDeclaration;"
-		src_before_using = python_Tools.substring(src, 0, using_pos)
-		src_after_using = python_Tools.substr(src, using_pos, None)
+			usingPos = packageMatch.end(0)
+		usingInsert = "using hxsublime.FindDeclaration;"
+		srcBeforeUsing = python_Tools.substring(src, 0, usingPos)
 		sel = view.sel()[0]
 		pos = sel.begin()
-		expr_end = None
-		expr_start = None
+		exprEnd = None
+		exprStart = None
 		if sel.end() == pos:
-			r = hxsublime_commands_FindDeclaration_Helper.get_word_at(view, src, pos)
+			r = hxsublime_commands_FindDeclaration_Helper.getWordAt(view, src, pos)
 			word_str = r[0]
 			word_start = r[1]
 			word_end = r[2]
 			chars = ["{", "+", "-", "(", "[", "*", "/", "=", ";", ":"]
 			res = hxsublime_tools_HxSrcTools.reverse_search_next_char_on_same_nesting_level(src, chars, word_end - 1)
-			res = hxsublime_tools_HxSrcTools.skip_whitespace_or_comments(src, res[0] + 1)
-			expr_end = word_end
-			expr_start = res[0]
+			res = hxsublime_tools_HxSrcTools.skipWhitespaceOrComments(src, res[0] + 1)
+			exprEnd = word_end
+			exprStart = res[0]
 		
 		else:
-			expr_start = pos
-			expr_end = sel.end()
+			exprStart = pos
+			exprEnd = sel.end()
 		
-		src_before_expr = python_Tools.substring(src, using_pos, expr_start)
-		src_after_expr = python_Tools.substr(src, expr_end, None)
-		expr_string = python_Tools.substring(src, expr_start, expr_end)
-		display_str = None
-		if use_display:
-			display_str = ".|"
+		srcBeforeExpr = python_Tools.substring(src, usingPos, exprStart)
+		srcAfterExpr = python_Tools.substr(src, exprEnd, None)
+		exprString = python_Tools.substring(src, exprStart, exprEnd)
+		displayStr = None
+		if useDisplay:
+			displayStr = ".|"
 		else:
-			display_str = ""
-		insert_before = helper_method + "("
-		order_str = Std.string(order)
-		insert_after = ", " + order_str + ")" + display_str
-		new_src = src_before_using + using_insert + src_before_expr + insert_before + expr_string + insert_after + src_after_expr
-		r = hxsublime_commands_FindDeclaration_Helper.prepare_build(view, project, use_display, new_src)
+			displayStr = ""
+		insertBefore = helperMethod + "("
+		orderStr = Std.string(order)
+		insertAfter = ", " + orderStr + ")" + displayStr
+		newSrc = srcBeforeUsing + usingInsert + srcBeforeExpr + insertBefore + exprString + insertAfter + srcAfterExpr
+		r = hxsublime_commands_FindDeclaration_Helper.prepareBuild(view, project, useDisplay, newSrc)
 		build = r[0]
 		temp_path = r[1]
-		temp_file = r[2]
+		tempFile = r[2]
 		def _hx_local_0(out,err):
-			hxsublime_Temp.remove_path(temp_path)
-			file_pos = python_lib_Re.compile("\\|\\|\\|\\|\\|([^|]+)\\|\\|\\|\\|\\|", python_lib_Re.I)
-			res = python_lib_Re.search(file_pos, out)
+			hxsublime_Temp.removePath(temp_path)
+			filePos = python_lib_Re.compile("\\|\\|\\|\\|\\|([^|]+)\\|\\|\\|\\|\\|", python_lib_Re.I)
+			res = python_lib_Re.search(filePos, out)
 			if res is not None:
 				json_str = res.group(1)
-				json_res = python_lib_Json.loads(json_str)
-				if python_lib_DictImpl.hasKey(json_res, "error"):
-					error = json_res.get("error", None)
-					haxe_Log.trace("nothing found (1), cannot find declaration", _Hx_AnonObject(fileName = "FindDeclaration.hx" ,lineNumber = 153 ,className = "hxsublime.commands.HaxeFindDeclarationCommand" ,methodName = "run1" ))
-					if order == 1 and use_display:
+				jsonResult = python_lib_Json.loads(json_str)
+				if python_lib_DictImpl.hasKey(jsonResult, "error"):
+					error = jsonResult.get("error", None)
+					haxe_Log.trace("nothing found (1), cannot find declaration", _Hx_AnonObject(fileName = "FindDeclaration.hx" ,lineNumber = 149 ,className = "hxsublime.commands.HaxeFindDeclarationCommand" ,methodName = "run1" ))
+					if order == 1 and useDisplay:
 						_g.run1(True, 2)
-					elif order == 2 and use_display:
+					elif order == 2 and useDisplay:
 						_g.run1(True, 3)
 					
 				
 				else:
-					_g.handle_successfull_result(view, json_res, using_insert, insert_before, insert_after, expr_end, build, temp_path, temp_file)
+					_g.handleSuccessfulResult(view, jsonResult, usingInsert, insertBefore, insertAfter, exprEnd, build, temp_path, tempFile)
 			
-			elif order == 1 and use_display:
+			elif order == 1 and useDisplay:
 				_g.run1(True, 2)
-			elif order == 2 and use_display:
+			elif order == 2 and useDisplay:
 				_g.run1(True, 3)
-			elif use_display:
-				haxe_Log.trace("nothing found yet (2), try again without display (workaround)", _Hx_AnonObject(fileName = "FindDeclaration.hx" ,lineNumber = 180 ,className = "hxsublime.commands.HaxeFindDeclarationCommand" ,methodName = "run1" ))
+			elif useDisplay:
+				haxe_Log.trace("nothing found yet (2), try again without display (workaround)", _Hx_AnonObject(fileName = "FindDeclaration.hx" ,lineNumber = 176 ,className = "hxsublime.commands.HaxeFindDeclarationCommand" ,methodName = "run1" ))
 				_g.run1(False)
 			
 			else:
-				hxsublime_panel_Panels.default_panel().writeln("Cannot find declaration for expression " + expr_string.strip(None))
-				haxe_Log.trace("nothing found (3), cannot find declaration", _Hx_AnonObject(fileName = "FindDeclaration.hx" ,lineNumber = 186 ,className = "hxsublime.commands.HaxeFindDeclarationCommand" ,methodName = "run1" ))
+				hxsublime_panel_Panels.defaultPanel().writeln("Cannot find declaration for expression " + exprString.strip(None))
+				haxe_Log.trace("nothing found (3), cannot find declaration", _Hx_AnonObject(fileName = "FindDeclaration.hx" ,lineNumber = 182 ,className = "hxsublime.commands.HaxeFindDeclarationCommand" ,methodName = "run1" ))
 			
 		
 		cb = _hx_local_0
 		build.run(project, view, False, cb)
 	
 
-	def handle_successfull_result(self,view,json_res,using_insert,insert_before,insert_after,expr_end,build,temp_path,temp_file):
-		file = json_res.get("file", None)
-		min = json_res.get("min", 0)
-		max = json_res.get("max", 0)
-		abs_path = hxsublime_tools_PathTools.joinNorm(build.get_build_folder(), file)
-		abs_path_temp = hxsublime_tools_PathTools.joinNorm(build.get_build_folder(), build.get_relative_path(python_lib_os_Path.join(temp_path, temp_file)))
-		if abs_path == temp_file:
-			if min > expr_end:
-				min = min - __builtin__.len(insert_after)
-				min = min - __builtin__.len(insert_before)
+	def handleSuccessfulResult(self,view,jsonResult,usingInsert,insertBefore,insertAfter,exprEnd,build,temp_path,tempFile):
+		file = jsonResult.get("file", None)
+		min = jsonResult.get("min", 0)
+		max = jsonResult.get("max", 0)
+		absPath = hxsublime_tools_PathTools.joinNorm(build.getBuildFolder(), file)
+		if absPath == tempFile:
+			if min > exprEnd:
+				min = min - __builtin__.len(insertAfter)
+				min = min - __builtin__.len(insertBefore)
 			
 			
-			min = min - __builtin__.len(using_insert)
+			min = min - __builtin__.len(usingInsert)
 		
 		else:
-			f = python_lib_Codecs.open(abs_path, "r", "utf-8")
-			real_source = f.read()
+			f = python_lib_Codecs.open(absPath, "r", "utf-8")
+			realSrc = f.read()
 			f.close()
 			offset = 0
 			_g = 0
@@ -6503,25 +6496,25 @@ class hxsublime_commands_HaxeFindDeclarationCommand(sublime_TextCommand):
 					
 				
 				i = _hx_local_1()
-				if real_source[i] == "\r":
+				if realSrc[i] == "\r":
 					offset = offset + 1
 				
 			
 			
-			haxe_Log.trace("offset: " + Std.string(offset), _Hx_AnonObject(fileName = "FindDeclaration.hx" ,lineNumber = 235 ,className = "hxsublime.commands.HaxeFindDeclarationCommand" ,methodName = "handle_successfull_result" ))
+			haxe_Log.trace("offset: " + Std.string(offset), _Hx_AnonObject(fileName = "FindDeclaration.hx" ,lineNumber = 227 ,className = "hxsublime.commands.HaxeFindDeclarationCommand" ,methodName = "handleSuccessfulResult" ))
 			min = min - offset
 		
-		if abs_path == temp_file:
-			target_view = view
-			haxe_Log.trace("line ending: " + Std.string(view.settings().get("line_ending")), _Hx_AnonObject(fileName = "FindDeclaration.hx" ,lineNumber = 247 ,className = "hxsublime.commands.HaxeFindDeclarationCommand" ,methodName = "handle_successfull_result" ))
-			target_view.sel().clear()
-			target_view.sel().add(sublime_Region(min))
-			target_view.show(sublime_Region(min))
+		if absPath == tempFile:
+			targetView = view
+			haxe_Log.trace("line ending: " + Std.string(view.settings().get("line_ending")), _Hx_AnonObject(fileName = "FindDeclaration.hx" ,lineNumber = 239 ,className = "hxsublime.commands.HaxeFindDeclarationCommand" ,methodName = "handleSuccessfulResult" ))
+			targetView.sel().clear()
+			targetView.sel().add(sublime_Region(min))
+			targetView.show(sublime_Region(min))
 		
 		else:
-			hxsublime_commands_FindDeclaration_State.find_decl_file = abs_path
-			hxsublime_commands_FindDeclaration_State.find_decl_pos = min
-			view.window().open_file(abs_path)
+			hxsublime_commands_FindDeclaration_State.findDeclFile = absPath
+			hxsublime_commands_FindDeclaration_State.findDeclPos = min
+			view.window().open_file(absPath)
 		
 	
 
@@ -6536,7 +6529,7 @@ hxsublime_commands_HaxeFindDeclarationCommand._hx_class_name = "hxsublime.comman
 _hx_classes['hxsublime.commands.HaxeFindDeclarationCommand'] = hxsublime_commands_HaxeFindDeclarationCommand
 hxsublime_commands_HaxeFindDeclarationCommand._hx_fields = []
 hxsublime_commands_HaxeFindDeclarationCommand._hx_props = []
-hxsublime_commands_HaxeFindDeclarationCommand._hx_methods = ["run","helper_method","run1","handle_successfull_result"]
+hxsublime_commands_HaxeFindDeclarationCommand._hx_methods = ["run","helperMethod","run1","handleSuccessfulResult"]
 hxsublime_commands_HaxeFindDeclarationCommand._hx_statics = []
 hxsublime_commands_HaxeFindDeclarationCommand._hx_interfaces = []
 hxsublime_commands_HaxeFindDeclarationCommand._hx_super = sublime_TextCommand
@@ -6549,8 +6542,8 @@ class hxsublime_commands_FindDeclaration_State:
 
 
 
-hxsublime_commands_FindDeclaration_State.find_decl_file = None
-hxsublime_commands_FindDeclaration_State.find_decl_pos = None
+hxsublime_commands_FindDeclaration_State.findDeclFile = None
+hxsublime_commands_FindDeclaration_State.findDeclPos = None
 
 
 hxsublime_commands_FindDeclaration_State._hx_class = hxsublime_commands_FindDeclaration_State
@@ -6559,7 +6552,7 @@ _hx_classes['hxsublime.commands._FindDeclaration._FindDeclaration.State'] = hxsu
 hxsublime_commands_FindDeclaration_State._hx_fields = []
 hxsublime_commands_FindDeclaration_State._hx_props = []
 hxsublime_commands_FindDeclaration_State._hx_methods = []
-hxsublime_commands_FindDeclaration_State._hx_statics = ["find_decl_file","find_decl_pos"]
+hxsublime_commands_FindDeclaration_State._hx_statics = ["findDeclFile","findDeclPos"]
 hxsublime_commands_FindDeclaration_State._hx_interfaces = []
 
 # print python.lib.os.Path.Path
@@ -6573,30 +6566,30 @@ class hxsublime_commands_FindDeclaration_Helper:
 
 
 hxsublime_commands_FindDeclaration_Helper.plugin_path = hxsublime_Plugin.plugin_base_dir()
-def Helper_statics_get_word_at(view,src,pos):
+def Helper_statics_getWordAt(view,src,pos):
 	word = view.word(pos)
-	word_start = word.a
-	word_end = word.b
-	word_str = python_Tools.substring(src, word_start, word_end)
-	return (word_str, word_start, word_end)
+	wordStart = word.a
+	wordEnd = word.b
+	wordStr = python_Tools.substring(src, wordStart, wordEnd)
+	return (wordStr, wordStart, wordEnd)
 	
-hxsublime_commands_FindDeclaration_Helper.get_word_at = Helper_statics_get_word_at
-def Helper_statics_prepare_build(view,project,use_display,new_src):
-	build = project.get_build(view).copy()
-	build.add_arg(("-D", "no-inline"))
-	r = hxsublime_Temp.create_temp_path_and_file(build, view.file_name(), new_src)
-	temp_path = r[0]
-	temp_file = r[1]
-	build.add_classpath(temp_path)
-	build.add_classpath(python_lib_os_Path.join(hxsublime_commands_FindDeclaration_Helper.plugin_path, "haxetools"))
-	haxe_Log.trace(build.classpaths, _Hx_AnonObject(fileName = "FindDeclaration.hx" ,lineNumber = 301 ,className = "hxsublime.commands._FindDeclaration.Helper" ,methodName = "prepare_build" ))
-	build.add_arg(("-dce", "no"))
-	if use_display:
-		build.set_auto_completion(temp_file + "@0", False)
+hxsublime_commands_FindDeclaration_Helper.getWordAt = Helper_statics_getWordAt
+def Helper_statics_prepareBuild(view,project,useDisplay,newSrc):
+	build = project.getBuild(view).copy()
+	build.addArg(("-D", "no-inline"))
+	r = hxsublime_Temp.createTempPathAndFile(build, view.file_name(), newSrc)
+	tempPath = r[0]
+	tempFile = r[1]
+	build.addClasspath(tempPath)
+	build.addClasspath(python_lib_os_Path.join(hxsublime_commands_FindDeclaration_Helper.plugin_path, "haxetools"))
+	haxe_Log.trace(build.classpaths, _Hx_AnonObject(fileName = "FindDeclaration.hx" ,lineNumber = 292 ,className = "hxsublime.commands._FindDeclaration.Helper" ,methodName = "prepareBuild" ))
+	build.addArg(("-dce", "no"))
+	if useDisplay:
+		build.setAutoCompletion(tempFile + "@0", False)
 	
-	return (build, temp_path, temp_file)
+	return (build, tempPath, tempFile)
 	
-hxsublime_commands_FindDeclaration_Helper.prepare_build = Helper_statics_prepare_build
+hxsublime_commands_FindDeclaration_Helper.prepareBuild = Helper_statics_prepareBuild
 
 
 hxsublime_commands_FindDeclaration_Helper._hx_class = hxsublime_commands_FindDeclaration_Helper
@@ -6605,7 +6598,7 @@ _hx_classes['hxsublime.commands._FindDeclaration._FindDeclaration.Helper'] = hxs
 hxsublime_commands_FindDeclaration_Helper._hx_fields = []
 hxsublime_commands_FindDeclaration_Helper._hx_props = []
 hxsublime_commands_FindDeclaration_Helper._hx_methods = []
-hxsublime_commands_FindDeclaration_Helper._hx_statics = ["plugin_path","get_word_at","prepare_build"]
+hxsublime_commands_FindDeclaration_Helper._hx_statics = ["plugin_path","getWordAt","prepareBuild"]
 hxsublime_commands_FindDeclaration_Helper._hx_interfaces = []
 
 # print hxsublime.commands.FindDeclaration.HaxeFindDeclarationListener
@@ -6613,9 +6606,9 @@ class hxsublime_commands_HaxeFindDeclarationListener(sublime_EventListener):
 
 	def on_activated(self,view):
 		if view is not None and view.file_name() is not None:
-			if view.file_name() == hxsublime_commands_FindDeclaration_State.find_decl_file:
+			if view.file_name() == hxsublime_commands_FindDeclaration_State.findDeclFile:
 				view.sel().clear()
-				min = hxsublime_commands_FindDeclaration_State.find_decl_pos
+				min = hxsublime_commands_FindDeclaration_State.findDeclPos
 				view.sel().add(sublime_Region(min))
 				def _hx_local_0():
 					view.show_at_center(sublime_Region(min))
@@ -6623,8 +6616,8 @@ class hxsublime_commands_HaxeFindDeclarationListener(sublime_EventListener):
 				sublime_Sublime.set_timeout(show, 70)
 			
 			
-			hxsublime_commands_FindDeclaration_State.find_decl_file = None
-			hxsublime_commands_FindDeclaration_State.find_decl_pos = None
+			hxsublime_commands_FindDeclaration_State.findDeclFile = None
+			hxsublime_commands_FindDeclaration_State.findDeclPos = None
 	
 		
 
@@ -6650,12 +6643,12 @@ class hxsublime_commands_HaxeGenerateUsingCommand(sublime_TextCommand):
 
 	def __init__(self,v):
 		super().__init__(v)
-	def run(self,edit,**kwArgs):
-		if kwArgs is None:
-			kwArgs = None
+	def run(self,edit,**_):
+		if _ is None:
+			_ = None
 		
 		haxe_Log.trace("run HaxeGenerateUsingCommand", _Hx_AnonObject(fileName = "GenerateImport.hx" ,lineNumber = 15 ,className = "hxsublime.commands.HaxeGenerateUsingCommand" ,methodName = "run" ))
-		hxsublime_HaxeImportGenerator.generate_using(self.view, edit)
+		hxsublime_HaxeImportGenerator.generateUsing(self.view, edit)
 	
 
 
@@ -6680,12 +6673,12 @@ class hxsublime_commands_HaxeGenerateImportCommand(sublime_TextCommand):
 
 	def __init__(self,v):
 		super().__init__(v)
-	def run(self,edit,**kwArgs):
-		if kwArgs is None:
-			kwArgs = None
+	def run(self,edit,**_):
+		if _ is None:
+			_ = None
 		
 		haxe_Log.trace("run HaxeGenerateImportCommand", _Hx_AnonObject(fileName = "GenerateImport.hx" ,lineNumber = 24 ,className = "hxsublime.commands.HaxeGenerateImportCommand" ,methodName = "run" ))
-		hxsublime_HaxeImportGenerator.generate_import(self.view, edit)
+		hxsublime_HaxeImportGenerator.generateImport(self.view, edit)
 	
 
 
@@ -6710,14 +6703,14 @@ class hxsublime_commands_HaxeGetTypeOfExprCommand(hxsublime_commands_HaxeFindDec
 
 	def __init__(self,v):
 		super().__init__(v)
-	def helper_method(self):
+	def helperMethod(self):
 		return "hxsublime.FindDeclaration.__getType"
 
-	def handle_successfull_result(self,view,json_res,using_insert,insert_before,insert_after,expr_end,build,temp_path,temp_file):
+	def handleSuccessfulResult(self,view,json_res,using_insert,insert_before,insert_after,expr_end,build,temp_path,temp_file):
 		t = json_res.get("type", None)
 		e = json_res.get("expr", None)
 		msg = "Expr: " + e + "\n" + "Type: " + t
-		hxsublime_panel_Panels.slide_panel().writeln(msg, None, False)
+		hxsublime_panel_Panels.slidePanel().writeln(msg, None, False)
 	
 
 
@@ -6731,7 +6724,7 @@ hxsublime_commands_HaxeGetTypeOfExprCommand._hx_class_name = "hxsublime.commands
 _hx_classes['hxsublime.commands.HaxeGetTypeOfExprCommand'] = hxsublime_commands_HaxeGetTypeOfExprCommand
 hxsublime_commands_HaxeGetTypeOfExprCommand._hx_fields = []
 hxsublime_commands_HaxeGetTypeOfExprCommand._hx_props = []
-hxsublime_commands_HaxeGetTypeOfExprCommand._hx_methods = ["helper_method","handle_successfull_result"]
+hxsublime_commands_HaxeGetTypeOfExprCommand._hx_methods = ["helperMethod","handleSuccessfulResult"]
 hxsublime_commands_HaxeGetTypeOfExprCommand._hx_statics = []
 hxsublime_commands_HaxeGetTypeOfExprCommand._hx_interfaces = []
 hxsublime_commands_HaxeGetTypeOfExprCommand._hx_super = hxsublime_commands_HaxeFindDeclarationCommand
@@ -6745,16 +6738,16 @@ class hxsublime_commands_HaxeGotoBaseCommand(sublime_TextCommand):
 		super().__init__(v)
 	
 	# var selecting_build
-	def get_entries(self,types):
+	def getEntries(self,types):
 		raise _HxException("abstract method")
 
-	def get_data(self,types):
+	def getData(self,types):
 		raise _HxException("abstract method")
 
-	def get_file(self,data_entry):
+	def getFile(self,data_entry):
 		raise _HxException("abstract method")
 
-	def get_src_pos(self,data_entry):
+	def getSrcPos(self,data_entry):
 		raise _HxException("abstract method")
 
 	def run(self,edit,**kwArgs):
@@ -6764,29 +6757,29 @@ class hxsublime_commands_HaxeGotoBaseCommand(sublime_TextCommand):
 		_g = self
 		haxe_Log.trace("run HaxeListBuildFieldsCommand", _Hx_AnonObject(fileName = "GotoBase.hx" ,lineNumber = 51 ,className = "hxsublime.commands.HaxeGotoBaseCommand" ,methodName = "run" ))
 		view = self.view
-		project = hxsublime_project_Projects.current_project(view)
-		if not project.has_build():
-			project.extract_build_args(view, False)
+		project = hxsublime_project_Projects.currentProject(view)
+		if not project.hasBuild():
+			project.extractBuildArgs(view, False)
 		
-		if not project.has_build():
-			project.extract_build_args(view, True)
+		if not project.hasBuild():
+			project.extractBuildArgs(view, True)
 			return
 		
 		
-		build = project.get_build(view)
-		bundle = build.get_types().merge(build.std_bundle())
-		bundle_types = bundle.all_types_and_enum_constructors_with_info()
+		build = project.getBuild(view)
+		bundle = build.getTypes().merge(build.stdBundle())
+		bundle_types = bundle.allTypesAndEnumConstructorsWithInfo()
 		filtered_types = haxe_ds_StringMap()
 		_it = bundle_types.keys()
 		while _it.hasNext():
 			k = _it.next()
 			t = bundle_types.get(k)
-			if build.is_type_available(t):
+			if build.isTypeAvailable(t):
 				filtered_types.set(k, t)
 			
 		
-		function_list = self.get_entries(filtered_types)
-		function_list_data = self.get_data(filtered_types)
+		function_list = self.getEntries(filtered_types)
+		function_list_data = self.getData(filtered_types)
 		haxe_Log.trace(Std.string(function_list), _Hx_AnonObject(fileName = "GotoBase.hx" ,lineNumber = 93 ,className = "hxsublime.commands.HaxeGotoBaseCommand" ,methodName = "run" ))
 		haxe_Log.trace(Std.string(__builtin__.len(function_list)), _Hx_AnonObject(fileName = "GotoBase.hx" ,lineNumber = 95 ,className = "hxsublime.commands.HaxeGotoBaseCommand" ,methodName = "run" ))
 		self.selecting_build = True
@@ -6815,8 +6808,8 @@ class hxsublime_commands_HaxeGotoBaseCommand(sublime_TextCommand):
 			if i >= 0:
 				selected_type = function_list_data[i]
 				haxe_Log.trace("selected field: " + Std.string(selected_type[0]), _Hx_AnonObject(fileName = "GotoBase.hx" ,lineNumber = 127 ,className = "hxsublime.commands.HaxeGotoBaseCommand" ,methodName = "run" ))
-				src_pos = _g.get_src_pos(selected_type[1])
-				goto_file = _g.get_file(selected_type[1])
+				src_pos = _g.getSrcPos(selected_type[1])
+				goto_file = _g.getFile(selected_type[1])
 				hxsublime_commands_GotoBase_State._find_decl_file = goto_file
 				haxe_Log.trace("find_decl_file: " + Std.string(hxsublime_commands_GotoBase_State._find_decl_file), _Hx_AnonObject(fileName = "GotoBase.hx" ,lineNumber = 135 ,className = "hxsublime.commands.HaxeGotoBaseCommand" ,methodName = "run" ))
 				if src_pos is not None:
@@ -6832,9 +6825,9 @@ class hxsublime_commands_HaxeGotoBaseCommand(sublime_TextCommand):
 			
 			
 		
-		on_selected = _hx_local_1
+		onSelected = _hx_local_1
 		hxsublime_commands_GotoBase_State._is_open = True
-		win.show_quick_panel(function_list, on_selected, sublime_Sublime.MONOSPACE_FONT)
+		win.show_quick_panel(function_list, onSelected, sublime_Sublime.MONOSPACE_FONT)
 	
 
 
@@ -6848,7 +6841,7 @@ hxsublime_commands_HaxeGotoBaseCommand._hx_class_name = "hxsublime.commands.Haxe
 _hx_classes['hxsublime.commands.HaxeGotoBaseCommand'] = hxsublime_commands_HaxeGotoBaseCommand
 hxsublime_commands_HaxeGotoBaseCommand._hx_fields = ["selecting_build"]
 hxsublime_commands_HaxeGotoBaseCommand._hx_props = []
-hxsublime_commands_HaxeGotoBaseCommand._hx_methods = ["get_entries","get_data","get_file","get_src_pos","run"]
+hxsublime_commands_HaxeGotoBaseCommand._hx_methods = ["getEntries","getData","getFile","getSrcPos","run"]
 hxsublime_commands_HaxeGotoBaseCommand._hx_statics = []
 hxsublime_commands_HaxeGotoBaseCommand._hx_interfaces = []
 hxsublime_commands_HaxeGotoBaseCommand._hx_super = sublime_TextCommand
@@ -6859,18 +6852,18 @@ class hxsublime_commands_HaxeGotoAnythingCommand(hxsublime_commands_HaxeGotoBase
 
 	def __init__(self,v):
 		super().__init__(v)
-	def get_entries(self,types):
+	def getEntries(self,types):
 		fields = None
 		_g = []
 		_it = types.keys()
 		while _it.hasNext():
 			k = _it.next()
 			_g1 = 0
-			_g2 = types.get(k).all_fields_list()
+			_g2 = types.get(k).allFieldsList()
 			while _g1 < len(_g2):
 				p = _g2[_g1]
 				_g1 = _g1 + 1
-				x = [p.toString() + " - " + p.kind, p.type.file()]
+				x = [p.toString() + " - " + p.kind, p.type._file]
 				_g.append(x)
 				__builtin__.len(_g)
 				
@@ -6883,7 +6876,11 @@ class hxsublime_commands_HaxeGotoAnythingCommand(hxsublime_commands_HaxeGotoBase
 		_it = types.keys()
 		while _it.hasNext():
 			k = _it.next()
-			x = [k, types.get(k).file()]
+			def _hx_local_0():
+				_this = types.get(k)
+				return _this._file
+			
+			x = [k, _hx_local_0()]
 			_g1.append(x)
 			__builtin__.len(_g1)
 			
@@ -6897,14 +6894,14 @@ class hxsublime_commands_HaxeGotoAnythingCommand(hxsublime_commands_HaxeGotoBase
 	def toEntry(self,e):
 		return e
 
-	def get_data(self,types):
+	def getData(self,types):
 		fields = None
 		_g = []
 		_it = types.keys()
 		while _it.hasNext():
 			k = _it.next()
 			_g1 = 0
-			_g2 = types.get(k).all_fields_list()
+			_g2 = types.get(k).allFieldsList()
 			while _g1 < len(_g2):
 				p = _g2[_g1]
 				_g1 = _g1 + 1
@@ -6938,11 +6935,11 @@ class hxsublime_commands_HaxeGotoAnythingCommand(hxsublime_commands_HaxeGotoBase
 		return fields
 	
 
-	def get_file(self,data_entry):
-		return data_entry.file()
+	def getFile(self,dataEntry):
+		return dataEntry.file()
 
-	def get_src_pos(self,data_entry):
-		return data_entry.src_pos()
+	def getSrcPos(self,dataEntry):
+		return dataEntry.srcPos()
 
 
 
@@ -6955,7 +6952,7 @@ hxsublime_commands_HaxeGotoAnythingCommand._hx_class_name = "hxsublime.commands.
 _hx_classes['hxsublime.commands.HaxeGotoAnythingCommand'] = hxsublime_commands_HaxeGotoAnythingCommand
 hxsublime_commands_HaxeGotoAnythingCommand._hx_fields = []
 hxsublime_commands_HaxeGotoAnythingCommand._hx_props = []
-hxsublime_commands_HaxeGotoAnythingCommand._hx_methods = ["get_entries","toEntry","get_data","get_file","get_src_pos"]
+hxsublime_commands_HaxeGotoAnythingCommand._hx_methods = ["getEntries","toEntry","getData","getFile","getSrcPos"]
 hxsublime_commands_HaxeGotoAnythingCommand._hx_statics = []
 hxsublime_commands_HaxeGotoAnythingCommand._hx_interfaces = []
 hxsublime_commands_HaxeGotoAnythingCommand._hx_super = hxsublime_commands_HaxeGotoBaseCommand
@@ -7038,17 +7035,17 @@ class hxsublime_commands_HaxeGotoBuildFieldsCommand(hxsublime_commands_HaxeGotoB
 
 	def __init__(self,v):
 		super().__init__(v)
-	def get_entries(self,types):
+	def getEntries(self,types):
 		_g = []
 		_it = types.keys()
 		while _it.hasNext():
 			k = _it.next()
 			_g1 = 0
-			_g2 = types.get(k).all_fields_list()
+			_g2 = types.get(k).allFieldsList()
 			while _g1 < len(_g2):
 				p = _g2[_g1]
 				_g1 = _g1 + 1
-				x = [p.toString() + " - " + p.kind, p.type.file()]
+				x = [p.toString() + " - " + p.kind, p.type._file]
 				_g.append(x)
 				__builtin__.len(_g)
 				
@@ -7057,13 +7054,13 @@ class hxsublime_commands_HaxeGotoBuildFieldsCommand(hxsublime_commands_HaxeGotoB
 		return _g
 	
 
-	def get_data(self,types):
+	def getData(self,types):
 		_g = []
 		_it = types.keys()
 		while _it.hasNext():
 			k = _it.next()
 			_g1 = 0
-			_g2 = types.get(k).all_fields_list()
+			_g2 = types.get(k).allFieldsList()
 			while _g1 < len(_g2):
 				p = _g2[_g1]
 				_g1 = _g1 + 1
@@ -7076,11 +7073,11 @@ class hxsublime_commands_HaxeGotoBuildFieldsCommand(hxsublime_commands_HaxeGotoB
 		return _g
 	
 
-	def get_file(self,data_entry):
-		return data_entry.type.file()
+	def getFile(self,data_entry):
+		return data_entry.type._file
 
-	def get_src_pos(self,data_entry):
-		return data_entry.src_pos()
+	def getSrcPos(self,data_entry):
+		return data_entry.srcPos()
 
 
 
@@ -7093,7 +7090,7 @@ hxsublime_commands_HaxeGotoBuildFieldsCommand._hx_class_name = "hxsublime.comman
 _hx_classes['hxsublime.commands.HaxeGotoBuildFieldsCommand'] = hxsublime_commands_HaxeGotoBuildFieldsCommand
 hxsublime_commands_HaxeGotoBuildFieldsCommand._hx_fields = []
 hxsublime_commands_HaxeGotoBuildFieldsCommand._hx_props = []
-hxsublime_commands_HaxeGotoBuildFieldsCommand._hx_methods = ["get_entries","get_data","get_file","get_src_pos"]
+hxsublime_commands_HaxeGotoBuildFieldsCommand._hx_methods = ["getEntries","getData","getFile","getSrcPos"]
 hxsublime_commands_HaxeGotoBuildFieldsCommand._hx_statics = []
 hxsublime_commands_HaxeGotoBuildFieldsCommand._hx_interfaces = []
 hxsublime_commands_HaxeGotoBuildFieldsCommand._hx_super = hxsublime_commands_HaxeGotoBaseCommand
@@ -7104,12 +7101,16 @@ class hxsublime_commands_HaxeGotoBuildTypesCommand(hxsublime_commands_HaxeGotoBa
 
 	def __init__(self,v):
 		super().__init__(v)
-	def get_entries(self,types):
+	def getEntries(self,types):
 		_g = []
 		_it = types.keys()
 		while _it.hasNext():
 			k = _it.next()
-			x = [k, types.get(k).file()]
+			def _hx_local_0():
+				_this = types.get(k)
+				return _this._file
+			
+			x = [k, _hx_local_0()]
 			_g.append(x)
 			__builtin__.len(_g)
 			
@@ -7117,7 +7118,7 @@ class hxsublime_commands_HaxeGotoBuildTypesCommand(hxsublime_commands_HaxeGotoBa
 		return _g
 	
 
-	def get_data(self,types):
+	def getData(self,types):
 		_g = []
 		_it = types.keys()
 		while _it.hasNext():
@@ -7133,11 +7134,11 @@ class hxsublime_commands_HaxeGotoBuildTypesCommand(hxsublime_commands_HaxeGotoBa
 		return _g
 	
 
-	def get_file(self,data_entry):
-		return data_entry.file()
+	def getFile(self,dataEntry):
+		return dataEntry._file
 
-	def get_src_pos(self,data_entry):
-		return data_entry.src_pos()
+	def getSrcPos(self,dataEntry):
+		return dataEntry.srcPos()
 
 
 
@@ -7150,7 +7151,7 @@ hxsublime_commands_HaxeGotoBuildTypesCommand._hx_class_name = "hxsublime.command
 _hx_classes['hxsublime.commands.HaxeGotoBuildTypesCommand'] = hxsublime_commands_HaxeGotoBuildTypesCommand
 hxsublime_commands_HaxeGotoBuildTypesCommand._hx_fields = []
 hxsublime_commands_HaxeGotoBuildTypesCommand._hx_props = []
-hxsublime_commands_HaxeGotoBuildTypesCommand._hx_methods = ["get_entries","get_data","get_file","get_src_pos"]
+hxsublime_commands_HaxeGotoBuildTypesCommand._hx_methods = ["getEntries","getData","getFile","getSrcPos"]
 hxsublime_commands_HaxeGotoBuildTypesCommand._hx_statics = []
 hxsublime_commands_HaxeGotoBuildTypesCommand._hx_interfaces = []
 hxsublime_commands_HaxeGotoBuildTypesCommand._hx_super = hxsublime_commands_HaxeGotoBaseCommand
@@ -7163,33 +7164,32 @@ class hxsublime_commands_HaxeInstallLibCommand(sublime_WindowCommand):
 		super().__init__(w)
 	def run(self,**_):
 		view = sublime_Sublime.active_window().active_view()
-		project = hxsublime_project_Projects.current_project(view)
+		project = hxsublime_project_Projects.currentProject(view)
 		if project is not None:
-			manager = project.haxelib_manager()
-			libs = manager.search_libs()
-			menu = self._prepare_menu(libs, manager)
-			on_selected = None
-			f = self._entry_selected
-			a1 = libs
-			a2 = manager
-			def _hx_local_0(i):
-				return f(a1, a2, i)
-			on_selected = _hx_local_0
+			manager = project.haxelibManager()
+			libs = manager.searchLibs()
+			menu = self.createMenuItems(libs, manager)
+			def _hx_local_0():
+				f = self.onEntrySelected
+				a1 = libs
+				a2 = manager
+				def _hx_local_1(i):
+					return f(a1, a2, i)
+				return _hx_local_1
 			
-			haxe_Log.trace(libs, _Hx_AnonObject(fileName = "Haxelib.hx" ,lineNumber = 29 ,className = "hxsublime.commands.HaxeInstallLibCommand" ,methodName = "run" ))
-			self.window.show_quick_panel(menu, on_selected)
+			self.window.show_quick_panel(menu, _hx_local_0())
 		
 		
 	
 
-	def _prepare_menu(self,libs,manager):
+	def createMenuItems(self,libs,manager):
 		menu = []
 		_g = 0
 		while _g < len(libs):
 			l = libs[_g]
 			_g = _g + 1
-			if manager.is_lib_installed(l):
-				menu.append([l + " [" + manager.get_lib(l).version + "]", "Remove"])
+			if manager.isLibInstalled(l):
+				menu.append([l + " [" + manager.getLib(l).version + "]", "Remove"])
 				__builtin__.len(menu)
 			
 			else:
@@ -7207,29 +7207,29 @@ class hxsublime_commands_HaxeInstallLibCommand(sublime_WindowCommand):
 		return menu
 	
 
-	def _entry_selected(self,libs,manager,i):
-		haxe_Log.trace("install lib command selected " + Std.string(i), _Hx_AnonObject(fileName = "Haxelib.hx" ,lineNumber = 56 ,className = "hxsublime.commands.HaxeInstallLibCommand" ,methodName = "_entry_selected" ))
+	def onEntrySelected(self,libs,manager,i):
+		haxe_Log.trace("install lib command selected " + Std.string(i), _Hx_AnonObject(fileName = "Haxelib.hx" ,lineNumber = 56 ,className = "hxsublime.commands.HaxeInstallLibCommand" ,methodName = "onEntrySelected" ))
 		if i < 0:
 			return
 		
 		if i == __builtin__.len(libs):
-			haxe_Log.trace("upgrade all", _Hx_AnonObject(fileName = "Haxelib.hx" ,lineNumber = 62 ,className = "hxsublime.commands.HaxeInstallLibCommand" ,methodName = "_entry_selected" ))
-			manager.upgrade_all()
+			haxe_Log.trace("upgrade all", _Hx_AnonObject(fileName = "Haxelib.hx" ,lineNumber = 62 ,className = "hxsublime.commands.HaxeInstallLibCommand" ,methodName = "onEntrySelected" ))
+			manager.upgradeAll()
 		
 		
 		if i == __builtin__.len(libs) + 1:
-			haxe_Log.trace("self update", _Hx_AnonObject(fileName = "Haxelib.hx" ,lineNumber = 68 ,className = "hxsublime.commands.HaxeInstallLibCommand" ,methodName = "_entry_selected" ))
-			manager.self_update()
+			haxe_Log.trace("self update", _Hx_AnonObject(fileName = "Haxelib.hx" ,lineNumber = 68 ,className = "hxsublime.commands.HaxeInstallLibCommand" ,methodName = "onEntrySelected" ))
+			manager.selfUpdate()
 		
 		else:
 			lib = libs[i]
 			if manager.available().exists(lib):
-				haxe_Log.trace("remove " + lib, _Hx_AnonObject(fileName = "Haxelib.hx" ,lineNumber = 76 ,className = "hxsublime.commands.HaxeInstallLibCommand" ,methodName = "_entry_selected" ))
-				manager.remove_lib(lib)
+				haxe_Log.trace("remove " + lib, _Hx_AnonObject(fileName = "Haxelib.hx" ,lineNumber = 76 ,className = "hxsublime.commands.HaxeInstallLibCommand" ,methodName = "onEntrySelected" ))
+				manager.removeLib(lib)
 			
 			else:
-				haxe_Log.trace("install " + lib, _Hx_AnonObject(fileName = "Haxelib.hx" ,lineNumber = 81 ,className = "hxsublime.commands.HaxeInstallLibCommand" ,methodName = "_entry_selected" ))
-				manager.install_lib(lib)
+				haxe_Log.trace("install " + lib, _Hx_AnonObject(fileName = "Haxelib.hx" ,lineNumber = 81 ,className = "hxsublime.commands.HaxeInstallLibCommand" ,methodName = "onEntrySelected" ))
+				manager.installLib(lib)
 			
 		
 	
@@ -7245,7 +7245,7 @@ hxsublime_commands_HaxeInstallLibCommand._hx_class_name = "hxsublime.commands.Ha
 _hx_classes['hxsublime.commands.HaxeInstallLibCommand'] = hxsublime_commands_HaxeInstallLibCommand
 hxsublime_commands_HaxeInstallLibCommand._hx_fields = []
 hxsublime_commands_HaxeInstallLibCommand._hx_props = []
-hxsublime_commands_HaxeInstallLibCommand._hx_methods = ["run","_prepare_menu","_entry_selected"]
+hxsublime_commands_HaxeInstallLibCommand._hx_methods = ["run","createMenuItems","onEntrySelected"]
 hxsublime_commands_HaxeInstallLibCommand._hx_statics = []
 hxsublime_commands_HaxeInstallLibCommand._hx_interfaces = []
 hxsublime_commands_HaxeInstallLibCommand._hx_super = sublime_WindowCommand
@@ -7256,18 +7256,18 @@ class hxsublime_commands_HaxeShowDocCommand(hxsublime_commands_HaxeFindDeclarati
 
 	def __init__(self,v):
 		super().__init__(v)
-	def helper_method(self):
+	def helperMethod(self):
 		return "hxsublime.FindDeclaration.__sublimeShowDoc"
 
-	def handle_successfull_result(self,view,json_res,using_insert,insert_before,insert_after,expr_end,build,temp_path,temp_file):
+	def handleSuccessfulResult(self,view,json_res,using_insert,insert_before,insert_after,expr_end,build,temp_path,temp_file):
 		doc = None
 		if python_lib_DictImpl.hasKey(json_res, "doc"):
 			doc = json_res.get("doc", None)
 		else:
 			doc = "No documentation found"
-		haxe_Log.trace("json: " + Std.string(json_res), _Hx_AnonObject(fileName = "ShowDoc.hx" ,lineNumber = 27 ,className = "hxsublime.commands.HaxeShowDocCommand" ,methodName = "handle_successfull_result" ))
-		haxe_Log.trace("doc: " + Std.string(doc), _Hx_AnonObject(fileName = "ShowDoc.hx" ,lineNumber = 28 ,className = "hxsublime.commands.HaxeShowDocCommand" ,methodName = "handle_successfull_result" ))
-		hxsublime_panel_Panels.slide_panel().writeln(doc, None, False)
+		haxe_Log.trace("json: " + Std.string(json_res), _Hx_AnonObject(fileName = "ShowDoc.hx" ,lineNumber = 27 ,className = "hxsublime.commands.HaxeShowDocCommand" ,methodName = "handleSuccessfulResult" ))
+		haxe_Log.trace("doc: " + Std.string(doc), _Hx_AnonObject(fileName = "ShowDoc.hx" ,lineNumber = 28 ,className = "hxsublime.commands.HaxeShowDocCommand" ,methodName = "handleSuccessfulResult" ))
+		hxsublime_panel_Panels.slidePanel().writeln(doc, None, False)
 	
 
 
@@ -7281,7 +7281,7 @@ hxsublime_commands_HaxeShowDocCommand._hx_class_name = "hxsublime.commands.HaxeS
 _hx_classes['hxsublime.commands.HaxeShowDocCommand'] = hxsublime_commands_HaxeShowDocCommand
 hxsublime_commands_HaxeShowDocCommand._hx_fields = []
 hxsublime_commands_HaxeShowDocCommand._hx_props = []
-hxsublime_commands_HaxeShowDocCommand._hx_methods = ["helper_method","handle_successfull_result"]
+hxsublime_commands_HaxeShowDocCommand._hx_methods = ["helperMethod","handleSuccessfulResult"]
 hxsublime_commands_HaxeShowDocCommand._hx_statics = []
 hxsublime_commands_HaxeShowDocCommand._hx_interfaces = []
 hxsublime_commands_HaxeShowDocCommand._hx_super = hxsublime_commands_HaxeFindDeclarationCommand
@@ -7330,7 +7330,7 @@ def Output_statics_get_type_hint(types):
 	hints = []
 	for i in types:
 		hint = i.text.strip(None)
-		hint_types = hxsublime_tools_HxSrcTools.split_function_signature(hint)
+		hint_types = hxsublime_tools_HxSrcTools.splitFunctionSignature(hint)
 		hints.append(hint_types)
 		__builtin__.len(hints)
 		
@@ -7389,10 +7389,10 @@ hxsublime_compiler_Output.get_function_type_params = Output_statics_get_function
 def Output_statics_completion_field_to_entry(name,sig,doc):
 	insert = name
 	label = name
-	smart_snippets = hxsublime_Settings.smart_snippets_on_completion()
+	smart_snippets = hxsublime_Settings.smartSnippetsOnCompletion()
 	not_smart = not smart_snippets
 	if sig is not None:
-		types = hxsublime_tools_HxSrcTools.split_function_signature(sig)
+		types = hxsublime_tools_HxSrcTools.splitFunctionSignature(sig)
 		r = hxsublime_compiler_Output.get_function_type_params(name, types)
 		types1 = r[0]
 		type_params = r[1]
@@ -7526,14 +7526,14 @@ def Output_statics_extract_errors(str):
 		
 	
 	if __builtin__.len(errors) > 0:
-		hxsublime_panel_Panels.slide_panel().writeln(errors[0].message)
+		hxsublime_panel_Panels.slidePanel().writeln(errors[0].message)
 		sublime_Sublime.status_message(errors[0].message)
 	
 	
 	return errors
 	
 hxsublime_compiler_Output.extract_errors = Output_statics_extract_errors
-def Output_statics_get_completion_output(temp_file,orig_file,output,commas):
+def Output_statics_getCompletionOutput(temp_file,orig_file,output,commas):
 	r = hxsublime_compiler_Output.parse_completion_output(temp_file, orig_file, output)
 	hints = r[0]
 	comps = r[1]
@@ -7562,7 +7562,7 @@ def Output_statics_get_completion_output(temp_file,orig_file,output,commas):
 	
 	return (hints, comps, status, errors)
 	
-hxsublime_compiler_Output.get_completion_output = Output_statics_get_completion_output
+hxsublime_compiler_Output.getCompletionOutput = Output_statics_getCompletionOutput
 def Output_statics_parse_completion_output(temp_file,orig_file,output):
 	tree = None
 	try:
@@ -7591,7 +7591,7 @@ def Output_statics_parse_completion_output(temp_file,orig_file,output):
 		return __builtin__.len(_this)
 	
 	if _hx_local_0() > 0:
-		smart_snippets = hxsublime_Settings.smart_snippets_on_completion()
+		smart_snippets = hxsublime_Settings.smartSnippetsOnCompletion()
 		insert = None
 		if smart_snippets:
 			insert = "${1:value:Dynamic}"
@@ -7664,7 +7664,7 @@ _hx_classes['hxsublime.compiler.Output'] = hxsublime_compiler_Output
 hxsublime_compiler_Output._hx_fields = []
 hxsublime_compiler_Output._hx_props = []
 hxsublime_compiler_Output._hx_methods = []
-hxsublime_compiler_Output._hx_statics = ["compiler_output","no_classes_found","no_classes_found_in_trace","haxe_compiler_line","type_parameter_name","get_type_hint","get_function_type_params","completion_field_to_entry","collect_completion_fields","extract_errors","get_completion_output","parse_completion_output","get_completion_status_and_errors","parse_completion_errors"]
+hxsublime_compiler_Output._hx_statics = ["compiler_output","no_classes_found","no_classes_found_in_trace","haxe_compiler_line","type_parameter_name","get_type_hint","get_function_type_params","completion_field_to_entry","collect_completion_fields","extract_errors","getCompletionOutput","parse_completion_output","get_completion_status_and_errors","parse_completion_errors"]
 hxsublime_compiler_Output._hx_interfaces = []
 
 # print hxsublime.compiler.Server.Server
@@ -7672,7 +7672,7 @@ class hxsublime_compiler_Server:
 
 
 	def __init__(self,port):
-		self._use_wrapper = hxsublime_Settings.use_haxe_servermode_wrapper()
+		self._use_wrapper = hxsublime_Settings.useHaxeServermodeWrapper()
 		self._server_proc = None
 		self._server_port = port
 		self._orig_server_port = port
@@ -7867,7 +7867,7 @@ class hxsublime_compiler_Server:
 			else:
 				raise _hx_e
 		if completeCallback is not None:
-			hxsublime_panel_Panels.default_panel().writeln("stopping server on port: " + Std.string(old_port))
+			hxsublime_panel_Panels.defaultPanel().writeln("stopping server on port: " + Std.string(old_port))
 			completeCallback()
 		
 		
@@ -7891,12 +7891,12 @@ hxsublime_compiler_Server._hx_methods = ["get_server_port","start","stop","__del
 hxsublime_compiler_Server._hx_statics = []
 hxsublime_compiler_Server._hx_interfaces = []
 
-# print hxsublime.completion.Base.CompletionListener
+# print hxsublime.completion.Completion.CompletionListener
 class hxsublime_completion_CompletionListener(sublime_EventListener):
 
 	def on_query_completions(self,view,prefix,locations):
-		project = hxsublime_project_Projects.current_project(view)
-		return hxsublime_completion_Completion.dispatch_auto_complete(project, view, prefix, locations[0])
+		project = hxsublime_project_Projects.currentProject(view)
+		return hxsublime_completion_Completion.dispatchAutoComplete(project, view, prefix, locations[0])
 	
 
 
@@ -7915,7 +7915,7 @@ hxsublime_completion_CompletionListener._hx_statics = []
 hxsublime_completion_CompletionListener._hx_interfaces = []
 hxsublime_completion_CompletionListener._hx_super = sublime_EventListener
 
-# print hxsublime.completion.Base.Completion
+# print hxsublime.completion.Completion.Completion
 class hxsublime_completion_Completion:
 
 	pass
@@ -7923,64 +7923,64 @@ class hxsublime_completion_Completion:
 
 
 
-def Completion_statics_get_completion_scopes(view,location):
+def Completion_statics_getCompletionScopes(view,location):
 	return hxsublime_tools_ViewTools.getScopesAt(view, location)
-hxsublime_completion_Completion.get_completion_scopes = Completion_statics_get_completion_scopes
-def Completion_statics_get_completion_offset(location,prefix):
+hxsublime_completion_Completion.getCompletionScopes = Completion_statics_getCompletionScopes
+def Completion_statics_getCompletionOffset(location,prefix):
 	return location - __builtin__.len(prefix)
-hxsublime_completion_Completion.get_completion_offset = Completion_statics_get_completion_offset
-def Completion_statics_can_run_completion(offset,scopes):
+hxsublime_completion_Completion.getCompletionOffset = Completion_statics_getCompletionOffset
+def Completion_statics_canRunCompletion(offset,scopes):
 	if offset == 0:
 		return False
 	else:
-		return hxsublime_completion_Completion.is_supported_scope(scopes)
-hxsublime_completion_Completion.can_run_completion = Completion_statics_can_run_completion
-def Completion_statics_is_supported_scope(scopes):
+		return hxsublime_completion_Completion.isSupportedScope(scopes)
+hxsublime_completion_Completion.canRunCompletion = Completion_statics_canRunCompletion
+def Completion_statics_isSupportedScope(scopes):
 	return not hxsublime_tools_ScopeTools.containsStringOrComment(scopes)
-hxsublime_completion_Completion.is_supported_scope = Completion_statics_is_supported_scope
-def Completion_statics_empty_handler(project,view,offset,prefix):
+hxsublime_completion_Completion.isSupportedScope = Completion_statics_isSupportedScope
+def Completion_statics_emptyHandler(project,view,offset,prefix):
 	return []
-hxsublime_completion_Completion.empty_handler = Completion_statics_empty_handler
-def Completion_statics_get_auto_complete_handler(view,scopes):
+hxsublime_completion_Completion.emptyHandler = Completion_statics_emptyHandler
+def Completion_statics_getAutoCompleteHandler(view,scopes):
 	handler = None
 	if Lambda.has(scopes, hxsublime_Config.SOURCE_HXML):
-		handler = hxsublime_completion_hxml_Base.auto_complete
+		handler = hxsublime_completion_hxml_HxmlCompletion.autoComplete
 	elif Lambda.has(scopes, hxsublime_Config.SOURCE_HAXE):
 		if hxsublime_tools_ViewTools.isHxsl(view):
-			handler = hxsublime_completion_hxsl_Base.auto_complete
+			handler = hxsublime_completion_hxsl_HxslCompletion.autoComplete
 		else:
-			handler = hxsublime_completion_hx_Base.auto_complete
+			handler = hxsublime_completion_hx_HxCompletion.autoComplete
 	else:
-		handler = hxsublime_completion_Completion.empty_handler
+		handler = hxsublime_completion_Completion.emptyHandler
 	return handler
 	
-hxsublime_completion_Completion.get_auto_complete_handler = Completion_statics_get_auto_complete_handler
-def Completion_statics_dispatch_auto_complete(project,view,prefix,location):
-	start_time = python_lib_Time.time()
-	offset = hxsublime_completion_Completion.get_completion_offset(location, prefix)
-	scopes = hxsublime_completion_Completion.get_completion_scopes(view, location)
+hxsublime_completion_Completion.getAutoCompleteHandler = Completion_statics_getAutoCompleteHandler
+def Completion_statics_dispatchAutoComplete(project,view,prefix,location):
+	startTime = python_lib_Time.time()
+	offset = hxsublime_completion_Completion.getCompletionOffset(location, prefix)
+	scopes = hxsublime_completion_Completion.getCompletionScopes(view, location)
 	comps = None
-	haxe_Log.trace("pre handler", _Hx_AnonObject(fileName = "Base.hx" ,lineNumber = 81 ,className = "hxsublime.completion.Completion" ,methodName = "dispatch_auto_complete" ))
-	if hxsublime_completion_Completion.can_run_completion(offset, scopes):
-		haxe_Log.trace("run handler", _Hx_AnonObject(fileName = "Base.hx" ,lineNumber = 83 ,className = "hxsublime.completion.Completion" ,methodName = "dispatch_auto_complete" ))
-		handler = hxsublime_completion_Completion.get_auto_complete_handler(view, scopes)
+	haxe_Log.trace("pre handler", _Hx_AnonObject(fileName = "Completion.hx" ,lineNumber = 86 ,className = "hxsublime.completion.Completion" ,methodName = "dispatchAutoComplete" ))
+	if hxsublime_completion_Completion.canRunCompletion(offset, scopes):
+		haxe_Log.trace("run handler", _Hx_AnonObject(fileName = "Completion.hx" ,lineNumber = 88 ,className = "hxsublime.completion.Completion" ,methodName = "dispatchAutoComplete" ))
+		handler = hxsublime_completion_Completion.getAutoCompleteHandler(view, scopes)
 		comps = handler(project, view, offset, prefix)
 	
 	else:
-		haxe_Log.trace("no handler", _Hx_AnonObject(fileName = "Base.hx" ,lineNumber = 88 ,className = "hxsublime.completion.Completion" ,methodName = "dispatch_auto_complete" ))
+		haxe_Log.trace("no handler", _Hx_AnonObject(fileName = "Completion.hx" ,lineNumber = 93 ,className = "hxsublime.completion.Completion" ,methodName = "dispatchAutoComplete" ))
 		comps = []
 	
-	haxe_Log.trace("do log info", _Hx_AnonObject(fileName = "Base.hx" ,lineNumber = 92 ,className = "hxsublime.completion.Completion" ,methodName = "dispatch_auto_complete" ))
-	hxsublime_completion_Completion.log_completion_info(start_time, python_lib_Time.time(), comps)
+	haxe_Log.trace("do log info", _Hx_AnonObject(fileName = "Completion.hx" ,lineNumber = 97 ,className = "hxsublime.completion.Completion" ,methodName = "dispatchAutoComplete" ))
+	hxsublime_completion_Completion.logCompletionInfo(startTime, python_lib_Time.time(), comps)
 	return comps
 	
-hxsublime_completion_Completion.dispatch_auto_complete = Completion_statics_dispatch_auto_complete
-def Completion_statics_log_completion_info(start_time,end_time,comps):
-	run_time = end_time - start_time
-	haxe_Log.trace("on_query_completion time: " + Std.string(run_time), _Hx_AnonObject(fileName = "Base.hx" ,lineNumber = 101 ,className = "hxsublime.completion.Completion" ,methodName = "log_completion_info" ))
-	haxe_Log.trace("number of completions: " + Std.string(__builtin__.len(comps)), _Hx_AnonObject(fileName = "Base.hx" ,lineNumber = 102 ,className = "hxsublime.completion.Completion" ,methodName = "log_completion_info" ))
+hxsublime_completion_Completion.dispatchAutoComplete = Completion_statics_dispatchAutoComplete
+def Completion_statics_logCompletionInfo(startTime,endTime,comps):
+	runTime = endTime - startTime
+	haxe_Log.trace("on_query_completion time: " + Std.string(runTime), _Hx_AnonObject(fileName = "Completion.hx" ,lineNumber = 106 ,className = "hxsublime.completion.Completion" ,methodName = "logCompletionInfo" ))
+	haxe_Log.trace("number of completions: " + Std.string(__builtin__.len(comps)), _Hx_AnonObject(fileName = "Completion.hx" ,lineNumber = 107 ,className = "hxsublime.completion.Completion" ,methodName = "logCompletionInfo" ))
 	
-hxsublime_completion_Completion.log_completion_info = Completion_statics_log_completion_info
+hxsublime_completion_Completion.logCompletionInfo = Completion_statics_logCompletionInfo
 
 
 hxsublime_completion_Completion._hx_class = hxsublime_completion_Completion
@@ -7989,1119 +7989,10 @@ _hx_classes['hxsublime.completion.Completion'] = hxsublime_completion_Completion
 hxsublime_completion_Completion._hx_fields = []
 hxsublime_completion_Completion._hx_props = []
 hxsublime_completion_Completion._hx_methods = []
-hxsublime_completion_Completion._hx_statics = ["get_completion_scopes","get_completion_offset","can_run_completion","is_supported_scope","empty_handler","get_auto_complete_handler","dispatch_auto_complete","log_completion_info"]
+hxsublime_completion_Completion._hx_statics = ["getCompletionScopes","getCompletionOffset","canRunCompletion","isSupportedScope","emptyHandler","getAutoCompleteHandler","dispatchAutoComplete","logCompletionInfo"]
 hxsublime_completion_Completion._hx_interfaces = []
 
-# print hxsublime.completion.hx.Base.Base
-class hxsublime_completion_hx_Base:
-
-	pass
-
-
-
-
-def Base_statics_trigger_completion(view,options,show_top_level_snippets = False):
-	if show_top_level_snippets is None:
-		show_top_level_snippets = False
-	
-	def _hx_local_3():
-		project = hxsublime_project_Projects.current_project(view)
-		if not project.has_build():
-			project.extract_build_args(view, False)
-		
-		if project.has_build():
-			project.completion_context.set_trigger(view, options)
-			def _hx_local_0():
-				x = _Hx_AnonObject(api_completions_only = not show_top_level_snippets ,disable_auto_insert = True ,next_completion_if_showing = True ,auto_complete_commit_on_tab = True )
-				def _hx_local_2():
-					def _hx_local_1():
-						d = python_lib_Dict()
-						_g = 0
-						_g1 = Reflect.fields(x)
-						while _g < len(_g1):
-							f = _g1[_g]
-							_g = _g + 1
-							val = Reflect.field(x, f)
-							python_lib_DictImpl.set(d, f, val)
-							
-						
-						
-						return d
-					
-					return _hx_local_1()
-				
-				return _hx_local_2()
-			
-			view.run_command("auto_complete", _hx_local_0())
-		
-		else:
-			project.extract_build_args(view, True)
-	
-	run = _hx_local_3
-	view.run_command("hide_auto_complete")
-	sublime_Sublime.set_timeout(run, 0)
-	
-hxsublime_completion_hx_Base.trigger_completion = Base_statics_trigger_completion
-def Base_statics_get_available_async_completions(comp_result,view):
-	ctx = comp_result.ctx
-	has_results = comp_result.has_results()
-	discard_results = not has_results and ctx.options.types().has_hint()
-	if discard_results:
-		return hxsublime_completion_hx_Base.cancel_completion(view)
-	else:
-		return hxsublime_completion_hx_Base.combine_hints_and_comps(comp_result)
-	
-hxsublime_completion_hx_Base.get_available_async_completions = Base_statics_get_available_async_completions
-def Base_statics_completion_result_with_smart_snippets(view,comps,result,options):
-	use_snippets = hxsublime_Settings.smart_snippets(view)
-	prefix_is_whitespace = hxsublime_tools_StringTools.isWhitespaceOrEmpty(result.ctx.prefix)
-	has_one_hint = options.types().has_hint() and __builtin__.len(result.hints) == 1
-	same_cursor_pos = hxsublime_tools_ViewTools.getFirstCursorPos(view) == result.ctx.view_pos
-	line_after_offset = None
-	s = result.ctx.line_after_offset()
-	line_after_offset = s.strip(None)
-	
-	really_insert = None
-	def _hx_local_0():
-		str = line_after_offset[0]
-		return "),".find(str)
-	
-	really_insert = __builtin__.len(line_after_offset) == 0 or _hx_local_0() > -1
-	if really_insert and prefix_is_whitespace and use_snippets and has_one_hint and same_cursor_pos:
-		only_hint = comps[0]
-		hxsublime_tools_ViewTools.insertSnippet(view, only_hint[1])
-		comps = hxsublime_completion_hx_Base.cancel_completion(view)
-	
-	
-	return comps
-	
-hxsublime_completion_hx_Base.completion_result_with_smart_snippets = Base_statics_completion_result_with_smart_snippets
-def Base_statics_auto_complete(project,view,offset,prefix):
-	haxe_Log.trace("run auto_complete", _Hx_AnonObject(fileName = "Base.hx" ,lineNumber = 103 ,className = "hxsublime.completion.hx.Base" ,methodName = "auto_complete" ))
-	options = project.completion_context.get_and_delete_trigger(view)
-	res = None
-	if options is not None and options.async_trigger():
-		haxe_Log.trace("run auto_complete 1", _Hx_AnonObject(fileName = "Base.hx" ,lineNumber = 110 ,className = "hxsublime.completion.hx.Base" ,methodName = "auto_complete" ))
-		async_result = project.completion_context.get_and_delete_async(view)
-		use_async_results = async_result is not None and async_result.has_results()
-		if use_async_results:
-			haxe_Log.trace("run auto_complete 2", _Hx_AnonObject(fileName = "Base.hx" ,lineNumber = 115 ,className = "hxsublime.completion.hx.Base" ,methodName = "auto_complete" ))
-			res = hxsublime_completion_hx_Base.get_available_async_completions(async_result, view)
-			res = hxsublime_completion_hx_Base.completion_result_with_smart_snippets(view, res, async_result, options)
-			haxe_Log.trace(res, _Hx_AnonObject(fileName = "Base.hx" ,lineNumber = 118 ,className = "hxsublime.completion.hx.Base" ,methodName = "auto_complete" ))
-		
-		else:
-			haxe_Log.trace("run auto_complete 3", _Hx_AnonObject(fileName = "Base.hx" ,lineNumber = 122 ,className = "hxsublime.completion.hx.Base" ,methodName = "auto_complete" ))
-			res = hxsublime_completion_hx_Base.cancel_completion(view)
-		
-	
-	else:
-		haxe_Log.trace("create comps", _Hx_AnonObject(fileName = "Base.hx" ,lineNumber = 127 ,className = "hxsublime.completion.hx.Base" ,methodName = "auto_complete" ))
-		res = hxsublime_completion_hx_Base.create_new_completions(project, view, offset, options, prefix)
-		haxe_Log.trace("after create comps", _Hx_AnonObject(fileName = "Base.hx" ,lineNumber = 130 ,className = "hxsublime.completion.hx.Base" ,methodName = "auto_complete" ))
-	
-	return res
-	
-hxsublime_completion_hx_Base.auto_complete = Base_statics_auto_complete
-def Base_statics_create_new_completions(project,view,offset,options,prefix):
-	cache = project.completion_context.current
-	haxe_Log.trace("------- COMPLETION START -----------", _Hx_AnonObject(fileName = "Base.hx" ,lineNumber = 142 ,className = "hxsublime.completion.hx.Base" ,methodName = "create_new_completions" ))
-	ctx = hxsublime_completion_hx_Base.create_completion_context(project, view, offset, options, prefix)
-	res = None
-	haxe_Log.trace("MANUAL COMPLETION: " + Std.string(ctx.options.manual_completion), _Hx_AnonObject(fileName = "Base.hx" ,lineNumber = 148 ,className = "hxsublime.completion.hx.Base" ,methodName = "create_new_completions" ))
-	if hxsublime_completion_hx_Base.is_equivalent_completion_already_running(ctx):
-		haxe_Log.trace("create_new_completions9", _Hx_AnonObject(fileName = "Base.hx" ,lineNumber = 155 ,className = "hxsublime.completion.hx.Base" ,methodName = "create_new_completions" ))
-		haxe_Log.trace("cancel completion, same is running", _Hx_AnonObject(fileName = "Base.hx" ,lineNumber = 156 ,className = "hxsublime.completion.hx.Base" ,methodName = "create_new_completions" ))
-		res = hxsublime_completion_hx_Base.cancel_completion(ctx.view)
-	
-	elif not ctx.options.manual_completion():
-		haxe_Log.trace("create_new_completions7", _Hx_AnonObject(fileName = "Base.hx" ,lineNumber = 160 ,className = "hxsublime.completion.hx.Base" ,methodName = "create_new_completions" ))
-		hxsublime_completion_hx_Base.trigger_manual_completion(ctx.view, ctx.options.copy_as_manual())
-		res = hxsublime_completion_hx_Base.cancel_completion(ctx.view)
-	
-	elif hxsublime_completion_hx_Base.is_after_int_iterator(ctx.src(), ctx.offset):
-		haxe_Log.trace("create_new_completions8", _Hx_AnonObject(fileName = "Base.hx" ,lineNumber = 165 ,className = "hxsublime.completion.hx.Base" ,methodName = "create_new_completions" ))
-		res = hxsublime_completion_hx_Base.cancel_completion(ctx.view)
-	
-	elif hxsublime_completion_hx_Base.is_iterator_completion(ctx.src(), ctx.offset):
-		haxe_Log.trace("create_new_completions10", _Hx_AnonObject(fileName = "Base.hx" ,lineNumber = 169 ,className = "hxsublime.completion.hx.Base" ,methodName = "create_new_completions" ))
-		haxe_Log.trace("iterator completion", _Hx_AnonObject(fileName = "Base.hx" ,lineNumber = 170 ,className = "hxsublime.completion.hx.Base" ,methodName = "create_new_completions" ))
-		res = [(".\tint iterator", "..")]
-	
-	else:
-		haxe_Log.trace("create_new_completions11", _Hx_AnonObject(fileName = "Base.hx" ,lineNumber = 174 ,className = "hxsublime.completion.hx.Base" ,methodName = "create_new_completions" ))
-		if hxsublime_completion_hx_Base.is_hint_completion(ctx):
-			haxe_Log.trace("ADD HINT", _Hx_AnonObject(fileName = "Base.hx" ,lineNumber = 176 ,className = "hxsublime.completion.hx.Base" ,methodName = "create_new_completions" ))
-			ctx.options.types().add_hint()
-		
-		
-		is_directly_after_control_struct = ctx.complete_char_is_after_control_struct()
-		only_top_level = ctx.is_new() or is_directly_after_control_struct
-		haxe_Log.trace("only_top_level: " + Std.string(only_top_level), _Hx_AnonObject(fileName = "Base.hx" ,lineNumber = 185 ,className = "hxsublime.completion.hx.Base" ,methodName = "create_new_completions" ))
-		if only_top_level:
-			res = hxsublime_completion_hx_Base.get_toplevel_completions(ctx)
-		else:
-			last_ctx = cache.input
-			if hxsublime_completion_hx_Base.use_completion_cache(ctx, last_ctx):
-				haxe_Log.trace("USE COMPLETION CACHE", _Hx_AnonObject(fileName = "Base.hx" ,lineNumber = 197 ,className = "hxsublime.completion.hx.Base" ,methodName = "create_new_completions" ))
-				out = cache.output
-				hxsublime_completion_hx_Base.update_completion_cache(cache, out)
-				project.completion_context.add_completion_result(out)
-				res = hxsublime_completion_hx_Base.cancel_completion(view)
-				hxsublime_completion_hx_Base.trigger_async_completion(view, ctx.options, out.show_top_level_snippets())
-			
-			elif hxsublime_completion_hx_Base.supported_compiler_completion_char(ctx.complete_char()):
-				haxe_Log.trace("supported char", _Hx_AnonObject(fileName = "Base.hx" ,lineNumber = 208 ,className = "hxsublime.completion.hx.Base" ,methodName = "create_new_completions" ))
-				comp_build = hxsublime_completion_hx_Base.create_completion_build(ctx)
-				if comp_build is not None:
-					def _hx_local_0(out,err):
-						hxsublime_completion_hx_Base.completion_finished(ctx, comp_build, out, err)
-					hxsublime_completion_hx_Base.run_compiler_completion(comp_build, _hx_local_0)
-				
-				else:
-					haxe_Log.trace("couldn't create temp path && files which are neccessary for completion", _Hx_AnonObject(fileName = "Base.hx" ,lineNumber = 214 ,className = "hxsublime.completion.hx.Base" ,methodName = "create_new_completions" ))
-				res = hxsublime_completion_hx_Base.cancel_completion(view, True)
-			
-			else:
-				haxe_Log.trace("whatever", _Hx_AnonObject(fileName = "Base.hx" ,lineNumber = 221 ,className = "hxsublime.completion.hx.Base" ,methodName = "create_new_completions" ))
-				def _hx_local_1():
-					return hxsublime_completion_hx_Base.get_toplevel_completions(ctx)
-				comp_result = hxsublime_completion_hx_CompletionResult.empty_result(ctx, _hx_local_1)
-				hxsublime_completion_hx_Base.update_completion_cache(cache, comp_result)
-				project.completion_context.add_completion_result(comp_result)
-				res = hxsublime_completion_hx_Base.cancel_completion(view)
-				hxsublime_completion_hx_Base.trigger_async_completion(view, ctx.options, comp_result.show_top_level_snippets())
-			
-		
-	
-	return res
-	
-hxsublime_completion_hx_Base.create_new_completions = Base_statics_create_new_completions
-def Base_statics_create_completion_build(ctx):
-	tmp_src = ctx.temp_completion_src()
-	r = hxsublime_Temp.create_temp_path_and_file(ctx.build(), ctx.orig_file(), tmp_src)
-	temp_path = r[0]
-	temp_file = r[1]
-	temp_creation_success = temp_path is not None and temp_file is not None
-	def _hx_local_0():
-		comp_build = hxsublime_completion_hx_CompletionBuild(ctx, temp_path, temp_file)
-		build = comp_build.build
-		display = comp_build.display()
-		macro_completion = ctx.options.macro_completion()
-		build.set_auto_completion(display, macro_completion)
-		if ctx.settings.show_completion_times(comp_build.ctx.view):
-			build.set_times()
-		
-		return comp_build
-	
-	mk_build = _hx_local_0
-	if temp_creation_success:
-		return mk_build()
-	else:
-		return None
-	
-hxsublime_completion_hx_Base.create_completion_build = Base_statics_create_completion_build
-def Base_statics_run_compiler_completion(comp_build,callback):
-	start_time = python_lib_Time.time()
-	ctx = comp_build.ctx
-	project = ctx.project
-	build = comp_build.build
-	view = ctx.view
-	async = ctx.settings.is_async_completion()
-	def _hx_local_1(out,err):
-		def _hx_local_0():
-			run_time = python_lib_Time.time() - start_time
-			haxe_Log.trace("completion time: " + Std.string(run_time), _Hx_AnonObject(fileName = "Base.hx" ,lineNumber = 276 ,className = "hxsublime.completion.hx.Base" ,methodName = "run_compiler_completion" ))
-			hxsublime_Temp.remove_path(comp_build.temp_path)
-			callback(out, err)
-		
-		run = _hx_local_0
-		project.completion_context.run_if_still_up_to_date(ctx.id, run)
-	
-	in_main = _hx_local_1
-	def _hx_local_3(out1,err1):
-		def _hx_local_2():
-			in_main(out1, err1)
-		sublime_Sublime.set_timeout(_hx_local_2, 2)
-	
-	on_result = _hx_local_3
-	project.completion_context.set_new_completion(ctx)
-	haxe_Log.trace("ASYNC: " + Std.string(async), _Hx_AnonObject(fileName = "Base.hx" ,lineNumber = 293 ,className = "hxsublime.completion.hx.Base" ,methodName = "run_compiler_completion" ))
-	build.run(project, view, async, on_result)
-	
-hxsublime_completion_hx_Base.run_compiler_completion = Base_statics_run_compiler_completion
-def Base_statics_completion_finished(ctx,comp_build,out,err):
-	ctx1 = comp_build.ctx
-	temp_file = comp_build.temp_file
-	cache = comp_build.cache
-	project = ctx1.project
-	view = ctx1.view
-	def _hx_local_0():
-		return hxsublime_completion_hx_Base.get_toplevel_completions(ctx1)
-	comp_result = hxsublime_completion_hx_Base.output_to_result(ctx1, temp_file, err, out, _hx_local_0)
-	has_results = comp_result.has_results()
-	if has_results:
-		hxsublime_completion_hx_Base.update_completion_cache(cache, comp_result)
-		project.completion_context.add_completion_result(comp_result)
-		show_top_level_snippets = comp_result.show_top_level_snippets()
-		hxsublime_completion_hx_Base.trigger_async_completion(view, ctx1.options, show_top_level_snippets)
-	
-	else:
-		haxe_Log.trace("ignore background completion on finished", _Hx_AnonObject(fileName = "Base.hx" ,lineNumber = 320 ,className = "hxsublime.completion.hx.Base" ,methodName = "completion_finished" ))
-	
-hxsublime_completion_hx_Base.completion_finished = Base_statics_completion_finished
-def Base_statics_hints_to_sublime_completions(hints):
-	def _hx_local_5(h):
-		hint_is_only_type = __builtin__.len(h) == 1
-		res = None
-		if hint_is_only_type:
-			res = (h[0] + " - No Completion", "${}")
-		else:
-			function_has_no_params = __builtin__.len(h) == 2 and h[0] == "Void"
-			insert = None
-			show = None
-			if function_has_no_params:
-				insert = ")"
-				show = "Void"
-			
-			else:
-				def _hx_local_0(p):
-					_this = p.split("}")
-					return "\\}".join(_this)
-				
-				param_escape = _hx_local_0
-				last_index = __builtin__.len(h) - 1
-				params = h[0:last_index]
-				show = ", ".join(params)
-				if hxsublime_Settings.smart_snippets_just_current():
-					first = param_escape(params[0])
-					if __builtin__.len(params) == 1:
-						insert = "${1:" + first + "})${0}"
-					else:
-						insert = "${0:" + first + "}"
-				
-				else:
-					def _hx_local_1(list_index):
-						return Std.string(list_index + 1)
-					get_snippet_index = _hx_local_1
-					def _hx_local_2(param,index):
-						return "${" + get_snippet_index(index) + ":" + param_escape(param) + "}"
-					param_snippet = _hx_local_2
-					snippet_list = None
-					_g = []
-					_g2 = 0
-					_g1 = __builtin__.len(params)
-					while _g2 < _g1:
-						def _hx_local_4():
-							nonlocal _g2
-							_hx_local_3 = _g2
-							_g2 = _g2 + 1
-							return _hx_local_3
-							
-						
-						index = _hx_local_4()
-						x = param_snippet(params[index], index)
-						_g.append(x)
-						__builtin__.len(_g)
-						
-					
-					
-					snippet_list = _g
-					
-					insert = ",".join(snippet_list) + ")${0}"
-				
-			
-			res = (show, insert)
-		
-		return res
-	
-	make_hint_comp = _hx_local_5
-	_g = []
-	_g1 = 0
-	while _g1 < len(hints):
-		h = hints[_g1]
-		_g1 = _g1 + 1
-		x = make_hint_comp(h)
-		_g.append(x)
-		__builtin__.len(_g)
-		
-	
-	
-	return _g
-	
-	
-hxsublime_completion_hx_Base.hints_to_sublime_completions = Base_statics_hints_to_sublime_completions
-def Base_statics_combine_hints_and_comps(comp_result):
-	all_comps = hxsublime_completion_hx_Base.hints_to_sublime_completions(comp_result.hints)
-	if not comp_result.ctx.options.types().has_hint() or __builtin__.len(comp_result.hints) == 0:
-		haxe_Log.trace("TAKE TOP LEVEL COMPS", _Hx_AnonObject(fileName = "Base.hx" ,lineNumber = 404 ,className = "hxsublime.completion.hx.Base" ,methodName = "combine_hints_and_comps" ))
-		x = comp_result.all_comps()
-		all_comps.extend(x)
-		
-	
-	elif __builtin__.len(comp_result.hints) == 1:
-		sublime_Sublime.status_message("signature: " + "->".join(comp_result.hints[0]))
-	
-	return all_comps
-	
-hxsublime_completion_hx_Base.combine_hints_and_comps = Base_statics_combine_hints_and_comps
-def Base_statics_is_iterator_completion(src,offset):
-	o = offset
-	s = src
-	return o > 3 and s[o] == "\n" and s[o - 1] == "." and s[o - 2] == "." and s[o - 3] != "."
-	
-hxsublime_completion_hx_Base.is_iterator_completion = Base_statics_is_iterator_completion
-def Base_statics_is_after_int_iterator(src,offset):
-	o = offset
-	s = src
-	return o > 3 and s[o] == "\n" and s[o - 1] == "." and s[o - 2] == "." and s[o - 3] == "."
-	
-hxsublime_completion_hx_Base.is_after_int_iterator = Base_statics_is_after_int_iterator
-def Base_statics_is_hint_completion(ctx):
-	whitespace_re = python_lib_Re.compile("^\\s*$")
-	def _hx_local_1():
-		def _hx_local_0():
-			str = ctx.complete_char()
-			return "(,".find(str)
-		
-		return _hx_local_0() > -1 and python_lib_Re.match(whitespace_re, ctx.prefix) is not None
-	
-	return _hx_local_1()
-	
-hxsublime_completion_hx_Base.is_hint_completion = Base_statics_is_hint_completion
-def Base_statics_is_equivalent_completion_already_running(ctx):
-	return ctx.project.completion_context.is_equivalent_completion_already_running(ctx)
-hxsublime_completion_hx_Base.is_equivalent_completion_already_running = Base_statics_is_equivalent_completion_already_running
-def Base_statics_should_include_top_level_completion(ctx):
-	haxe_Log.trace("complete Char: '" + ctx.complete_char() + "'", _Hx_AnonObject(fileName = "Base.hx" ,lineNumber = 447 ,className = "hxsublime.completion.hx.Base" ,methodName = "should_include_top_level_completion" ))
-	toplevel_complete = None
-	def _hx_local_0():
-		str = ctx.complete_char()
-		return ":(,{;})".find(str)
-	
-	toplevel_complete = _hx_local_0() > -1 or ctx.in_control_struct() or ctx.is_new()
-	haxe_Log.trace("should include: " + Std.string(toplevel_complete), _Hx_AnonObject(fileName = "Base.hx" ,lineNumber = 450 ,className = "hxsublime.completion.hx.Base" ,methodName = "should_include_top_level_completion" ))
-	return toplevel_complete
-	
-hxsublime_completion_hx_Base.should_include_top_level_completion = Base_statics_should_include_top_level_completion
-def Base_statics_get_toplevel_completions(ctx):
-	haxe_Log.trace("get top level completions", _Hx_AnonObject(fileName = "Base.hx" ,lineNumber = 458 ,className = "hxsublime.completion.hx.Base" ,methodName = "get_toplevel_completions" ))
-	comps = None
-	if hxsublime_completion_hx_Base.should_include_top_level_completion(ctx):
-		comps = hxsublime_completion_hx_TopLevel.get_toplevel_completion_filtered(ctx)
-	else:
-		haxe_Log.trace("should not", _Hx_AnonObject(fileName = "Base.hx" ,lineNumber = 464 ,className = "hxsublime.completion.hx.Base" ,methodName = "get_toplevel_completions" ))
-		comps = []
-	
-	return comps
-	
-hxsublime_completion_hx_Base.get_toplevel_completions = Base_statics_get_toplevel_completions
-def Base_statics_create_completion_context(project,view,offset,options,prefix):
-	haxe_Log.trace("OPTIONS:" + Std.string(options), _Hx_AnonObject(fileName = "Base.hx" ,lineNumber = 477 ,className = "hxsublime.completion.hx.Base" ,methodName = "create_completion_context" ))
-	if options is None:
-		options = hxsublime_completion_hx_CompletionOptions(2)
-	
-	haxe_Log.trace(options, _Hx_AnonObject(fileName = "Base.hx" ,lineNumber = 483 ,className = "hxsublime.completion.hx.Base" ,methodName = "create_completion_context" ))
-	settings = hxsublime_completion_hx_CompletionSettings(hxsublime_Settings)
-	ctx = hxsublime_completion_hx_CompletionContext(view, project, offset, options, settings, prefix)
-	return ctx
-	
-hxsublime_completion_hx_Base.create_completion_context = Base_statics_create_completion_context
-def Base_statics_update_completion_cache(cache,comp_result):
-	cache.output = comp_result
-	cache.input = comp_result.ctx
-	
-hxsublime_completion_hx_Base.update_completion_cache = Base_statics_update_completion_cache
-def Base_statics_log_completion_status(status,comps,hints):
-	if status != "":
-		if comps.length > 0 or hints.length > 0:
-			haxe_Log.trace(status, _Hx_AnonObject(fileName = "Base.hx" ,lineNumber = 500 ,className = "hxsublime.completion.hx.Base" ,methodName = "log_completion_status" ))
-		else:
-			hxsublime_panel_Panels.default_panel().writeln(status)
-	
-hxsublime_completion_hx_Base.log_completion_status = Base_statics_log_completion_status
-def Base_statics_output_to_result(ctx,temp_file,err,ret,retrieve_tl_comps):
-	r = hxsublime_compiler_Output.get_completion_output(temp_file, ctx.orig_file(), err, ctx.commas())
-	hints = r[0]
-	comps1 = r[1]
-	status = r[2]
-	errors = r[3]
-	comps2 = None
-	_g = []
-	_g1 = 0
-	while _g1 < len(comps1):
-		t = comps1[_g1]
-		_g1 = _g1 + 1
-		x = (t.hint, t.insert)
-		_g.append(x)
-		__builtin__.len(_g)
-		
-	
-	
-	comps2 = _g
-	
-	ctx.project.completion_context.set_errors(errors)
-	hxsublime_completion_hx_Base.highlight_errors(errors, ctx.view)
-	return hxsublime_completion_hx_CompletionResult(ret, comps2, status, hints, ctx, retrieve_tl_comps)
-	
-hxsublime_completion_hx_Base.output_to_result = Base_statics_output_to_result
-def Base_statics_use_completion_cache(last_input,current_input):
-	return last_input.eq(current_input)
-hxsublime_completion_hx_Base.use_completion_cache = Base_statics_use_completion_cache
-def Base_statics_supported_compiler_completion_char(char):
-	return "(.,".find(char) > -1
-hxsublime_completion_hx_Base.supported_compiler_completion_char = Base_statics_supported_compiler_completion_char
-def Base_statics_highlight_errors(errors,view):
-	regions = []
-	_g = 0
-	while _g < len(errors):
-		e = errors[_g]
-		_g = _g + 1
-		l = e.line
-		left = e._hx_from
-		right = e.to
-		a = view.text_point(l, left)
-		b = view.text_point(l, right)
-		x = sublime_Region(a, b)
-		regions.append(x)
-		
-		hxsublime_panel_Panels.default_panel().status("Error", e.file + ":" + Std.string(l) + ": characters " + Std.string(left) + "-" + Std.string(right) + ": " + e.message)
-	
-	
-	view.add_regions("haxe-error", regions, "invalid", "dot")
-	
-hxsublime_completion_hx_Base.highlight_errors = Base_statics_highlight_errors
-def Base_statics_cancel_completion(view,hide_complete = True):
-	if hide_complete is None:
-		hide_complete = True
-	
-	if hide_complete:
-		view.run_command("hide_auto_complete")
-	
-	return [("  ...  ", "")]
-	
-hxsublime_completion_hx_Base.cancel_completion = Base_statics_cancel_completion
-def Base_statics_trigger_async_completion(view,options,show_top_level_snippets = False):
-	if show_top_level_snippets is None:
-		show_top_level_snippets = False
-	
-	async_options = options.copy_as_async()
-	def _hx_local_0():
-		hxsublime_completion_hx_Base.trigger_completion(view, async_options, show_top_level_snippets)
-	run_complete = _hx_local_0
-	sublime_Sublime.set_timeout(run_complete, 2)
-	
-hxsublime_completion_hx_Base.trigger_async_completion = Base_statics_trigger_async_completion
-def Base_statics_trigger_manual_completion(view,options):
-	hint = options.types().has_hint()
-	macroComp = options.macro_completion()
-	def _hx_local_0():
-		if hint and macroComp:
-			view.run_command("hxsublime_commands__haxe_hint_display_macro_completion")
-		elif hint:
-			view.run_command("hxsublime_commands__haxe_hint_display_completion")
-		elif macroComp:
-			view.run_command("hxsublime_commands__haxe_display_macro_completion")
-		else:
-			view.run_command("hxsublime_commands__haxe_display_completion")
-	run_complete = _hx_local_0
-	sublime_Sublime.set_timeout(run_complete, 2)
-	
-hxsublime_completion_hx_Base.trigger_manual_completion = Base_statics_trigger_manual_completion
-
-
-hxsublime_completion_hx_Base._hx_class = hxsublime_completion_hx_Base
-hxsublime_completion_hx_Base._hx_class_name = "hxsublime.completion.hx.Base"
-_hx_classes['hxsublime.completion.hx.Base'] = hxsublime_completion_hx_Base
-hxsublime_completion_hx_Base._hx_fields = []
-hxsublime_completion_hx_Base._hx_props = []
-hxsublime_completion_hx_Base._hx_methods = []
-hxsublime_completion_hx_Base._hx_statics = ["trigger_completion","get_available_async_completions","completion_result_with_smart_snippets","auto_complete","create_new_completions","create_completion_build","run_compiler_completion","completion_finished","hints_to_sublime_completions","combine_hints_and_comps","is_iterator_completion","is_after_int_iterator","is_hint_completion","is_equivalent_completion_already_running","should_include_top_level_completion","get_toplevel_completions","create_completion_context","update_completion_cache","log_completion_status","output_to_result","use_completion_cache","supported_compiler_completion_char","highlight_errors","cancel_completion","trigger_async_completion","trigger_manual_completion"]
-hxsublime_completion_hx_Base._hx_interfaces = []
-
-# print hxsublime.completion.hx.Constants.Constants
-class hxsublime_completion_hx_Constants:
-
-	pass
-
-
-
-
-hxsublime_completion_hx_Constants.COMPLETION_TRIGGER_MANUAL = 1
-hxsublime_completion_hx_Constants.COMPLETION_TRIGGER_AUTO = 2
-hxsublime_completion_hx_Constants.COMPLETION_TRIGGER_ASYNC = 3
-hxsublime_completion_hx_Constants.COMPILER_CONTEXT_MACRO = 1
-hxsublime_completion_hx_Constants.COMPILER_CONTEXT_REGULAR = 2
-hxsublime_completion_hx_Constants.COMPLETION_TYPE_REGULAR = 1
-hxsublime_completion_hx_Constants.COMPLETION_TYPE_HINT = 2
-hxsublime_completion_hx_Constants.COMPLETION_TYPE_TOPLEVEL = 4
-hxsublime_completion_hx_Constants.COMPLETION_TYPE_TOPLEVEL_FORCED = 12
-hxsublime_completion_hx_Constants.TOPLEVEL_OPTION_TYPES = 1
-hxsublime_completion_hx_Constants.TOPLEVEL_OPTION_LOCALS = 2
-hxsublime_completion_hx_Constants.TOPLEVEL_OPTION_KEYWORDS = 4
-hxsublime_completion_hx_Constants.TOPLEVEL_OPTION_ALL = 7
-
-
-hxsublime_completion_hx_Constants._hx_class = hxsublime_completion_hx_Constants
-hxsublime_completion_hx_Constants._hx_class_name = "hxsublime.completion.hx.Constants"
-_hx_classes['hxsublime.completion.hx.Constants'] = hxsublime_completion_hx_Constants
-hxsublime_completion_hx_Constants._hx_fields = []
-hxsublime_completion_hx_Constants._hx_props = []
-hxsublime_completion_hx_Constants._hx_methods = []
-hxsublime_completion_hx_Constants._hx_statics = ["COMPLETION_TRIGGER_MANUAL","COMPLETION_TRIGGER_AUTO","COMPLETION_TRIGGER_ASYNC","COMPILER_CONTEXT_MACRO","COMPILER_CONTEXT_REGULAR","COMPLETION_TYPE_REGULAR","COMPLETION_TYPE_HINT","COMPLETION_TYPE_TOPLEVEL","COMPLETION_TYPE_TOPLEVEL_FORCED","TOPLEVEL_OPTION_TYPES","TOPLEVEL_OPTION_LOCALS","TOPLEVEL_OPTION_KEYWORDS","TOPLEVEL_OPTION_ALL"]
-hxsublime_completion_hx_Constants._hx_interfaces = []
-
-# print hxsublime.completion.hx.Toplevel.TopLevel
-class hxsublime_completion_hx_TopLevel:
-
-	pass
-
-
-
-
-hxsublime_completion_hx_TopLevel.TOP_LEVEL_KEYWORDS = [("trace\ttoplevel", "trace"), ("this\ttoplevel", "this"), ("super\ttoplevel", "super")]
-def TopLevel_statics_get_toplevel_keywords(ctx):
-	if ctx.is_new():
-		return []
-	else:
-		return hxsublime_completion_hx_TopLevel.TOP_LEVEL_KEYWORDS
-hxsublime_completion_hx_TopLevel.get_toplevel_keywords = TopLevel_statics_get_toplevel_keywords
-def TopLevel_statics_get_build_target(ctx):
-	if ctx.options.macro_completion():
-		return "neko"
-	else:
-		return ctx.build().target().plattform
-hxsublime_completion_hx_TopLevel.get_build_target = TopLevel_statics_get_build_target
-def TopLevel_statics_get_local_vars(ctx):
-	comps = []
-	def _hx_local_0():
-		p = hxsublime_tools_Regex.variables.finditer(ctx.src())
-		return python_HaxeIterator(p)
-	
-	_it = _hx_local_0()
-	while _it.hasNext():
-		v = _it.next()
-		x = None
-		a = v.group(1) + "\tvar"
-		b = v.group(1)
-		x = (a, b)
-		
-		comps.append(x)
-		__builtin__.len(comps)
-		
-	
-	return comps
-	
-hxsublime_completion_hx_TopLevel.get_local_vars = TopLevel_statics_get_local_vars
-def TopLevel_statics_get_local_functions(ctx):
-	comps = []
-	def _hx_local_0():
-		p = hxsublime_tools_Regex.named_functions.finditer(ctx.src())
-		return python_HaxeIterator(p)
-	
-	_it = _hx_local_0()
-	while _it.hasNext():
-		i = _it.next()
-		f = i.group(1)
-		if f != "new":
-			x = (f + "\tfunction", f)
-			comps.append(x)
-			__builtin__.len(comps)
-			
-		
-		
-	
-	return comps
-	
-hxsublime_completion_hx_TopLevel.get_local_functions = TopLevel_statics_get_local_functions
-def TopLevel_statics_get_local_function_params(ctx):
-	comps = []
-	_g = 0
-	_g1 = None
-	string = ctx.src()
-	_g1 = python_lib_Re_RegexHelper.findallDynamic(hxsublime_tools_Regex.function_params, string, None, None)
-	
-	while _g < len(_g1):
-		params_text = _g1[_g]
-		_g = _g + 1
-		cleaned_params_text = python_lib_Re.sub(hxsublime_tools_Regex.param_default, "", params_text)
-		params_list = cleaned_params_text.split(",")
-		_g2 = 0
-		while _g2 < len(params_list):
-			param = params_list[_g2]
-			_g2 = _g2 + 1
-			a = param.strip(None)
-			if StringTools.startsWith(a, "?"):
-				a = python_Tools.substr(a, 1, None)
-			
-			idx = a.find(":")
-			if idx > -1:
-				a = python_Tools.substring(a, 0, idx)
-			
-			idx1 = a.find("=")
-			if idx1 > -1:
-				a = python_Tools.substring(a, 0, idx1)
-			
-			a = a.strip(None)
-			cm = (a + "\tvar", a)
-			if not Lambda.has(comps, cm):
-				comps.append(cm)
-				__builtin__.len(comps)
-			
-			
-		
-		
-	
-	
-	return comps
-	
-hxsublime_completion_hx_TopLevel.get_local_function_params = TopLevel_statics_get_local_function_params
-def TopLevel_statics_get_local_vars_and_functions(ctx):
-	comps = []
-	x = hxsublime_completion_hx_TopLevel.get_local_vars(ctx)
-	comps.extend(x)
-	
-	x = hxsublime_completion_hx_TopLevel.get_local_functions(ctx)
-	comps.extend(x)
-	
-	x = hxsublime_completion_hx_TopLevel.get_local_function_params(ctx)
-	comps.extend(x)
-	
-	return comps
-	
-hxsublime_completion_hx_TopLevel.get_local_vars_and_functions = TopLevel_statics_get_local_vars_and_functions
-def TopLevel_statics_get_imports(ctx):
-	imports = None
-	string = ctx.src()
-	imports = python_lib_Re_RegexHelper.findallDynamic(hxsublime_tools_Regex.import_line, string, None, None)
-	
-	imported = []
-	_g = 0
-	while _g < len(imports):
-		i = imports[_g]
-		_g = _g + 1
-		imp = i[1]
-		imported.append(imp)
-		__builtin__.len(imported)
-		
-	
-	
-	return imported
-	
-hxsublime_completion_hx_TopLevel.get_imports = TopLevel_statics_get_imports
-def TopLevel_statics_get_usings(ctx):
-	usings = None
-	string = ctx.src()
-	usings = python_lib_Re_RegexHelper.findallDynamic(hxsublime_tools_Regex.using_line, string, None, None)
-	
-	used = []
-	_g = 0
-	while _g < len(usings):
-		i = usings[_g]
-		_g = _g + 1
-		imp = i[1]
-		used.append(imp)
-		__builtin__.len(used)
-		
-	
-	
-	return used
-	
-hxsublime_completion_hx_TopLevel.get_usings = TopLevel_statics_get_usings
-def TopLevel_statics_get_imports_and_usings(ctx):
-	res = hxsublime_completion_hx_TopLevel.get_imports(ctx)
-	a = hxsublime_completion_hx_TopLevel.get_usings(ctx)
-	res = res + a
-	
-	return res
-	
-hxsublime_completion_hx_TopLevel.get_imports_and_usings = TopLevel_statics_get_imports_and_usings
-def TopLevel_statics_haxe_type_as_completion(type):
-	insert = type.full_pack_with_optional_module_type_and_enum_value
-	display = type.type_name_with_optional_enum_value
-	display = display + "\t" + type.get_type_hint
-	return (display, insert)
-	
-hxsublime_completion_hx_TopLevel.haxe_type_as_completion = TopLevel_statics_haxe_type_as_completion
-def TopLevel_statics_get_type_comps(ctx,bundle,imported):
-	build_target = hxsublime_completion_hx_TopLevel.get_build_target(ctx)
-	comps = []
-	start_time = python_lib_Time.time()
-	allTypes = bundle.all_types()
-	run_time0 = python_lib_Time.time() - start_time
-	_g = 0
-	while _g < len(allTypes):
-		t = allTypes[_g]
-		_g = _g + 1
-		if ctx.build().is_type_available(t):
-			snippets = t.to_snippets(imported, ctx.orig_file())
-			comps.extend(snippets)
-		
-		
-	
-	
-	run_time1 = python_lib_Time.time() - start_time
-	_g = 0
-	_g1 = bundle.packs()
-	while _g < len(_g1):
-		p = _g1[_g]
-		_g = _g + 1
-		if ctx.build().is_pack_available(p):
-			cm = (p + "\tpackage", p)
-			comps.append(cm)
-			__builtin__.len(comps)
-			
-		
-		
-	
-	
-	run_time2 = python_lib_Time.time() - start_time
-	haxe_Log.trace("get_type_comps time0" + Std.string(run_time0), _Hx_AnonObject(fileName = "Toplevel.hx" ,lineNumber = 169 ,className = "hxsublime.completion.hx.TopLevel" ,methodName = "get_type_comps" ))
-	haxe_Log.trace("get_type_comps time1" + Std.string(run_time1), _Hx_AnonObject(fileName = "Toplevel.hx" ,lineNumber = 170 ,className = "hxsublime.completion.hx.TopLevel" ,methodName = "get_type_comps" ))
-	haxe_Log.trace("get_type_comps time2" + Std.string(run_time2), _Hx_AnonObject(fileName = "Toplevel.hx" ,lineNumber = 171 ,className = "hxsublime.completion.hx.TopLevel" ,methodName = "get_type_comps" ))
-	return comps
-	
-hxsublime_completion_hx_TopLevel.get_type_comps = TopLevel_statics_get_type_comps
-def TopLevel_statics_get_toplevel_completion(ctx):
-	start_time = python_lib_Time.time()
-	comps = []
-	if not ctx.is_new():
-		x = hxsublime_completion_hx_TopLevel.get_toplevel_keywords(ctx)
-		comps.extend(x)
-		
-		x = hxsublime_completion_hx_TopLevel.get_local_vars_and_functions(ctx)
-		comps.extend(x)
-		
-	
-	
-	imported = hxsublime_completion_hx_TopLevel.get_imports_and_usings(ctx)
-	run_time1 = python_lib_Time.time() - start_time
-	build_bundle = ctx.build().get_types()
-	run_time2 = python_lib_Time.time() - start_time
-	std_bundle = ctx.build().std_bundle()
-	def _hx_local_0(t):
-		return not t.is_private or t.file() == ctx.orig_file()
-	filter_privates = _hx_local_0
-	merged_bundle = std_bundle.merge(build_bundle).filter(filter_privates)
-	run_time3 = python_lib_Time.time() - start_time
-	comps1 = hxsublime_completion_hx_TopLevel.get_type_comps(ctx, merged_bundle, imported)
-	run_time4 = python_lib_Time.time() - start_time
-	comps.extend(comps1)
-	run_time = python_lib_Time.time() - start_time
-	haxe_Log.trace("TOP LEVEL COMPLETION TIME1:" + Std.string(run_time1), _Hx_AnonObject(fileName = "Toplevel.hx" ,lineNumber = 220 ,className = "hxsublime.completion.hx.TopLevel" ,methodName = "get_toplevel_completion" ))
-	haxe_Log.trace("TOP LEVEL COMPLETION TIME2:" + Std.string(run_time2), _Hx_AnonObject(fileName = "Toplevel.hx" ,lineNumber = 221 ,className = "hxsublime.completion.hx.TopLevel" ,methodName = "get_toplevel_completion" ))
-	haxe_Log.trace("TOP LEVEL COMPLETION TIME3:" + Std.string(run_time3), _Hx_AnonObject(fileName = "Toplevel.hx" ,lineNumber = 222 ,className = "hxsublime.completion.hx.TopLevel" ,methodName = "get_toplevel_completion" ))
-	haxe_Log.trace("TOP LEVEL COMPLETION TIME4:" + Std.string(run_time4), _Hx_AnonObject(fileName = "Toplevel.hx" ,lineNumber = 223 ,className = "hxsublime.completion.hx.TopLevel" ,methodName = "get_toplevel_completion" ))
-	haxe_Log.trace("TOP LEVEL COMPLETION TIME END:" + Std.string(run_time), _Hx_AnonObject(fileName = "Toplevel.hx" ,lineNumber = 224 ,className = "hxsublime.completion.hx.TopLevel" ,methodName = "get_toplevel_completion" ))
-	return comps
-	
-hxsublime_completion_hx_TopLevel.get_toplevel_completion = TopLevel_statics_get_toplevel_completion
-def TopLevel_statics_get_toplevel_completion_filtered(ctx):
-	comps = hxsublime_completion_hx_TopLevel.get_toplevel_completion(ctx)
-	haxe_Log.trace(ctx.prefix, _Hx_AnonObject(fileName = "Toplevel.hx" ,lineNumber = 233 ,className = "hxsublime.completion.hx.TopLevel" ,methodName = "get_toplevel_completion_filtered" ))
-	return hxsublime_completion_hx_TopLevel.filter_top_level_completions(ctx.prefix, comps)
-	
-hxsublime_completion_hx_TopLevel.get_toplevel_completion_filtered = TopLevel_statics_get_toplevel_completion_filtered
-def TopLevel_statics_filter_top_level_completions(prefix,all_comps):
-	comps = []
-	haxe_Log.trace("c : " + prefix, _Hx_AnonObject(fileName = "Toplevel.hx" ,lineNumber = 241 ,className = "hxsublime.completion.hx.TopLevel" ,methodName = "filter_top_level_completions" ))
-	if __builtin__.len(prefix) == 0:
-		comps = __builtin__.list(all_comps)
-	else:
-		test = []
-		_g1 = 0
-		_g = __builtin__.len(prefix)
-		while _g1 < _g:
-			def _hx_local_1():
-				nonlocal _g1
-				_hx_local_0 = _g1
-				_g1 = _g1 + 1
-				return _hx_local_0
-				
-			
-			i = _hx_local_1()
-			c = prefix[i]
-			isLower = "abcdefghijklmnopqrstuvwxyz".find(c) > -1
-			isUpper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".find(c) > -1
-			is_digit = "0123456789".find(c) > -1
-			is_special = "$_#".find(c) > -1
-			if isLower or isUpper or is_digit or is_special:
-				offsetUpper = c.upper()
-				offsetLower = c.lower()
-				test.append(offsetLower)
-				__builtin__.len(test)
-				
-			
-			
-		
-		
-		_g = 0
-		while _g < len(all_comps):
-			c = all_comps[_g]
-			_g = _g + 1
-			found = True
-			id = None
-			_this = c[1]
-			id = _this.lower()
-			
-			oldId = id
-			if id.find("arraysort") > -1:
-				haxe_Log.trace(id, _Hx_AnonObject(fileName = "Toplevel.hx" ,lineNumber = 272 ,className = "hxsublime.completion.hx.TopLevel" ,methodName = "filter_top_level_completions" ))
-				haxe_Log.trace(test, _Hx_AnonObject(fileName = "Toplevel.hx" ,lineNumber = 273 ,className = "hxsublime.completion.hx.TopLevel" ,methodName = "filter_top_level_completions" ))
-			
-			
-			_g1 = 0
-			while _g1 < len(test):
-				cur = test[_g1]
-				_g1 = _g1 + 1
-				if found:
-					index = id.find(cur)
-					if oldId.find("arraysort") > -1:
-						haxe_Log.trace("index: " + Std.string(index), _Hx_AnonObject(fileName = "Toplevel.hx" ,lineNumber = 280 ,className = "hxsublime.completion.hx.TopLevel" ,methodName = "filter_top_level_completions" ))
-					
-					if index > -1:
-						id = python_Tools.substr(id, index + 1, None)
-						if oldId.find("arraysort") > -1:
-							haxe_Log.trace(id, _Hx_AnonObject(fileName = "Toplevel.hx" ,lineNumber = 287 ,className = "hxsublime.completion.hx.TopLevel" ,methodName = "filter_top_level_completions" ))
-						
-					
-					else:
-						found = False
-						break
-					
-				
-				
-			
-			
-			if oldId.find("arraysort") > -1:
-				haxe_Log.trace(id, _Hx_AnonObject(fileName = "Toplevel.hx" ,lineNumber = 297 ,className = "hxsublime.completion.hx.TopLevel" ,methodName = "filter_top_level_completions" ))
-				haxe_Log.trace(found, _Hx_AnonObject(fileName = "Toplevel.hx" ,lineNumber = 298 ,className = "hxsublime.completion.hx.TopLevel" ,methodName = "filter_top_level_completions" ))
-			
-			
-			if found:
-				comps.append(c)
-				__builtin__.len(comps)
-			
-			
-		
-		
-	
-	haxe_Log.trace("number of top level completions (all: " + Std.string(__builtin__.len(all_comps)) + ", filtered: " + Std.string(__builtin__.len(comps)) + ")", _Hx_AnonObject(fileName = "Toplevel.hx" ,lineNumber = 313 ,className = "hxsublime.completion.hx.TopLevel" ,methodName = "filter_top_level_completions" ))
-	return comps
-	
-hxsublime_completion_hx_TopLevel.filter_top_level_completions = TopLevel_statics_filter_top_level_completions
-
-
-hxsublime_completion_hx_TopLevel._hx_class = hxsublime_completion_hx_TopLevel
-hxsublime_completion_hx_TopLevel._hx_class_name = "hxsublime.completion.hx.TopLevel"
-_hx_classes['hxsublime.completion.hx.TopLevel'] = hxsublime_completion_hx_TopLevel
-hxsublime_completion_hx_TopLevel._hx_fields = []
-hxsublime_completion_hx_TopLevel._hx_props = []
-hxsublime_completion_hx_TopLevel._hx_methods = []
-hxsublime_completion_hx_TopLevel._hx_statics = ["TOP_LEVEL_KEYWORDS","get_toplevel_keywords","get_build_target","get_local_vars","get_local_functions","get_local_function_params","get_local_vars_and_functions","get_imports","get_usings","get_imports_and_usings","haxe_type_as_completion","get_type_comps","get_toplevel_completion","get_toplevel_completion_filtered","filter_top_level_completions"]
-hxsublime_completion_hx_TopLevel._hx_interfaces = []
-
-# print hxsublime.completion.hx.Types.CompletionResult
-class hxsublime_completion_hx_CompletionResult:
-
-
-	def __init__(self,ret,comps,status,hints,ctx,retrieve_toplevel_comps):
-		self.all_comps_cache_set = False
-		self.all_comps_cache = None
-		self.requires_toplevel_comps_cache_set = False
-		self.requires_toplevel_comps_cache = None
-		self.show_top_level_snippets_cache_set = False
-		self.show_top_level_snippets_cache = None
-		self.has_results_cache_set = False
-		self.has_results_cache = None
-		self.has_compiler_results_cache_set = False
-		self.has_compiler_results_cache = None
-		self.has_hints_cache_set = False
-		self.has_hints_cache = None
-		self._toplevel_comps_cache_set = False
-		self._toplevel_comps_cache = None
-		self.ret = ret
-		self.comps = comps
-		self.status = status
-		self.hints = hints
-		self.ctx = ctx
-		if retrieve_toplevel_comps is None:
-			def _hx_local_0():
-				return []
-			retrieve_toplevel_comps = _hx_local_0
-		
-		
-		self.retrieve_toplevel_comps = retrieve_toplevel_comps
-	
-	# var ret
-	# var comps
-	# var status
-	# var hints
-	# var ctx
-	# var retrieve_toplevel_comps
-	# var _toplevel_comps_cache
-	# var _toplevel_comps_cache_set
-	def _toplevel_comps(self):
-		_g = self
-		if not self._toplevel_comps_cache_set:
-			self._toplevel_comps_cache_set = True
-			def _hx_local_0():
-				return _g.retrieve_toplevel_comps()
-			eval = _hx_local_0
-			self._toplevel_comps_cache = eval()
-		
-		
-		return self._toplevel_comps_cache
-	
-
-	# var has_hints_cache
-	# var has_hints_cache_set
-	def has_hints(self):
-		_g = self
-		if not self.has_hints_cache_set:
-			self.has_hints_cache_set = True
-			def _hx_local_0():
-				return __builtin__.len(_g.hints) > 0
-			eval = _hx_local_0
-			self.has_hints_cache = eval()
-		
-		
-		return self.has_hints_cache
-	
-
-	# var has_compiler_results_cache
-	# var has_compiler_results_cache_set
-	def has_compiler_results(self):
-		_g = self
-		if not self.has_compiler_results_cache_set:
-			self.has_compiler_results_cache_set = True
-			def _hx_local_0():
-				return __builtin__.len(_g.comps) > 0
-			eval = _hx_local_0
-			self.has_compiler_results_cache = eval()
-		
-		
-		return self.has_compiler_results_cache
-	
-
-	# var has_results_cache
-	# var has_results_cache_set
-	def has_results(self):
-		_g = self
-		if not self.has_results_cache_set:
-			self.has_results_cache_set = True
-			def _hx_local_2():
-				def _hx_local_1():
-					def _hx_local_0():
-						_this = _g._toplevel_comps()
-						return __builtin__.len(_this)
-					
-					return __builtin__.len(_g.comps) > 0 or __builtin__.len(_g.hints) > 0 or _g.requires_toplevel_comps() and _hx_local_0() > 0
-				
-				return _hx_local_1()
-			
-			eval = _hx_local_2
-			self.has_results_cache = eval()
-		
-		
-		return self.has_results_cache
-	
-
-	# var show_top_level_snippets_cache
-	# var show_top_level_snippets_cache_set
-	def show_top_level_snippets(self):
-		_g = self
-		if not self.show_top_level_snippets_cache_set:
-			self.show_top_level_snippets_cache_set = True
-			def _hx_local_0():
-				req = _g.requires_toplevel_comps()
-				r = req and not _g.ctx.is_new()
-				return r
-			
-			eval = _hx_local_0
-			self.show_top_level_snippets_cache = eval()
-		
-		
-		return self.show_top_level_snippets_cache
-	
-
-	# var requires_toplevel_comps_cache
-	# var requires_toplevel_comps_cache_set
-	def requires_toplevel_comps(self):
-		_g = self
-		if not self.requires_toplevel_comps_cache_set:
-			self.requires_toplevel_comps_cache_set = True
-			def _hx_local_0():
-				prefix_is_whitespace = hxsublime_tools_StringTools.isWhitespaceOrEmpty(_g.ctx.prefix)
-				haxe_Log.trace("prefix_is_whitespace:" + Std.string(prefix_is_whitespace), _Hx_AnonObject(fileName = "Types.hx" ,lineNumber = 97 ,className = "hxsublime.completion.hx.CompletionResult" ,methodName = "requires_toplevel_comps" ))
-				haxe_Log.trace("has_hints:" + Std.string(_g.has_hints()), _Hx_AnonObject(fileName = "Types.hx" ,lineNumber = 98 ,className = "hxsublime.completion.hx.CompletionResult" ,methodName = "requires_toplevel_comps" ))
-				haxe_Log.trace("has_hint:" + Std.string(_g.ctx.options.types().has_hint()), _Hx_AnonObject(fileName = "Types.hx" ,lineNumber = 99 ,className = "hxsublime.completion.hx.CompletionResult" ,methodName = "requires_toplevel_comps" ))
-				haxe_Log.trace("has_compiler_results:" + Std.string(_g.has_compiler_results()), _Hx_AnonObject(fileName = "Types.hx" ,lineNumber = 100 ,className = "hxsublime.completion.hx.CompletionResult" ,methodName = "requires_toplevel_comps" ))
-				r = not (prefix_is_whitespace and _g.has_hints() and _g.ctx.options.types().has_hint() or _g.has_compiler_results())
-				haxe_Log.trace("requires_toplevel_comps:" + Std.string(r), _Hx_AnonObject(fileName = "Types.hx" ,lineNumber = 102 ,className = "hxsublime.completion.hx.CompletionResult" ,methodName = "requires_toplevel_comps" ))
-				return r
-			
-			eval = _hx_local_0
-			self.requires_toplevel_comps_cache = eval()
-		
-		
-		return self.requires_toplevel_comps_cache
-	
-
-	# var all_comps_cache
-	# var all_comps_cache_set
-	def all_comps(self):
-		_g = self
-		if not self.all_comps_cache_set:
-			self.all_comps_cache_set = True
-			def _hx_local_1():
-				res = []
-				if _g.requires_toplevel_comps():
-					x = _g._toplevel_comps()
-					res.extend(x)
-				
-				
-				res.extend(_g.comps)
-				def _hx_local_0(s1,s2):
-					if s1[0] < s2[0]:
-						return -1
-					elif s1[0] > s2[0]:
-						return 1
-					else:
-						return 0
-				res.sort(key=python_lib_FuncTools.cmp_to_key(_hx_local_0))
-				return res
-			
-			eval = _hx_local_1
-			self.all_comps_cache = eval()
-		
-		
-		return self.all_comps_cache
-	
-
-
-
-
-
-def CompletionResult_statics_empty_result(ctx,retrieve_toplevel_comps = None):
-	if retrieve_toplevel_comps is None:
-		retrieve_toplevel_comps = None
-	
-	return hxsublime_completion_hx_CompletionResult("", [], "", [], ctx, retrieve_toplevel_comps)
-	
-hxsublime_completion_hx_CompletionResult.empty_result = CompletionResult_statics_empty_result
-
-
-hxsublime_completion_hx_CompletionResult._hx_class = hxsublime_completion_hx_CompletionResult
-hxsublime_completion_hx_CompletionResult._hx_class_name = "hxsublime.completion.hx.CompletionResult"
-_hx_classes['hxsublime.completion.hx.CompletionResult'] = hxsublime_completion_hx_CompletionResult
-hxsublime_completion_hx_CompletionResult._hx_fields = ["ret","comps","status","hints","ctx","retrieve_toplevel_comps","_toplevel_comps_cache","_toplevel_comps_cache_set","has_hints_cache","has_hints_cache_set","has_compiler_results_cache","has_compiler_results_cache_set","has_results_cache","has_results_cache_set","show_top_level_snippets_cache","show_top_level_snippets_cache_set","requires_toplevel_comps_cache","requires_toplevel_comps_cache_set","all_comps_cache","all_comps_cache_set"]
-hxsublime_completion_hx_CompletionResult._hx_props = []
-hxsublime_completion_hx_CompletionResult._hx_methods = ["_toplevel_comps","has_hints","has_compiler_results","has_results","show_top_level_snippets","requires_toplevel_comps","all_comps"]
-hxsublime_completion_hx_CompletionResult._hx_statics = ["empty_result"]
-hxsublime_completion_hx_CompletionResult._hx_interfaces = [hxsublime_macros_LazyFunctionSupport]
-
-# print hxsublime.completion.hx.Types.CompletionBuild
+# print hxsublime.completion.hx.CompletionBuild.CompletionBuild
 class hxsublime_completion_hx_CompletionBuild:
 
 
@@ -9109,16 +8000,16 @@ class hxsublime_completion_hx_CompletionBuild:
 		self.display_cache_set = False
 		self.display_cache = None
 		self.build = ctx.build().copy()
-		self.build.add_classpath(temp_path)
+		self.build.addClasspath(temp_path)
 		self.ctx = ctx
-		self.temp_path = temp_path
-		self.temp_file = temp_file
-		self.cache = ctx.project.completion_context.current
+		self.tempPath = temp_path
+		self.tempFile = temp_file
+		self.cache = ctx.project.completionContext.current
 	
 	# var build
 	# var ctx
-	# var temp_path
-	# var temp_file
+	# var tempPath
+	# var tempFile
 	# var cache
 	# var display_cache
 	# var display_cache_set
@@ -9128,11 +8019,11 @@ class hxsublime_completion_hx_CompletionBuild:
 			self.display_cache_set = True
 			def _hx_local_0():
 				pos = None
-				if not hxsublime_Settings.use_offset_completion():
+				if not hxsublime_Settings.useOffsetCompletion():
 					pos = "0"
 				else:
 					pos = Std.string(_g.ctx.complete_offset_in_bytes)
-				return _g.temp_file + "@" + pos
+				return _g.tempFile + "@" + pos
 			
 			eval = _hx_local_0
 			self.display_cache = eval()
@@ -9150,395 +8041,43 @@ class hxsublime_completion_hx_CompletionBuild:
 hxsublime_completion_hx_CompletionBuild._hx_class = hxsublime_completion_hx_CompletionBuild
 hxsublime_completion_hx_CompletionBuild._hx_class_name = "hxsublime.completion.hx.CompletionBuild"
 _hx_classes['hxsublime.completion.hx.CompletionBuild'] = hxsublime_completion_hx_CompletionBuild
-hxsublime_completion_hx_CompletionBuild._hx_fields = ["build","ctx","temp_path","temp_file","cache","display_cache","display_cache_set"]
+hxsublime_completion_hx_CompletionBuild._hx_fields = ["build","ctx","tempPath","tempFile","cache","display_cache","display_cache_set"]
 hxsublime_completion_hx_CompletionBuild._hx_props = []
 hxsublime_completion_hx_CompletionBuild._hx_methods = ["display"]
 hxsublime_completion_hx_CompletionBuild._hx_statics = []
 hxsublime_completion_hx_CompletionBuild._hx_interfaces = [hxsublime_macros_LazyFunctionSupport]
 
-# print hxsublime.completion.hx.Types.CompletionOptions
-class hxsublime_completion_hx_CompletionOptions:
-
-
-	def __init__(self,trigger,context = 2,types = 1,toplevel = 4):
-		if context is None:
-			context = 2
-		
-		if types is None:
-			types = 1
-		
-		if toplevel is None:
-			toplevel = 4
-		
-		self.regular_completion_cache_set = False
-		self.regular_completion_cache = None
-		self.macro_completion_cache_set = False
-		self.macro_completion_cache = None
-		self.manual_completion_cache_set = False
-		self.manual_completion_cache = None
-		self.async_trigger_cache_set = False
-		self.async_trigger_cache = None
-		self._types = hxsublime_completion_hx_CompletionTypes(types)
-		self._toplevel = hxsublime_completion_hx_TopLevelOptions(toplevel)
-		self._context = context
-		self._trigger = trigger
-	
-	# var _types
-	# var _toplevel
-	# var _context
-	# var _trigger
-	def copy_as_manual(self):
-		return hxsublime_completion_hx_CompletionOptions(1, self._context, self.types().val(), self._toplevel.val())
-
-	def copy_as_async(self):
-		return hxsublime_completion_hx_CompletionOptions(3, self._context, self.types().val(), self._toplevel.val())
-
-	def types(self):
-		return self._types
-
-	# var async_trigger_cache
-	# var async_trigger_cache_set
-	def async_trigger(self):
-		_g = self
-		if not self.async_trigger_cache_set:
-			self.async_trigger_cache_set = True
-			def _hx_local_0():
-				return _g._trigger == 3
-			eval = _hx_local_0
-			self.async_trigger_cache = eval()
-		
-		
-		return self.async_trigger_cache
-	
-
-	# var manual_completion_cache
-	# var manual_completion_cache_set
-	def manual_completion(self):
-		_g = self
-		if not self.manual_completion_cache_set:
-			self.manual_completion_cache_set = True
-			def _hx_local_0():
-				return _g._trigger == 1
-			eval = _hx_local_0
-			self.manual_completion_cache = eval()
-		
-		
-		return self.manual_completion_cache
-	
-
-	# var macro_completion_cache
-	# var macro_completion_cache_set
-	def macro_completion(self):
-		_g = self
-		if not self.macro_completion_cache_set:
-			self.macro_completion_cache_set = True
-			def _hx_local_0():
-				return _g._context == 1
-			eval = _hx_local_0
-			self.macro_completion_cache = eval()
-		
-		
-		return self.macro_completion_cache
-	
-
-	# var regular_completion_cache
-	# var regular_completion_cache_set
-	def regular_completion(self):
-		_g = self
-		if not self.regular_completion_cache_set:
-			self.regular_completion_cache_set = True
-			def _hx_local_0():
-				return _g._context == 2
-			eval = _hx_local_0
-			self.regular_completion_cache = eval()
-		
-		
-		return self.regular_completion_cache
-	
-
-	def eq(self,other):
-		return self._trigger == other._trigger and self._types.eq(other._types) and self._toplevel.eq(other._toplevel) and self._context == other._context
-
-
-
-
-
-hxsublime_completion_hx_CompletionOptions.__meta__ = _Hx_AnonObject(fields = _Hx_AnonObject(types = _Hx_AnonObject(property = None ) ) )
-
-
-hxsublime_completion_hx_CompletionOptions._hx_class = hxsublime_completion_hx_CompletionOptions
-hxsublime_completion_hx_CompletionOptions._hx_class_name = "hxsublime.completion.hx.CompletionOptions"
-_hx_classes['hxsublime.completion.hx.CompletionOptions'] = hxsublime_completion_hx_CompletionOptions
-hxsublime_completion_hx_CompletionOptions._hx_fields = ["_types","_toplevel","_context","_trigger","async_trigger_cache","async_trigger_cache_set","manual_completion_cache","manual_completion_cache_set","macro_completion_cache","macro_completion_cache_set","regular_completion_cache","regular_completion_cache_set"]
-hxsublime_completion_hx_CompletionOptions._hx_props = []
-hxsublime_completion_hx_CompletionOptions._hx_methods = ["copy_as_manual","copy_as_async","types","async_trigger","manual_completion","macro_completion","regular_completion","eq"]
-hxsublime_completion_hx_CompletionOptions._hx_statics = ["__meta__"]
-hxsublime_completion_hx_CompletionOptions._hx_interfaces = [hxsublime_macros_LazyFunctionSupport]
-
-# print hxsublime.completion.hx.Types.CompletionTypes
-class hxsublime_completion_hx_CompletionTypes:
-
-
-	def __init__(self,val = 1):
-		if val is None:
-			val = 1
-		
-		self._opt = val
-	
-	# var _opt
-	def val(self):
-		return self._opt
-
-	def add(self,val):
-		self._opt = self._opt | val
-
-	def add_hint(self):
-		self._opt = self._opt | 2
-
-	def has_regular(self):
-		return (self._opt & 1) > 0
-
-	def has_hint(self):
-		return (self._opt & 2) > 0
-
-	def has_toplevel(self):
-		return (self._opt & 4) > 0
-
-	def has_toplevel_forced(self):
-		return (self._opt & 12) > 0
-
-	def eq(self,other):
-		return self._opt == other._opt
-
-
-
-
-
-
-
-hxsublime_completion_hx_CompletionTypes._hx_class = hxsublime_completion_hx_CompletionTypes
-hxsublime_completion_hx_CompletionTypes._hx_class_name = "hxsublime.completion.hx.CompletionTypes"
-_hx_classes['hxsublime.completion.hx.CompletionTypes'] = hxsublime_completion_hx_CompletionTypes
-hxsublime_completion_hx_CompletionTypes._hx_fields = ["_opt"]
-hxsublime_completion_hx_CompletionTypes._hx_props = []
-hxsublime_completion_hx_CompletionTypes._hx_methods = ["val","add","add_hint","has_regular","has_hint","has_toplevel","has_toplevel_forced","eq"]
-hxsublime_completion_hx_CompletionTypes._hx_statics = []
-hxsublime_completion_hx_CompletionTypes._hx_interfaces = []
-
-# print hxsublime.completion.hx.Types.TopLevelOptions
-class hxsublime_completion_hx_TopLevelOptions:
-
-
-	def __init__(self,val = 0):
-		if val is None:
-			val = 0
-		
-		self._opt = val
-	
-	# var _opt
-	def val(self):
-		return self._opt
-
-	def set(self,val):
-		self._opt = self._opt | val
-
-	def has_types(self):
-		return (self._opt & 1) > 0
-
-	def has_locals(self):
-		return (self._opt & 2) > 0
-
-	def has_keywords(self):
-		return (self._opt & 4) > 0
-
-	def eq(self,other):
-		return self._opt == other._opt
-
-
-
-
-
-
-
-hxsublime_completion_hx_TopLevelOptions._hx_class = hxsublime_completion_hx_TopLevelOptions
-hxsublime_completion_hx_TopLevelOptions._hx_class_name = "hxsublime.completion.hx.TopLevelOptions"
-_hx_classes['hxsublime.completion.hx.TopLevelOptions'] = hxsublime_completion_hx_TopLevelOptions
-hxsublime_completion_hx_TopLevelOptions._hx_fields = ["_opt"]
-hxsublime_completion_hx_TopLevelOptions._hx_props = []
-hxsublime_completion_hx_TopLevelOptions._hx_methods = ["val","set","has_types","has_locals","has_keywords","eq"]
-hxsublime_completion_hx_TopLevelOptions._hx_statics = []
-hxsublime_completion_hx_TopLevelOptions._hx_interfaces = []
-
-# print hxsublime.completion.hx.Types.CompletionSettings
-class hxsublime_completion_hx_CompletionSettings:
-
-
-	def __init__(self,settings):
-		self.get_completion_delays_cache_set = False
-		self.get_completion_delays_cache = None
-		self.show_only_async_completions_cache_set = False
-		self.show_only_async_completions_cache = None
-		self.is_async_completion_cache_set = False
-		self.is_async_completion_cache = None
-		self.top_level_completions_only_on_demand_cache_set = False
-		self.top_level_completions_only_on_demand_cache = None
-		self.no_fuzzy_completion_cache_set = False
-		self.no_fuzzy_completion_cache = None
-		self.settings = settings
-	
-	# var settings
-	# var no_fuzzy_completion_cache
-	# var no_fuzzy_completion_cache_set
-	def no_fuzzy_completion(self):
-		_g = self
-		if not self.no_fuzzy_completion_cache_set:
-			self.no_fuzzy_completion_cache_set = True
-			def _hx_local_0():
-				return _g.settings.no_fuzzy_completion()
-			eval = _hx_local_0
-			self.no_fuzzy_completion_cache = eval()
-		
-		
-		return self.no_fuzzy_completion_cache
-	
-
-	# var top_level_completions_only_on_demand_cache
-	# var top_level_completions_only_on_demand_cache_set
-	def top_level_completions_only_on_demand(self):
-		_g = self
-		if not self.top_level_completions_only_on_demand_cache_set:
-			self.top_level_completions_only_on_demand_cache_set = True
-			def _hx_local_0():
-				return _g.settings.top_level_completions_on_demand()
-			eval = _hx_local_0
-			self.top_level_completions_only_on_demand_cache = eval()
-		
-		
-		return self.top_level_completions_only_on_demand_cache
-	
-
-	# var is_async_completion_cache
-	# var is_async_completion_cache_set
-	def is_async_completion(self):
-		_g = self
-		if not self.is_async_completion_cache_set:
-			self.is_async_completion_cache_set = True
-			def _hx_local_0():
-				return _g.settings.is_async_completion()
-			eval = _hx_local_0
-			self.is_async_completion_cache = eval()
-		
-		
-		return self.is_async_completion_cache
-	
-
-	# var show_only_async_completions_cache
-	# var show_only_async_completions_cache_set
-	def show_only_async_completions(self):
-		_g = self
-		if not self.show_only_async_completions_cache_set:
-			self.show_only_async_completions_cache_set = True
-			def _hx_local_0():
-				return _g.settings.show_only_async_completions()
-			eval = _hx_local_0
-			self.show_only_async_completions_cache = eval()
-		
-		
-		return self.show_only_async_completions_cache
-	
-
-	# var get_completion_delays_cache
-	# var get_completion_delays_cache_set
-	def get_completion_delays(self):
-		_g = self
-		if not self.get_completion_delays_cache_set:
-			self.get_completion_delays_cache_set = True
-			def _hx_local_0():
-				return _g.settings.get_completion_delays()
-			eval = _hx_local_0
-			self.get_completion_delays_cache = eval()
-		
-		
-		return self.get_completion_delays_cache
-	
-
-	def show_completion_times(self,view):
-		return self.settings.show_completion_times(view)
-
-
-
-
-
-
-
-hxsublime_completion_hx_CompletionSettings._hx_class = hxsublime_completion_hx_CompletionSettings
-hxsublime_completion_hx_CompletionSettings._hx_class_name = "hxsublime.completion.hx.CompletionSettings"
-_hx_classes['hxsublime.completion.hx.CompletionSettings'] = hxsublime_completion_hx_CompletionSettings
-hxsublime_completion_hx_CompletionSettings._hx_fields = ["settings","no_fuzzy_completion_cache","no_fuzzy_completion_cache_set","top_level_completions_only_on_demand_cache","top_level_completions_only_on_demand_cache_set","is_async_completion_cache","is_async_completion_cache_set","show_only_async_completions_cache","show_only_async_completions_cache_set","get_completion_delays_cache","get_completion_delays_cache_set"]
-hxsublime_completion_hx_CompletionSettings._hx_props = []
-hxsublime_completion_hx_CompletionSettings._hx_methods = ["no_fuzzy_completion","top_level_completions_only_on_demand","is_async_completion","show_only_async_completions","get_completion_delays","show_completion_times"]
-hxsublime_completion_hx_CompletionSettings._hx_statics = []
-hxsublime_completion_hx_CompletionSettings._hx_interfaces = [hxsublime_macros_LazyFunctionSupport]
-
-# print hxsublime.completion.hx.Types.Types
-class hxsublime_completion_hx_Types:
-
-	pass
-
-
-
-
-hxsublime_completion_hx_Types.control_struct = python_lib_Re.compile("\\s+(if|switch|for|while)\\s*\\($")
-
-
-hxsublime_completion_hx_Types._hx_class = hxsublime_completion_hx_Types
-hxsublime_completion_hx_Types._hx_class_name = "hxsublime.completion.hx.Types"
-_hx_classes['hxsublime.completion.hx.Types'] = hxsublime_completion_hx_Types
-hxsublime_completion_hx_Types._hx_fields = []
-hxsublime_completion_hx_Types._hx_props = []
-hxsublime_completion_hx_Types._hx_methods = []
-hxsublime_completion_hx_Types._hx_statics = ["control_struct"]
-hxsublime_completion_hx_Types._hx_interfaces = []
-
-# print hxsublime.completion.hx.Types.CompletionContext
+# print hxsublime.completion.hx.CompletionContext.CompletionContext
 class hxsublime_completion_hx_CompletionContext:
 
 
 	def __init__(self,view,project,offset,options,settings,prefix):
-		self.prefix_is_whitespace_cache_set = False
-		self.prefix_is_whitespace_cache = None
-		self.temp_completion_src_cache_set = False
-		self.temp_completion_src_cache = None
-		self.src_until_offset_cache_set = False
-		self.src_until_offset_cache = None
+		self.prefixIsWhitespace_cache_set = False
+		self.prefixIsWhitespace_cache = None
+		self.tempCompletionSrc_cache_set = False
+		self.tempCompletionSrc_cache = None
+		self.srcUntilOffset_cache_set = False
+		self.srcUntilOffset_cache = None
 		self.is_new_cache_set = False
 		self.is_new_cache = None
 		self.complete_offset_cache_set = False
 		self.complete_offset_cache = None
-		self.prev_symbol_is_comma_cache_set = False
-		self.prev_symbol_is_comma_cache = None
 		self.commas_cache_set = False
 		self.commas_cache = None
-		self._completion_info_cache_set = False
-		self._completion_info_cache = None
-		self.offset_char_cache_set = False
-		self.offset_char_cache = None
-		self.src_from_complete_to_prefix_end_cache_set = False
-		self.src_from_complete_to_prefix_end_cache = None
-		self.src_from_complete_to_offset_cache_set = False
-		self.src_from_complete_to_offset_cache = None
-		self.complete_char_cache_set = False
-		self.complete_char_cache = None
+		self.completionInfo_cache_set = False
+		self.completionInfo_cache = None
+		self.completeChar_cache_set = False
+		self.completeChar_cache = None
 		self.src_cache_set = False
 		self.src_cache = None
-		self.line_after_offset_cache_set = False
-		self.line_after_offset_cache = None
-		self.src_until_complete_offset_cache_set = False
-		self.src_until_complete_offset_cache = None
-		self.in_control_struct_cache_set = False
-		self.in_control_struct_cache = None
-		self.complete_char_is_after_control_struct_cache_set = False
-		self.complete_char_is_after_control_struct_cache = None
+		self.lineAfterOffset_cache_set = False
+		self.lineAfterOffset_cache = None
+		self.srcUntilCompleteOffset_cache_set = False
+		self.srcUntilCompleteOffset_cache = None
+		self.inControlStruct_cache_set = False
+		self.inControlStruct_cache = None
+		self.completeCharIsAfterControlStruct_cache_set = False
+		self.completeCharIsAfterControlStruct_cache = None
 		self.build_cache_set = False
 		self.build_cache = None
 		self.orig_file_cache_set = False
@@ -9552,7 +8091,7 @@ class hxsublime_completion_hx_CompletionContext:
 		self.options = options
 		self.settings = settings
 		self.view_id = view.id()
-		self.id = hxsublime_completion_hx_CompletionContext.get_completion_id()
+		self.id = hxsublime_completion_hx_CompletionContext.getCompletionId()
 		self.view_pos = hxsublime_tools_ViewTools.getFirstCursorPos(view)
 	
 	# var prefix
@@ -9571,9 +8110,9 @@ class hxsublime_completion_hx_CompletionContext:
 		if not self.complete_offset_in_bytes_cache_set:
 			self.complete_offset_in_bytes_cache_set = True
 			def _hx_local_0():
-				s = _g.src_until_complete_offset()
-				s_bytes = python_lib_StringTools.encode(s)
-				return __builtin__.len(s_bytes)
+				s = _g.srcUntilCompleteOffset()
+				b = python_lib_StringTools.encode(s)
+				return __builtin__.len(b)
 			
 			eval = _hx_local_0
 			self.complete_offset_in_bytes_cache = eval()
@@ -9604,10 +8143,10 @@ class hxsublime_completion_hx_CompletionContext:
 		if not self.build_cache_set:
 			self.build_cache_set = True
 			def _hx_local_0():
-				if not _g.project.has_build():
-					_g.project.extract_build_args()
+				if not _g.project.hasBuild():
+					_g.project.extractBuildArgs()
 				
-				return _g.project.get_build(_g.view).copy()
+				return _g.project.getBuild(_g.view).copy()
 			
 			eval = _hx_local_0
 			self.build_cache = eval()
@@ -9616,60 +8155,60 @@ class hxsublime_completion_hx_CompletionContext:
 		return self.build_cache
 	
 
-	# var complete_char_is_after_control_struct_cache
-	# var complete_char_is_after_control_struct_cache_set
-	def complete_char_is_after_control_struct(self):
+	# var completeCharIsAfterControlStruct_cache
+	# var completeCharIsAfterControlStruct_cache_set
+	def completeCharIsAfterControlStruct(self):
 		_g = self
-		if not self.complete_char_is_after_control_struct_cache_set:
-			self.complete_char_is_after_control_struct_cache_set = True
+		if not self.completeCharIsAfterControlStruct_cache_set:
+			self.completeCharIsAfterControlStruct_cache_set = True
 			def _hx_local_0():
-				return _g.in_control_struct() and _g.complete_char() == "("
+				return _g.inControlStruct() and _g.completeChar() == "("
 			eval = _hx_local_0
-			self.complete_char_is_after_control_struct_cache = eval()
+			self.completeCharIsAfterControlStruct_cache = eval()
 		
 		
-		return self.complete_char_is_after_control_struct_cache
+		return self.completeCharIsAfterControlStruct_cache
 	
 
-	# var in_control_struct_cache
-	# var in_control_struct_cache_set
-	def in_control_struct(self):
+	# var inControlStruct_cache
+	# var inControlStruct_cache_set
+	def inControlStruct(self):
 		_g = self
-		if not self.in_control_struct_cache_set:
-			self.in_control_struct_cache_set = True
+		if not self.inControlStruct_cache_set:
+			self.inControlStruct_cache_set = True
 			def _hx_local_0():
-				return hxsublime_completion_hx_Types.control_struct.search(_g.src_until_complete_offset()) is not None
+				return hxsublime_completion_hx_CompletionContext.controlStructRegex.search(_g.srcUntilCompleteOffset()) is not None
 			eval = _hx_local_0
-			self.in_control_struct_cache = eval()
+			self.inControlStruct_cache = eval()
 		
 		
-		return self.in_control_struct_cache
+		return self.inControlStruct_cache
 	
 
-	# var src_until_complete_offset_cache
-	# var src_until_complete_offset_cache_set
-	def src_until_complete_offset(self):
+	# var srcUntilCompleteOffset_cache
+	# var srcUntilCompleteOffset_cache_set
+	def srcUntilCompleteOffset(self):
 		_g = self
-		if not self.src_until_complete_offset_cache_set:
-			self.src_until_complete_offset_cache_set = True
+		if not self.srcUntilCompleteOffset_cache_set:
+			self.srcUntilCompleteOffset_cache_set = True
 			def _hx_local_0():
 				_this = _g.src()
 				endIndex = _g.complete_offset()
 				return python_Tools.substring(_this, 0, endIndex)
 			
 			eval = _hx_local_0
-			self.src_until_complete_offset_cache = eval()
+			self.srcUntilCompleteOffset_cache = eval()
 		
 		
-		return self.src_until_complete_offset_cache
+		return self.srcUntilCompleteOffset_cache
 	
 
-	# var line_after_offset_cache
-	# var line_after_offset_cache_set
-	def line_after_offset(self):
+	# var lineAfterOffset_cache
+	# var lineAfterOffset_cache_set
+	def lineAfterOffset(self):
 		_g = self
-		if not self.line_after_offset_cache_set:
-			self.line_after_offset_cache_set = True
+		if not self.lineAfterOffset_cache_set:
+			self.lineAfterOffset_cache_set = True
 			def _hx_local_0():
 				line_end = None
 				_this = _g.src()
@@ -9684,10 +8223,10 @@ class hxsublime_completion_hx_CompletionContext:
 				
 			
 			eval = _hx_local_0
-			self.line_after_offset_cache = eval()
+			self.lineAfterOffset_cache = eval()
 		
 		
-		return self.line_after_offset_cache
+		return self.lineAfterOffset_cache
 	
 
 	# var src_cache
@@ -9705,94 +8244,37 @@ class hxsublime_completion_hx_CompletionContext:
 		return self.src_cache
 	
 
-	# var complete_char_cache
-	# var complete_char_cache_set
-	def complete_char(self):
+	# var completeChar_cache
+	# var completeChar_cache_set
+	def completeChar(self):
 		_g = self
-		if not self.complete_char_cache_set:
-			self.complete_char_cache_set = True
+		if not self.completeChar_cache_set:
+			self.completeChar_cache_set = True
 			def _hx_local_0():
 				_this = _g.src()
 				index = _g.complete_offset() - 1
 				return _this[index]
 			
 			eval = _hx_local_0
-			self.complete_char_cache = eval()
+			self.completeChar_cache = eval()
 		
 		
-		return self.complete_char_cache
+		return self.completeChar_cache
 	
 
-	# var src_from_complete_to_offset_cache
-	# var src_from_complete_to_offset_cache_set
-	def src_from_complete_to_offset(self):
+	# var completionInfo_cache
+	# var completionInfo_cache_set
+	def completionInfo(self):
 		_g = self
-		if not self.src_from_complete_to_offset_cache_set:
-			self.src_from_complete_to_offset_cache_set = True
-			def _hx_local_0():
-				_this = _g.src()
-				startIndex = _g.complete_offset()
-				return python_Tools.substring(_this, startIndex, _g.offset)
-			
-			eval = _hx_local_0
-			self.src_from_complete_to_offset_cache = eval()
-		
-		
-		return self.src_from_complete_to_offset_cache
-	
-
-	# var src_from_complete_to_prefix_end_cache
-	# var src_from_complete_to_prefix_end_cache_set
-	def src_from_complete_to_prefix_end(self):
-		_g = self
-		if not self.src_from_complete_to_prefix_end_cache_set:
-			self.src_from_complete_to_prefix_end_cache_set = True
-			def _hx_local_0():
-				rest = None
-				_this = _g.src()
-				startIndex = _g.complete_offset() + 1
-				endIndex = _g.offset + 1 + __builtin__.len(_g.prefix)
-				rest = python_Tools.substring(_this, startIndex, endIndex)
-				
-				return rest
-			
-			eval = _hx_local_0
-			self.src_from_complete_to_prefix_end_cache = eval()
-		
-		
-		return self.src_from_complete_to_prefix_end_cache
-	
-
-	# var offset_char_cache
-	# var offset_char_cache_set
-	def offset_char(self):
-		_g = self
-		if not self.offset_char_cache_set:
-			self.offset_char_cache_set = True
-			def _hx_local_0():
-				_this = _g.src()
-				return _this[_g.offset]
-			
-			eval = _hx_local_0
-			self.offset_char_cache = eval()
-		
-		
-		return self.offset_char_cache
-	
-
-	# var _completion_info_cache
-	# var _completion_info_cache_set
-	def _completion_info(self):
-		_g = self
-		if not self._completion_info_cache_set:
-			self._completion_info_cache_set = True
+		if not self.completionInfo_cache_set:
+			self.completionInfo_cache_set = True
 			def _hx_local_0():
 				return hxsublime_completion_hx_CompletionContext.get_completion_info(_g.view, _g.offset, _g.src())
 			eval = _hx_local_0
-			self._completion_info_cache = eval()
+			self.completionInfo_cache = eval()
 		
 		
-		return self._completion_info_cache
+		return self.completionInfo_cache
 	
 
 	# var commas_cache
@@ -9802,7 +8284,7 @@ class hxsublime_completion_hx_CompletionContext:
 		if not self.commas_cache_set:
 			self.commas_cache_set = True
 			def _hx_local_0():
-				_this = _g._completion_info()
+				_this = _g.completionInfo()
 				return _this[0]
 			
 			eval = _hx_local_0
@@ -9812,23 +8294,6 @@ class hxsublime_completion_hx_CompletionContext:
 		return self.commas_cache
 	
 
-	# var prev_symbol_is_comma_cache
-	# var prev_symbol_is_comma_cache_set
-	def prev_symbol_is_comma(self):
-		_g = self
-		if not self.prev_symbol_is_comma_cache_set:
-			self.prev_symbol_is_comma_cache_set = True
-			def _hx_local_0():
-				_this = _g._completion_info()
-				return _this[2]
-			
-			eval = _hx_local_0
-			self.prev_symbol_is_comma_cache = eval()
-		
-		
-		return self.prev_symbol_is_comma_cache
-	
-
 	# var complete_offset_cache
 	# var complete_offset_cache_set
 	def complete_offset(self):
@@ -9836,7 +8301,7 @@ class hxsublime_completion_hx_CompletionContext:
 		if not self.complete_offset_cache_set:
 			self.complete_offset_cache_set = True
 			def _hx_local_0():
-				_this = _g._completion_info()
+				_this = _g.completionInfo()
 				return _this[1]
 			
 			eval = _hx_local_0
@@ -9853,7 +8318,7 @@ class hxsublime_completion_hx_CompletionContext:
 		if not self.is_new_cache_set:
 			self.is_new_cache_set = True
 			def _hx_local_0():
-				_this = _g._completion_info()
+				_this = _g.completionInfo()
 				return _this[3]
 			
 			eval = _hx_local_0
@@ -9863,29 +8328,29 @@ class hxsublime_completion_hx_CompletionContext:
 		return self.is_new_cache
 	
 
-	# var src_until_offset_cache
-	# var src_until_offset_cache_set
-	def src_until_offset(self):
+	# var srcUntilOffset_cache
+	# var srcUntilOffset_cache_set
+	def srcUntilOffset(self):
 		_g = self
-		if not self.src_until_offset_cache_set:
-			self.src_until_offset_cache_set = True
+		if not self.srcUntilOffset_cache_set:
+			self.srcUntilOffset_cache_set = True
 			def _hx_local_0():
 				_this = _g.src()
 				return python_Tools.substring(_this, 0, _g.offset - 1)
 			
 			eval = _hx_local_0
-			self.src_until_offset_cache = eval()
+			self.srcUntilOffset_cache = eval()
 		
 		
-		return self.src_until_offset_cache
+		return self.srcUntilOffset_cache
 	
 
-	# var temp_completion_src_cache
-	# var temp_completion_src_cache_set
-	def temp_completion_src(self):
+	# var tempCompletionSrc_cache
+	# var tempCompletionSrc_cache_set
+	def tempCompletionSrc(self):
 		_g = self
-		if not self.temp_completion_src_cache_set:
-			self.temp_completion_src_cache_set = True
+		if not self.tempCompletionSrc_cache_set:
+			self.tempCompletionSrc_cache_set = True
 			def _hx_local_3():
 				def _hx_local_2():
 					def _hx_local_1():
@@ -9903,49 +8368,50 @@ class hxsublime_completion_hx_CompletionContext:
 				return _hx_local_2()
 			
 			eval = _hx_local_3
-			self.temp_completion_src_cache = eval()
+			self.tempCompletionSrc_cache = eval()
 		
 		
-		return self.temp_completion_src_cache
+		return self.tempCompletionSrc_cache
 	
 
-	# var prefix_is_whitespace_cache
-	# var prefix_is_whitespace_cache_set
-	def prefix_is_whitespace(self):
+	# var prefixIsWhitespace_cache
+	# var prefixIsWhitespace_cache_set
+	def prefixIsWhitespace(self):
 		_g = self
-		if not self.prefix_is_whitespace_cache_set:
-			self.prefix_is_whitespace_cache_set = True
+		if not self.prefixIsWhitespace_cache_set:
+			self.prefixIsWhitespace_cache_set = True
 			def _hx_local_0():
 				return hxsublime_tools_StringTools.isWhitespaceOrEmpty(_g.prefix)
 			eval = _hx_local_0
-			self.prefix_is_whitespace_cache = eval()
+			self.prefixIsWhitespace_cache = eval()
 		
 		
-		return self.prefix_is_whitespace_cache
+		return self.prefixIsWhitespace_cache
 	
 
 	def eq(self,other):
 		_g = self
 		def _hx_local_0():
-			prefix_same = True
-			if _g.options.types().has_hint():
-				prefix_same = _g.prefix == other.prefix or _g.prefix_is_whitespace() and other.prefix_is_whitespace()
+			prefixSame = True
+			if _g.options.types().hasHint():
+				prefixSame = _g.prefix == other.prefix or _g.prefixIsWhitespace() and other.prefixIsWhitespace()
 			
-			haxe_Log.trace("same PREFIX:" + Std.string(prefix_same), _Hx_AnonObject(fileName = "Types.hx" ,lineNumber = 550 ,className = "hxsublime.completion.hx.CompletionContext" ,methodName = "eq" ))
-			haxe_Log.trace("PREFIXES:" + _g.prefix + " - " + other.prefix, _Hx_AnonObject(fileName = "Types.hx" ,lineNumber = 551 ,className = "hxsublime.completion.hx.CompletionContext" ,methodName = "eq" ))
-			return prefix_same
+			haxe_Log.trace("same PREFIX:" + Std.string(prefixSame), _Hx_AnonObject(fileName = "CompletionContext.hx" ,lineNumber = 214 ,className = "hxsublime.completion.hx.CompletionContext" ,methodName = "eq" ))
+			haxe_Log.trace("PREFIXES:" + _g.prefix + " - " + other.prefix, _Hx_AnonObject(fileName = "CompletionContext.hx" ,lineNumber = 215 ,className = "hxsublime.completion.hx.CompletionContext" ,methodName = "eq" ))
+			return prefixSame
 		
-		prefix_check = _hx_local_0
-		return other is not None and self.orig_file == other.orig_file and self.offset == other.offset and self.commas == other.commas and self.src_until_offset == other.src_until_offset and self.options.eq(other.options) and self.complete_char == other.complete_char and self.line_after_offset == other.line_after_offset and prefix_check()
+		prefixCheck = _hx_local_0
+		return other is not None and self.orig_file() == other.orig_file() and self.offset == other.offset and self.commas() == other.commas() and self.srcUntilOffset() == other.srcUntilOffset() and self.options.eq(other.options) and self.completeChar() == other.completeChar() and self.lineAfterOffset() == other.lineAfterOffset() and prefixCheck()
 	
 
 
 
 
 
-def CompletionContext_statics_get_completion_id():
+hxsublime_completion_hx_CompletionContext.controlStructRegex = python_lib_Re.compile("\\s+(if|switch|for|while)\\s*\\($")
+def CompletionContext_statics_getCompletionId():
 	return python_lib_Time.time()
-hxsublime_completion_hx_CompletionContext.get_completion_id = CompletionContext_statics_get_completion_id
+hxsublime_completion_hx_CompletionContext.getCompletionId = CompletionContext_statics_getCompletionId
 def CompletionContext_statics_count_commas_and_complete_offset(src,prev_comma,complete_offset):
 	commas = 0
 	closed_pars = 0
@@ -9995,7 +8461,7 @@ def CompletionContext_statics_get_completion_info(view,offset,src):
 	commas = 0
 	complete_offset = offset
 	is_new = False
-	prev_symbol_is_comma = False
+	prevSymbolIsComma = False
 	if prev == " " and offset - 4 >= 0 and python_Tools.substring(src, offset - 4, offset - 1) == "new":
 		is_new = True
 	elif not prev in "(.;":
@@ -10011,13 +8477,13 @@ def CompletionContext_statics_get_completion_info(view,offset,src):
 			r = hxsublime_completion_hx_CompletionContext.count_commas_and_complete_offset(src, prev_comma, complete_offset)
 			commas = r[0]
 			complete_offset = r[1]
-			prev_symbol_is_comma = True
+			prevSymbolIsComma = True
 		
 		else:
 			complete_offset = __builtin__.max(prev_dot + 1, prev_par + 1, prev_colon + 1, prev_brace + 1, prev_semi + 1)
 	
 	
-	return (commas, complete_offset, prev_symbol_is_comma, is_new)
+	return (commas, complete_offset, prevSymbolIsComma, is_new)
 	
 hxsublime_completion_hx_CompletionContext.get_completion_info = CompletionContext_statics_get_completion_info
 
@@ -10025,54 +8491,1467 @@ hxsublime_completion_hx_CompletionContext.get_completion_info = CompletionContex
 hxsublime_completion_hx_CompletionContext._hx_class = hxsublime_completion_hx_CompletionContext
 hxsublime_completion_hx_CompletionContext._hx_class_name = "hxsublime.completion.hx.CompletionContext"
 _hx_classes['hxsublime.completion.hx.CompletionContext'] = hxsublime_completion_hx_CompletionContext
-hxsublime_completion_hx_CompletionContext._hx_fields = ["prefix","view","view_id","id","options","settings","offset","project","view_pos","complete_offset_in_bytes_cache","complete_offset_in_bytes_cache_set","orig_file_cache","orig_file_cache_set","build_cache","build_cache_set","complete_char_is_after_control_struct_cache","complete_char_is_after_control_struct_cache_set","in_control_struct_cache","in_control_struct_cache_set","src_until_complete_offset_cache","src_until_complete_offset_cache_set","line_after_offset_cache","line_after_offset_cache_set","src_cache","src_cache_set","complete_char_cache","complete_char_cache_set","src_from_complete_to_offset_cache","src_from_complete_to_offset_cache_set","src_from_complete_to_prefix_end_cache","src_from_complete_to_prefix_end_cache_set","offset_char_cache","offset_char_cache_set","_completion_info_cache","_completion_info_cache_set","commas_cache","commas_cache_set","prev_symbol_is_comma_cache","prev_symbol_is_comma_cache_set","complete_offset_cache","complete_offset_cache_set","is_new_cache","is_new_cache_set","src_until_offset_cache","src_until_offset_cache_set","temp_completion_src_cache","temp_completion_src_cache_set","prefix_is_whitespace_cache","prefix_is_whitespace_cache_set"]
+hxsublime_completion_hx_CompletionContext._hx_fields = ["prefix","view","view_id","id","options","settings","offset","project","view_pos","complete_offset_in_bytes_cache","complete_offset_in_bytes_cache_set","orig_file_cache","orig_file_cache_set","build_cache","build_cache_set","completeCharIsAfterControlStruct_cache","completeCharIsAfterControlStruct_cache_set","inControlStruct_cache","inControlStruct_cache_set","srcUntilCompleteOffset_cache","srcUntilCompleteOffset_cache_set","lineAfterOffset_cache","lineAfterOffset_cache_set","src_cache","src_cache_set","completeChar_cache","completeChar_cache_set","completionInfo_cache","completionInfo_cache_set","commas_cache","commas_cache_set","complete_offset_cache","complete_offset_cache_set","is_new_cache","is_new_cache_set","srcUntilOffset_cache","srcUntilOffset_cache_set","tempCompletionSrc_cache","tempCompletionSrc_cache_set","prefixIsWhitespace_cache","prefixIsWhitespace_cache_set"]
 hxsublime_completion_hx_CompletionContext._hx_props = []
-hxsublime_completion_hx_CompletionContext._hx_methods = ["complete_offset_in_bytes","orig_file","build","complete_char_is_after_control_struct","in_control_struct","src_until_complete_offset","line_after_offset","src","complete_char","src_from_complete_to_offset","src_from_complete_to_prefix_end","offset_char","_completion_info","commas","prev_symbol_is_comma","complete_offset","is_new","src_until_offset","temp_completion_src","prefix_is_whitespace","eq"]
-hxsublime_completion_hx_CompletionContext._hx_statics = ["get_completion_id","count_commas_and_complete_offset","get_completion_info"]
+hxsublime_completion_hx_CompletionContext._hx_methods = ["complete_offset_in_bytes","orig_file","build","completeCharIsAfterControlStruct","inControlStruct","srcUntilCompleteOffset","lineAfterOffset","src","completeChar","completionInfo","commas","complete_offset","is_new","srcUntilOffset","tempCompletionSrc","prefixIsWhitespace","eq"]
+hxsublime_completion_hx_CompletionContext._hx_statics = ["controlStructRegex","getCompletionId","count_commas_and_complete_offset","get_completion_info"]
 hxsublime_completion_hx_CompletionContext._hx_interfaces = [hxsublime_macros_LazyFunctionSupport]
 
-# print hxsublime.completion.hxml.Base.Base
-class hxsublime_completion_hxml_Base:
+# print hxsublime.completion.hx.CompletionOptions.CompletionOptions
+class hxsublime_completion_hx_CompletionOptions:
+
+
+	def __init__(self,trigger,context = 2,types = 1,toplevel = 4):
+		if context is None:
+			context = 2
+		
+		if types is None:
+			types = 1
+		
+		if toplevel is None:
+			toplevel = 4
+		
+		self.regularCompletion_cache_set = False
+		self.regularCompletion_cache = None
+		self.macroCompletion_cache_set = False
+		self.macroCompletion_cache = None
+		self.manualCompletion_cache_set = False
+		self.manualCompletion_cache = None
+		self.asyncTrigger_cache_set = False
+		self.asyncTrigger_cache = None
+		self._types = hxsublime_completion_hx_CompletionTypes(types)
+		self._toplevel = hxsublime_completion_hx_TopLevelOptions(toplevel)
+		self._context = context
+		self._trigger = trigger
+	
+	# var _types
+	# var _toplevel
+	# var _context
+	# var _trigger
+	def copyAsManual(self):
+		return hxsublime_completion_hx_CompletionOptions(1, self._context, self.types().val(), self._toplevel.val())
+
+	def copyAsAsync(self):
+		return hxsublime_completion_hx_CompletionOptions(3, self._context, self.types().val(), self._toplevel.val())
+
+	def types(self):
+		return self._types
+
+	# var asyncTrigger_cache
+	# var asyncTrigger_cache_set
+	def asyncTrigger(self):
+		_g = self
+		if not self.asyncTrigger_cache_set:
+			self.asyncTrigger_cache_set = True
+			def _hx_local_0():
+				return _g._trigger == 3
+			eval = _hx_local_0
+			self.asyncTrigger_cache = eval()
+		
+		
+		return self.asyncTrigger_cache
+	
+
+	# var manualCompletion_cache
+	# var manualCompletion_cache_set
+	def manualCompletion(self):
+		_g = self
+		if not self.manualCompletion_cache_set:
+			self.manualCompletion_cache_set = True
+			def _hx_local_0():
+				return _g._trigger == 1
+			eval = _hx_local_0
+			self.manualCompletion_cache = eval()
+		
+		
+		return self.manualCompletion_cache
+	
+
+	# var macroCompletion_cache
+	# var macroCompletion_cache_set
+	def macroCompletion(self):
+		_g = self
+		if not self.macroCompletion_cache_set:
+			self.macroCompletion_cache_set = True
+			def _hx_local_0():
+				return _g._context == 1
+			eval = _hx_local_0
+			self.macroCompletion_cache = eval()
+		
+		
+		return self.macroCompletion_cache
+	
+
+	# var regularCompletion_cache
+	# var regularCompletion_cache_set
+	def regularCompletion(self):
+		_g = self
+		if not self.regularCompletion_cache_set:
+			self.regularCompletion_cache_set = True
+			def _hx_local_0():
+				return _g._context == 2
+			eval = _hx_local_0
+			self.regularCompletion_cache = eval()
+		
+		
+		return self.regularCompletion_cache
+	
+
+	def eq(self,other):
+		return self._trigger == other._trigger and self._types.eq(other._types) and self._toplevel.eq(other._toplevel) and self._context == other._context
+
+
+
+
+
+hxsublime_completion_hx_CompletionOptions.__meta__ = _Hx_AnonObject(fields = _Hx_AnonObject(types = _Hx_AnonObject(property = None ) ) )
+
+
+hxsublime_completion_hx_CompletionOptions._hx_class = hxsublime_completion_hx_CompletionOptions
+hxsublime_completion_hx_CompletionOptions._hx_class_name = "hxsublime.completion.hx.CompletionOptions"
+_hx_classes['hxsublime.completion.hx.CompletionOptions'] = hxsublime_completion_hx_CompletionOptions
+hxsublime_completion_hx_CompletionOptions._hx_fields = ["_types","_toplevel","_context","_trigger","asyncTrigger_cache","asyncTrigger_cache_set","manualCompletion_cache","manualCompletion_cache_set","macroCompletion_cache","macroCompletion_cache_set","regularCompletion_cache","regularCompletion_cache_set"]
+hxsublime_completion_hx_CompletionOptions._hx_props = []
+hxsublime_completion_hx_CompletionOptions._hx_methods = ["copyAsManual","copyAsAsync","types","asyncTrigger","manualCompletion","macroCompletion","regularCompletion","eq"]
+hxsublime_completion_hx_CompletionOptions._hx_statics = ["__meta__"]
+hxsublime_completion_hx_CompletionOptions._hx_interfaces = [hxsublime_macros_LazyFunctionSupport]
+
+# print hxsublime.completion.hx.CompletionResult.CompletionResult
+class hxsublime_completion_hx_CompletionResult:
+
+
+	def __init__(self,ret,comps,status,hints,ctx,retrieve_toplevel_comps):
+		self.allComps_cache_set = False
+		self.allComps_cache = None
+		self.requiresToplevelComps_cache_set = False
+		self.requiresToplevelComps_cache = None
+		self.showTopLevelSnippets_cache_set = False
+		self.showTopLevelSnippets_cache = None
+		self.hasResults_cache_set = False
+		self.hasResults_cache = None
+		self.hasCompilerResults_cache_set = False
+		self.hasCompilerResults_cache = None
+		self.hasHints_cache_set = False
+		self.hasHints_cache = None
+		self._toplevel_comps_cache_set = False
+		self._toplevel_comps_cache = None
+		self.ret = ret
+		self.comps = comps
+		self.status = status
+		self.hints = hints
+		self.ctx = ctx
+		if retrieve_toplevel_comps is None:
+			def _hx_local_0():
+				return []
+			retrieve_toplevel_comps = _hx_local_0
+		
+		
+		self.retrieve_toplevel_comps = retrieve_toplevel_comps
+	
+	# var hints
+	# var ctx
+	# var ret
+	# var comps
+	# var status
+	# var retrieve_toplevel_comps
+	# var _toplevel_comps_cache
+	# var _toplevel_comps_cache_set
+	def _toplevel_comps(self):
+		_g = self
+		if not self._toplevel_comps_cache_set:
+			self._toplevel_comps_cache_set = True
+			def _hx_local_0():
+				return _g.retrieve_toplevel_comps()
+			eval = _hx_local_0
+			self._toplevel_comps_cache = eval()
+		
+		
+		return self._toplevel_comps_cache
+	
+
+	# var hasHints_cache
+	# var hasHints_cache_set
+	def hasHints(self):
+		_g = self
+		if not self.hasHints_cache_set:
+			self.hasHints_cache_set = True
+			def _hx_local_0():
+				return __builtin__.len(_g.hints) > 0
+			eval = _hx_local_0
+			self.hasHints_cache = eval()
+		
+		
+		return self.hasHints_cache
+	
+
+	# var hasCompilerResults_cache
+	# var hasCompilerResults_cache_set
+	def hasCompilerResults(self):
+		_g = self
+		if not self.hasCompilerResults_cache_set:
+			self.hasCompilerResults_cache_set = True
+			def _hx_local_0():
+				return __builtin__.len(_g.comps) > 0
+			eval = _hx_local_0
+			self.hasCompilerResults_cache = eval()
+		
+		
+		return self.hasCompilerResults_cache
+	
+
+	# var hasResults_cache
+	# var hasResults_cache_set
+	def hasResults(self):
+		_g = self
+		if not self.hasResults_cache_set:
+			self.hasResults_cache_set = True
+			def _hx_local_2():
+				def _hx_local_1():
+					def _hx_local_0():
+						_this = _g._toplevel_comps()
+						return __builtin__.len(_this)
+					
+					return __builtin__.len(_g.comps) > 0 or __builtin__.len(_g.hints) > 0 or _g.requiresToplevelComps() and _hx_local_0() > 0
+				
+				return _hx_local_1()
+			
+			eval = _hx_local_2
+			self.hasResults_cache = eval()
+		
+		
+		return self.hasResults_cache
+	
+
+	# var showTopLevelSnippets_cache
+	# var showTopLevelSnippets_cache_set
+	def showTopLevelSnippets(self):
+		_g = self
+		if not self.showTopLevelSnippets_cache_set:
+			self.showTopLevelSnippets_cache_set = True
+			def _hx_local_0():
+				req = _g.requiresToplevelComps()
+				r = req and not _g.ctx.is_new()
+				return r
+			
+			eval = _hx_local_0
+			self.showTopLevelSnippets_cache = eval()
+		
+		
+		return self.showTopLevelSnippets_cache
+	
+
+	# var requiresToplevelComps_cache
+	# var requiresToplevelComps_cache_set
+	def requiresToplevelComps(self):
+		_g = self
+		if not self.requiresToplevelComps_cache_set:
+			self.requiresToplevelComps_cache_set = True
+			def _hx_local_0():
+				prefix_is_whitespace = hxsublime_tools_StringTools.isWhitespaceOrEmpty(_g.ctx.prefix)
+				haxe_Log.trace("prefix_is_whitespace:" + Std.string(prefix_is_whitespace), _Hx_AnonObject(fileName = "CompletionResult.hx" ,lineNumber = 99 ,className = "hxsublime.completion.hx.CompletionResult" ,methodName = "requiresToplevelComps" ))
+				haxe_Log.trace("has_hints:" + Std.string(_g.hasHints()), _Hx_AnonObject(fileName = "CompletionResult.hx" ,lineNumber = 100 ,className = "hxsublime.completion.hx.CompletionResult" ,methodName = "requiresToplevelComps" ))
+				haxe_Log.trace("has_hint:" + Std.string(_g.ctx.options.types().hasHint()), _Hx_AnonObject(fileName = "CompletionResult.hx" ,lineNumber = 101 ,className = "hxsublime.completion.hx.CompletionResult" ,methodName = "requiresToplevelComps" ))
+				haxe_Log.trace("has_compiler_results:" + Std.string(_g.hasCompilerResults()), _Hx_AnonObject(fileName = "CompletionResult.hx" ,lineNumber = 102 ,className = "hxsublime.completion.hx.CompletionResult" ,methodName = "requiresToplevelComps" ))
+				r = not (prefix_is_whitespace and _g.hasHints() and _g.ctx.options.types().hasHint() or _g.hasCompilerResults())
+				haxe_Log.trace("requires_toplevel_comps:" + Std.string(r), _Hx_AnonObject(fileName = "CompletionResult.hx" ,lineNumber = 104 ,className = "hxsublime.completion.hx.CompletionResult" ,methodName = "requiresToplevelComps" ))
+				return r
+			
+			eval = _hx_local_0
+			self.requiresToplevelComps_cache = eval()
+		
+		
+		return self.requiresToplevelComps_cache
+	
+
+	# var allComps_cache
+	# var allComps_cache_set
+	def allComps(self):
+		_g = self
+		if not self.allComps_cache_set:
+			self.allComps_cache_set = True
+			def _hx_local_1():
+				res = []
+				if _g.requiresToplevelComps():
+					x = _g._toplevel_comps()
+					res.extend(x)
+				
+				
+				res.extend(_g.comps)
+				def _hx_local_0(s1,s2):
+					if s1[0] < s2[0]:
+						return -1
+					elif s1[0] > s2[0]:
+						return 1
+					else:
+						return 0
+				res.sort(key=python_lib_FuncTools.cmp_to_key(_hx_local_0))
+				return res
+			
+			eval = _hx_local_1
+			self.allComps_cache = eval()
+		
+		
+		return self.allComps_cache
+	
+
+
+
+
+
+def CompletionResult_statics_emptyResult(ctx,retrieve_toplevel_comps = None):
+	if retrieve_toplevel_comps is None:
+		retrieve_toplevel_comps = None
+	
+	return hxsublime_completion_hx_CompletionResult("", [], "", [], ctx, retrieve_toplevel_comps)
+	
+hxsublime_completion_hx_CompletionResult.emptyResult = CompletionResult_statics_emptyResult
+
+
+hxsublime_completion_hx_CompletionResult._hx_class = hxsublime_completion_hx_CompletionResult
+hxsublime_completion_hx_CompletionResult._hx_class_name = "hxsublime.completion.hx.CompletionResult"
+_hx_classes['hxsublime.completion.hx.CompletionResult'] = hxsublime_completion_hx_CompletionResult
+hxsublime_completion_hx_CompletionResult._hx_fields = ["hints","ctx","ret","comps","status","retrieve_toplevel_comps","_toplevel_comps_cache","_toplevel_comps_cache_set","hasHints_cache","hasHints_cache_set","hasCompilerResults_cache","hasCompilerResults_cache_set","hasResults_cache","hasResults_cache_set","showTopLevelSnippets_cache","showTopLevelSnippets_cache_set","requiresToplevelComps_cache","requiresToplevelComps_cache_set","allComps_cache","allComps_cache_set"]
+hxsublime_completion_hx_CompletionResult._hx_props = []
+hxsublime_completion_hx_CompletionResult._hx_methods = ["_toplevel_comps","hasHints","hasCompilerResults","hasResults","showTopLevelSnippets","requiresToplevelComps","allComps"]
+hxsublime_completion_hx_CompletionResult._hx_statics = ["emptyResult"]
+hxsublime_completion_hx_CompletionResult._hx_interfaces = [hxsublime_macros_LazyFunctionSupport]
+
+# print hxsublime.completion.hx.CompletionSettings.CompletionSettings
+class hxsublime_completion_hx_CompletionSettings:
+
+
+	def __init__(self,settings):
+		self.getCompletionDelays_cache_set = False
+		self.getCompletionDelays_cache = None
+		self.showOnlyAsyncCompletions_cache_set = False
+		self.showOnlyAsyncCompletions_cache = None
+		self.isAsyncCompletion_cache_set = False
+		self.isAsyncCompletion_cache = None
+		self.topLevelCompletionsOnDemand_cache_set = False
+		self.topLevelCompletionsOnDemand_cache = None
+		self.noFuzzyCompletion_cache_set = False
+		self.noFuzzyCompletion_cache = None
+		self.settings = settings
+	
+	# var settings
+	# var noFuzzyCompletion_cache
+	# var noFuzzyCompletion_cache_set
+	def noFuzzyCompletion(self):
+		_g = self
+		if not self.noFuzzyCompletion_cache_set:
+			self.noFuzzyCompletion_cache_set = True
+			def _hx_local_0():
+				return _g.settings.noFuzzyCompletion()
+			eval = _hx_local_0
+			self.noFuzzyCompletion_cache = eval()
+		
+		
+		return self.noFuzzyCompletion_cache
+	
+
+	# var topLevelCompletionsOnDemand_cache
+	# var topLevelCompletionsOnDemand_cache_set
+	def topLevelCompletionsOnDemand(self):
+		_g = self
+		if not self.topLevelCompletionsOnDemand_cache_set:
+			self.topLevelCompletionsOnDemand_cache_set = True
+			def _hx_local_0():
+				return _g.settings.topLevelCompletionsOnDemand()
+			eval = _hx_local_0
+			self.topLevelCompletionsOnDemand_cache = eval()
+		
+		
+		return self.topLevelCompletionsOnDemand_cache
+	
+
+	# var isAsyncCompletion_cache
+	# var isAsyncCompletion_cache_set
+	def isAsyncCompletion(self):
+		_g = self
+		if not self.isAsyncCompletion_cache_set:
+			self.isAsyncCompletion_cache_set = True
+			def _hx_local_0():
+				return _g.settings.isAsyncCompletion()
+			eval = _hx_local_0
+			self.isAsyncCompletion_cache = eval()
+		
+		
+		return self.isAsyncCompletion_cache
+	
+
+	# var showOnlyAsyncCompletions_cache
+	# var showOnlyAsyncCompletions_cache_set
+	def showOnlyAsyncCompletions(self):
+		_g = self
+		if not self.showOnlyAsyncCompletions_cache_set:
+			self.showOnlyAsyncCompletions_cache_set = True
+			def _hx_local_0():
+				return _g.settings.showOnlyAsyncCompletions()
+			eval = _hx_local_0
+			self.showOnlyAsyncCompletions_cache = eval()
+		
+		
+		return self.showOnlyAsyncCompletions_cache
+	
+
+	# var getCompletionDelays_cache
+	# var getCompletionDelays_cache_set
+	def getCompletionDelays(self):
+		_g = self
+		if not self.getCompletionDelays_cache_set:
+			self.getCompletionDelays_cache_set = True
+			def _hx_local_0():
+				return _g.settings.getCompletionDelays()
+			eval = _hx_local_0
+			self.getCompletionDelays_cache = eval()
+		
+		
+		return self.getCompletionDelays_cache
+	
+
+	def showCompletionTimes(self,view):
+		return self.settings.showCompletionTimes(view)
+
+
+
+
+
+
+
+hxsublime_completion_hx_CompletionSettings._hx_class = hxsublime_completion_hx_CompletionSettings
+hxsublime_completion_hx_CompletionSettings._hx_class_name = "hxsublime.completion.hx.CompletionSettings"
+_hx_classes['hxsublime.completion.hx.CompletionSettings'] = hxsublime_completion_hx_CompletionSettings
+hxsublime_completion_hx_CompletionSettings._hx_fields = ["settings","noFuzzyCompletion_cache","noFuzzyCompletion_cache_set","topLevelCompletionsOnDemand_cache","topLevelCompletionsOnDemand_cache_set","isAsyncCompletion_cache","isAsyncCompletion_cache_set","showOnlyAsyncCompletions_cache","showOnlyAsyncCompletions_cache_set","getCompletionDelays_cache","getCompletionDelays_cache_set"]
+hxsublime_completion_hx_CompletionSettings._hx_props = []
+hxsublime_completion_hx_CompletionSettings._hx_methods = ["noFuzzyCompletion","topLevelCompletionsOnDemand","isAsyncCompletion","showOnlyAsyncCompletions","getCompletionDelays","showCompletionTimes"]
+hxsublime_completion_hx_CompletionSettings._hx_statics = []
+hxsublime_completion_hx_CompletionSettings._hx_interfaces = [hxsublime_macros_LazyFunctionSupport]
+
+# print hxsublime.completion.hx.CompletionTypes.CompletionTypes
+class hxsublime_completion_hx_CompletionTypes:
+
+
+	def __init__(self,val = 1):
+		if val is None:
+			val = 1
+		
+		self._opt = val
+	
+	# var _opt
+	def val(self):
+		return self._opt
+
+	def add(self,val):
+		self._opt = self._opt | val
+
+	def addHint(self):
+		self._opt = self._opt | 2
+
+	def hasRegular(self):
+		return (self._opt & 1) > 0
+
+	def hasHint(self):
+		return (self._opt & 2) > 0
+
+	def hasToplevel(self):
+		return (self._opt & 4) > 0
+
+	def hasToplevelForced(self):
+		return (self._opt & 12) > 0
+
+	def eq(self,other):
+		return self._opt == other._opt
+
+
+
+
+
+
+
+hxsublime_completion_hx_CompletionTypes._hx_class = hxsublime_completion_hx_CompletionTypes
+hxsublime_completion_hx_CompletionTypes._hx_class_name = "hxsublime.completion.hx.CompletionTypes"
+_hx_classes['hxsublime.completion.hx.CompletionTypes'] = hxsublime_completion_hx_CompletionTypes
+hxsublime_completion_hx_CompletionTypes._hx_fields = ["_opt"]
+hxsublime_completion_hx_CompletionTypes._hx_props = []
+hxsublime_completion_hx_CompletionTypes._hx_methods = ["val","add","addHint","hasRegular","hasHint","hasToplevel","hasToplevelForced","eq"]
+hxsublime_completion_hx_CompletionTypes._hx_statics = []
+hxsublime_completion_hx_CompletionTypes._hx_interfaces = []
+
+# print hxsublime.completion.hx.Constants.Constants
+class hxsublime_completion_hx_Constants:
 
 	pass
 
 
 
 
-hxsublime_completion_hxml_Base.lib_flag = python_lib_Re.compile("-lib\\s+(.*?)")
-def Base_statics_auto_complete(project,view,offset,prefix):
-	src = view.substr(sublime_Region(0, offset))
-	current_line = None
-	startIndex = src.find("\n") + 1
-	current_line = python_Tools.substring(src, startIndex, offset)
+hxsublime_completion_hx_Constants.COMPLETION_TRIGGER_MANUAL = 1
+hxsublime_completion_hx_Constants.COMPLETION_TRIGGER_AUTO = 2
+hxsublime_completion_hx_Constants.COMPLETION_TRIGGER_ASYNC = 3
+hxsublime_completion_hx_Constants.COMPILER_CONTEXT_MACRO = 1
+hxsublime_completion_hx_Constants.COMPILER_CONTEXT_REGULAR = 2
+hxsublime_completion_hx_Constants.COMPLETION_TYPE_REGULAR = 1
+hxsublime_completion_hx_Constants.COMPLETION_TYPE_HINT = 2
+hxsublime_completion_hx_Constants.COMPLETION_TYPE_TOPLEVEL = 4
+hxsublime_completion_hx_Constants.COMPLETION_TYPE_TOPLEVEL_FORCED = 12
+hxsublime_completion_hx_Constants.TOPLEVEL_OPTION_TYPES = 1
+hxsublime_completion_hx_Constants.TOPLEVEL_OPTION_LOCALS = 2
+hxsublime_completion_hx_Constants.TOPLEVEL_OPTION_KEYWORDS = 4
+hxsublime_completion_hx_Constants.TOPLEVEL_OPTION_ALL = 7
+
+
+hxsublime_completion_hx_Constants._hx_class = hxsublime_completion_hx_Constants
+hxsublime_completion_hx_Constants._hx_class_name = "hxsublime.completion.hx.Constants"
+_hx_classes['hxsublime.completion.hx.Constants'] = hxsublime_completion_hx_Constants
+hxsublime_completion_hx_Constants._hx_fields = []
+hxsublime_completion_hx_Constants._hx_props = []
+hxsublime_completion_hx_Constants._hx_methods = []
+hxsublime_completion_hx_Constants._hx_statics = ["COMPLETION_TRIGGER_MANUAL","COMPLETION_TRIGGER_AUTO","COMPLETION_TRIGGER_ASYNC","COMPILER_CONTEXT_MACRO","COMPILER_CONTEXT_REGULAR","COMPLETION_TYPE_REGULAR","COMPLETION_TYPE_HINT","COMPLETION_TYPE_TOPLEVEL","COMPLETION_TYPE_TOPLEVEL_FORCED","TOPLEVEL_OPTION_TYPES","TOPLEVEL_OPTION_LOCALS","TOPLEVEL_OPTION_KEYWORDS","TOPLEVEL_OPTION_ALL"]
+hxsublime_completion_hx_Constants._hx_interfaces = []
+
+# print hxsublime.completion.hx.HxCompletion.HxCompletion
+class hxsublime_completion_hx_HxCompletion:
+
+	pass
+
+
+
+
+def HxCompletion_statics_triggerCompletion(view,options,show_top_level_snippets = False):
+	if show_top_level_snippets is None:
+		show_top_level_snippets = False
 	
-	m = hxsublime_completion_hxml_Base.lib_flag.match(current_line)
+	def _hx_local_3():
+		project = hxsublime_project_Projects.currentProject(view)
+		if not project.hasBuild():
+			project.extractBuildArgs(view, False)
+		
+		if project.hasBuild():
+			project.completionContext.setTrigger(view, options)
+			def _hx_local_0():
+				x = _Hx_AnonObject(api_completions_only = not show_top_level_snippets ,disable_auto_insert = True ,next_completion_if_showing = True ,auto_complete_commit_on_tab = True )
+				def _hx_local_2():
+					def _hx_local_1():
+						d = python_lib_Dict()
+						_g = 0
+						_g1 = Reflect.fields(x)
+						while _g < len(_g1):
+							f = _g1[_g]
+							_g = _g + 1
+							val = Reflect.field(x, f)
+							python_lib_DictImpl.set(d, f, val)
+							
+						
+						
+						return d
+					
+					return _hx_local_1()
+				
+				return _hx_local_2()
+			
+			view.run_command("auto_complete", _hx_local_0())
+		
+		else:
+			project.extractBuildArgs(view, True)
+	
+	run = _hx_local_3
+	view.run_command("hide_auto_complete")
+	sublime_Sublime.set_timeout(run, 0)
+	
+hxsublime_completion_hx_HxCompletion.triggerCompletion = HxCompletion_statics_triggerCompletion
+def HxCompletion_statics_autoComplete(project,view,offset,prefix):
+	haxe_Log.trace("run auto_complete", _Hx_AnonObject(fileName = "HxCompletion.hx" ,lineNumber = 70 ,className = "hxsublime.completion.hx.HxCompletion" ,methodName = "autoComplete" ))
+	options = project.completionContext.getAndDeleteTrigger(view)
+	res = None
+	if options is not None and options.asyncTrigger():
+		haxe_Log.trace("run auto_complete 1", _Hx_AnonObject(fileName = "HxCompletion.hx" ,lineNumber = 78 ,className = "hxsublime.completion.hx.HxCompletion" ,methodName = "autoComplete" ))
+		async_result = project.completionContext.getAndDeleteAsync(view)
+		use_async_results = async_result is not None and async_result.hasResults()
+		if use_async_results:
+			haxe_Log.trace("run auto_complete 2", _Hx_AnonObject(fileName = "HxCompletion.hx" ,lineNumber = 84 ,className = "hxsublime.completion.hx.HxCompletion" ,methodName = "autoComplete" ))
+			res = hxsublime_completion_hx_HxCompletion.getAvailableAsyncCompletions(async_result, view)
+			res = hxsublime_completion_hx_HxCompletion.completionResultWithSmartSnippets(view, res, async_result, options)
+			haxe_Log.trace(res, _Hx_AnonObject(fileName = "HxCompletion.hx" ,lineNumber = 87 ,className = "hxsublime.completion.hx.HxCompletion" ,methodName = "autoComplete" ))
+		
+		else:
+			haxe_Log.trace("run auto_complete 3", _Hx_AnonObject(fileName = "HxCompletion.hx" ,lineNumber = 91 ,className = "hxsublime.completion.hx.HxCompletion" ,methodName = "autoComplete" ))
+			res = hxsublime_completion_hx_HxCompletion.cancelCompletion(view)
+		
+	
+	else:
+		haxe_Log.trace("create comps", _Hx_AnonObject(fileName = "HxCompletion.hx" ,lineNumber = 97 ,className = "hxsublime.completion.hx.HxCompletion" ,methodName = "autoComplete" ))
+		res = hxsublime_completion_hx_HxCompletion.createNewCompletions(project, view, offset, options, prefix)
+		haxe_Log.trace("after create comps", _Hx_AnonObject(fileName = "HxCompletion.hx" ,lineNumber = 100 ,className = "hxsublime.completion.hx.HxCompletion" ,methodName = "autoComplete" ))
+	
+	return res
+	
+hxsublime_completion_hx_HxCompletion.autoComplete = HxCompletion_statics_autoComplete
+def HxCompletion_statics_getAvailableAsyncCompletions(compResult,view):
+	ctx = compResult.ctx
+	has_results = compResult.hasResults()
+	discard_results = not has_results and ctx.options.types().hasHint()
+	if discard_results:
+		return hxsublime_completion_hx_HxCompletion.cancelCompletion(view)
+	else:
+		return hxsublime_completion_hx_HxCompletion.combineHintsAndComps(compResult)
+	
+hxsublime_completion_hx_HxCompletion.getAvailableAsyncCompletions = HxCompletion_statics_getAvailableAsyncCompletions
+def HxCompletion_statics_completionResultWithSmartSnippets(view,comps,result,options):
+	use_snippets = hxsublime_Settings.smartSnippets(view)
+	prefix_is_whitespace = hxsublime_tools_StringTools.isWhitespaceOrEmpty(result.ctx.prefix)
+	has_one_hint = options.types().hasHint() and __builtin__.len(result.hints) == 1
+	same_cursor_pos = hxsublime_tools_ViewTools.getFirstCursorPos(view) == result.ctx.view_pos
+	lineAfterOffset = None
+	s = result.ctx.lineAfterOffset()
+	lineAfterOffset = s.strip(None)
+	
+	really_insert = None
+	def _hx_local_0():
+		str = lineAfterOffset[0]
+		return "),".find(str)
+	
+	really_insert = __builtin__.len(lineAfterOffset) == 0 or _hx_local_0() > -1
+	if really_insert and prefix_is_whitespace and use_snippets and has_one_hint and same_cursor_pos:
+		onlyHint = comps[0]
+		hxsublime_tools_ViewTools.insertSnippet(view, onlyHint[1])
+		comps = hxsublime_completion_hx_HxCompletion.cancelCompletion(view)
+	
+	
+	return comps
+	
+hxsublime_completion_hx_HxCompletion.completionResultWithSmartSnippets = HxCompletion_statics_completionResultWithSmartSnippets
+def HxCompletion_statics_createNewCompletions(project,view,offset,options,prefix):
+	cache = project.completionContext.current
+	haxe_Log.trace("------- COMPLETION START -----------", _Hx_AnonObject(fileName = "HxCompletion.hx" ,lineNumber = 150 ,className = "hxsublime.completion.hx.HxCompletion" ,methodName = "createNewCompletions" ))
+	ctx = hxsublime_completion_hx_HxCompletion.createCompletionContext(project, view, offset, options, prefix)
+	res = None
+	haxe_Log.trace("MANUAL COMPLETION: " + Std.string(ctx.options.manualCompletion()), _Hx_AnonObject(fileName = "HxCompletion.hx" ,lineNumber = 156 ,className = "hxsublime.completion.hx.HxCompletion" ,methodName = "createNewCompletions" ))
+	if hxsublime_completion_hx_HxCompletion.isEquivalentCompletionAlreadyRunning(ctx):
+		haxe_Log.trace("cancel completion, same is running", _Hx_AnonObject(fileName = "HxCompletion.hx" ,lineNumber = 164 ,className = "hxsublime.completion.hx.HxCompletion" ,methodName = "createNewCompletions" ))
+		res = hxsublime_completion_hx_HxCompletion.cancelCompletion(ctx.view)
+	
+	elif not ctx.options.manualCompletion():
+		hxsublime_completion_hx_HxCompletion.triggerManualCompletion(ctx.view, ctx.options.copyAsManual())
+		res = hxsublime_completion_hx_HxCompletion.cancelCompletion(ctx.view)
+	
+	elif hxsublime_completion_hx_HxCompletion.isAfterIntIterator(ctx.src(), ctx.offset):
+		res = hxsublime_completion_hx_HxCompletion.cancelCompletion(ctx.view)
+	elif hxsublime_completion_hx_HxCompletion.isIntIteratorCompletion(ctx.src(), ctx.offset):
+		haxe_Log.trace("iterator completion", _Hx_AnonObject(fileName = "HxCompletion.hx" ,lineNumber = 178 ,className = "hxsublime.completion.hx.HxCompletion" ,methodName = "createNewCompletions" ))
+		res = [(".\tint iterator", "..")]
+	
+	else:
+		if hxsublime_completion_hx_HxCompletion.isHintCompletion(ctx):
+			haxe_Log.trace("ADD HINT", _Hx_AnonObject(fileName = "HxCompletion.hx" ,lineNumber = 185 ,className = "hxsublime.completion.hx.HxCompletion" ,methodName = "createNewCompletions" ))
+			ctx.options.types().addHint()
+		
+		
+		isDirectlyAfterControlStruct = ctx.completeCharIsAfterControlStruct()
+		onlyTopLevel = ctx.is_new() or isDirectlyAfterControlStruct
+		haxe_Log.trace("onlyTopLevel: " + Std.string(onlyTopLevel), _Hx_AnonObject(fileName = "HxCompletion.hx" ,lineNumber = 194 ,className = "hxsublime.completion.hx.HxCompletion" ,methodName = "createNewCompletions" ))
+		if onlyTopLevel:
+			res = hxsublime_completion_hx_HxCompletion.getToplevelCompletions(ctx)
+		else:
+			last_ctx = cache.input
+			if hxsublime_completion_hx_HxCompletion.useCompletionCache(ctx, last_ctx):
+				haxe_Log.trace("USE COMPLETION CACHE", _Hx_AnonObject(fileName = "HxCompletion.hx" ,lineNumber = 208 ,className = "hxsublime.completion.hx.HxCompletion" ,methodName = "createNewCompletions" ))
+				out = cache.output
+				hxsublime_completion_hx_HxCompletion.updateCompletionCache(cache, out)
+				project.completionContext.addCompletionResult(out)
+				res = hxsublime_completion_hx_HxCompletion.cancelCompletion(view)
+				hxsublime_completion_hx_HxCompletion.triggerAsyncCompletion(view, ctx.options, out.showTopLevelSnippets())
+			
+			elif hxsublime_completion_hx_HxCompletion.supportedCompilerCompletionChar(ctx.completeChar()):
+				haxe_Log.trace("supported char", _Hx_AnonObject(fileName = "HxCompletion.hx" ,lineNumber = 217 ,className = "hxsublime.completion.hx.HxCompletion" ,methodName = "createNewCompletions" ))
+				compBuild = hxsublime_completion_hx_HxCompletion.createCompletionBuild(ctx)
+				if compBuild is not None:
+					def _hx_local_0(out,err):
+						hxsublime_completion_hx_HxCompletion.completionFinished(ctx, compBuild, out, err)
+					hxsublime_completion_hx_HxCompletion.runCompilerCompletion(compBuild, _hx_local_0)
+				
+				else:
+					haxe_Log.trace("couldn't create temp path && files which are neccessary for completion", _Hx_AnonObject(fileName = "HxCompletion.hx" ,lineNumber = 223 ,className = "hxsublime.completion.hx.HxCompletion" ,methodName = "createNewCompletions" ))
+				res = hxsublime_completion_hx_HxCompletion.cancelCompletion(view, True)
+			
+			else:
+				def _hx_local_1():
+					return hxsublime_completion_hx_HxCompletion.getToplevelCompletions(ctx)
+				compResult = hxsublime_completion_hx_CompletionResult.emptyResult(ctx, _hx_local_1)
+				hxsublime_completion_hx_HxCompletion.updateCompletionCache(cache, compResult)
+				project.completionContext.addCompletionResult(compResult)
+				res = hxsublime_completion_hx_HxCompletion.cancelCompletion(view)
+				hxsublime_completion_hx_HxCompletion.triggerAsyncCompletion(view, ctx.options, compResult.showTopLevelSnippets())
+			
+		
+	
+	return res
+	
+hxsublime_completion_hx_HxCompletion.createNewCompletions = HxCompletion_statics_createNewCompletions
+def HxCompletion_statics_createCompletionBuild(ctx):
+	tmp_src = ctx.tempCompletionSrc()
+	r = hxsublime_Temp.createTempPathAndFile(ctx.build(), ctx.orig_file(), tmp_src)
+	tempPath = r[0]
+	tempFile = r[1]
+	temp_creation_success = tempPath is not None and tempFile is not None
+	def _hx_local_0():
+		compBuild = hxsublime_completion_hx_CompletionBuild(ctx, tempPath, tempFile)
+		build = compBuild.build
+		display = compBuild.display()
+		macroCompletion = ctx.options.macroCompletion()
+		build.setAutoCompletion(display, macroCompletion)
+		if ctx.settings.showCompletionTimes(compBuild.ctx.view):
+			build.setTimes()
+		
+		return compBuild
+	
+	mkBuild = _hx_local_0
+	if temp_creation_success:
+		return mkBuild()
+	else:
+		return None
+	
+hxsublime_completion_hx_HxCompletion.createCompletionBuild = HxCompletion_statics_createCompletionBuild
+def HxCompletion_statics_runCompilerCompletion(compBuild,callback):
+	startTime = python_lib_Time.time()
+	ctx = compBuild.ctx
+	project = ctx.project
+	build = compBuild.build
+	view = ctx.view
+	async = ctx.settings.isAsyncCompletion()
+	def _hx_local_1(out,err):
+		def _hx_local_0():
+			runTime = python_lib_Time.time() - startTime
+			haxe_Log.trace("completion time: " + Std.string(runTime), _Hx_AnonObject(fileName = "HxCompletion.hx" ,lineNumber = 286 ,className = "hxsublime.completion.hx.HxCompletion" ,methodName = "runCompilerCompletion" ))
+			hxsublime_Temp.removePath(compBuild.tempPath)
+			callback(out, err)
+		
+		run = _hx_local_0
+		project.completionContext.runIfStillUpToDate(ctx.id, run)
+	
+	inMainThread = _hx_local_1
+	def _hx_local_4(out,err):
+		def _hx_local_2():
+			f = inMainThread
+			a1 = out
+			a2 = err
+			def _hx_local_3():
+				return f(a1, a2)
+			return _hx_local_3
+		
+		sublime_Sublime.set_timeout(_hx_local_2(), 2)
+	
+	onResult = _hx_local_4
+	project.completionContext.setNewCompletion(ctx)
+	haxe_Log.trace("ASYNC: " + Std.string(async), _Hx_AnonObject(fileName = "HxCompletion.hx" ,lineNumber = 304 ,className = "hxsublime.completion.hx.HxCompletion" ,methodName = "runCompilerCompletion" ))
+	build.run(project, view, async, onResult)
+	
+hxsublime_completion_hx_HxCompletion.runCompilerCompletion = HxCompletion_statics_runCompilerCompletion
+def HxCompletion_statics_completionFinished(ctx,compBuild,out,err):
+	ctx1 = compBuild.ctx
+	tempFile = compBuild.tempFile
+	cache = compBuild.cache
+	project = ctx1.project
+	view = ctx1.view
+	def _hx_local_0():
+		return hxsublime_completion_hx_HxCompletion.getToplevelCompletions(ctx1)
+	compResult = hxsublime_completion_hx_HxCompletion.outputToResult(ctx1, tempFile, err, out, _hx_local_0)
+	hasResults = compResult.hasResults()
+	if hasResults:
+		hxsublime_completion_hx_HxCompletion.updateCompletionCache(cache, compResult)
+		project.completionContext.addCompletionResult(compResult)
+		showTopLevelSnippets = compResult.showTopLevelSnippets()
+		hxsublime_completion_hx_HxCompletion.triggerAsyncCompletion(view, ctx1.options, showTopLevelSnippets)
+	
+	else:
+		haxe_Log.trace("ignore background completion on finished", _Hx_AnonObject(fileName = "HxCompletion.hx" ,lineNumber = 333 ,className = "hxsublime.completion.hx.HxCompletion" ,methodName = "completionFinished" ))
+	
+hxsublime_completion_hx_HxCompletion.completionFinished = HxCompletion_statics_completionFinished
+def HxCompletion_statics_hintsToSublimeCompletions(hints):
+	def _hx_local_5(h):
+		hintIsJustAType = __builtin__.len(h) == 1
+		res = None
+		if hintIsJustAType:
+			res = (h[0] + " - No Completion", "${}")
+		else:
+			isFunctionWithoutParams = __builtin__.len(h) == 2 and h[0] == "Void"
+			insert = None
+			show = None
+			if isFunctionWithoutParams:
+				insert = ")"
+				show = "Void"
+			
+			else:
+				def _hx_local_0(p):
+					_this = p.split("}")
+					return "\\}".join(_this)
+				
+				escapeParam = _hx_local_0
+				last_index = __builtin__.len(h) - 1
+				params = h[0:last_index]
+				show = ", ".join(params)
+				if hxsublime_Settings.smartSnippetsJustCurrent():
+					first = escapeParam(params[0])
+					if __builtin__.len(params) == 1:
+						insert = "${1:" + first + "})${0}"
+					else:
+						insert = "${0:" + first + "}"
+				
+				else:
+					def _hx_local_1(listIndex):
+						return Std.string(listIndex + 1)
+					getSnippetIndex = _hx_local_1
+					def _hx_local_2(param,index):
+						return "${" + getSnippetIndex(index) + ":" + escapeParam(param) + "}"
+					paramSnippet = _hx_local_2
+					snippetList = None
+					_g = []
+					_g2 = 0
+					_g1 = __builtin__.len(params)
+					while _g2 < _g1:
+						def _hx_local_4():
+							nonlocal _g2
+							_hx_local_3 = _g2
+							_g2 = _g2 + 1
+							return _hx_local_3
+							
+						
+						index = _hx_local_4()
+						x = paramSnippet(params[index], index)
+						_g.append(x)
+						__builtin__.len(_g)
+						
+					
+					
+					snippetList = _g
+					
+					insert = ",".join(snippetList) + ")${0}"
+				
+			
+			res = (show, insert)
+		
+		return res
+	
+	make_hint_comp = _hx_local_5
+	_g = []
+	_g1 = 0
+	while _g1 < len(hints):
+		h = hints[_g1]
+		_g1 = _g1 + 1
+		x = make_hint_comp(h)
+		_g.append(x)
+		__builtin__.len(_g)
+		
+	
+	
+	return _g
+	
+	
+hxsublime_completion_hx_HxCompletion.hintsToSublimeCompletions = HxCompletion_statics_hintsToSublimeCompletions
+def HxCompletion_statics_combineHintsAndComps(compResult):
+	all_comps = hxsublime_completion_hx_HxCompletion.hintsToSublimeCompletions(compResult.hints)
+	if not compResult.ctx.options.types().hasHint() or __builtin__.len(compResult.hints) == 0:
+		haxe_Log.trace("TAKE TOP LEVEL COMPS", _Hx_AnonObject(fileName = "HxCompletion.hx" ,lineNumber = 420 ,className = "hxsublime.completion.hx.HxCompletion" ,methodName = "combineHintsAndComps" ))
+		x = compResult.allComps()
+		all_comps.extend(x)
+		
+	
+	elif __builtin__.len(compResult.hints) == 1:
+		sublime_Sublime.status_message("signature: " + "->".join(compResult.hints[0]))
+	
+	return all_comps
+	
+hxsublime_completion_hx_HxCompletion.combineHintsAndComps = HxCompletion_statics_combineHintsAndComps
+def HxCompletion_statics_isIntIteratorCompletion(src,offset):
+	o = offset
+	s = src
+	return o > 3 and s[o] == "\n" and s[o - 1] == "." and s[o - 2] == "." and s[o - 3] != "."
+	
+hxsublime_completion_hx_HxCompletion.isIntIteratorCompletion = HxCompletion_statics_isIntIteratorCompletion
+def HxCompletion_statics_isAfterIntIterator(src,offset):
+	o = offset
+	s = src
+	return o > 3 and s[o] == "\n" and s[o - 1] == "." and s[o - 2] == "." and s[o - 3] == "."
+	
+hxsublime_completion_hx_HxCompletion.isAfterIntIterator = HxCompletion_statics_isAfterIntIterator
+def HxCompletion_statics_isHintCompletion(ctx):
+	whitespace_re = python_lib_Re.compile("^\\s*$")
+	def _hx_local_1():
+		def _hx_local_0():
+			str = ctx.completeChar()
+			return "(,".find(str)
+		
+		return _hx_local_0() > -1 and python_lib_Re.match(whitespace_re, ctx.prefix) is not None
+	
+	return _hx_local_1()
+	
+hxsublime_completion_hx_HxCompletion.isHintCompletion = HxCompletion_statics_isHintCompletion
+def HxCompletion_statics_isEquivalentCompletionAlreadyRunning(ctx):
+	return ctx.project.completionContext.isEquivalentCompletionAlreadyRunning(ctx)
+hxsublime_completion_hx_HxCompletion.isEquivalentCompletionAlreadyRunning = HxCompletion_statics_isEquivalentCompletionAlreadyRunning
+def HxCompletion_statics_shouldIncludeTopLevelCompletion(ctx):
+	haxe_Log.trace("complete Char: '" + ctx.completeChar() + "'", _Hx_AnonObject(fileName = "HxCompletion.hx" ,lineNumber = 469 ,className = "hxsublime.completion.hx.HxCompletion" ,methodName = "shouldIncludeTopLevelCompletion" ))
+	toplevel_complete = None
+	def _hx_local_0():
+		str = ctx.completeChar()
+		return ":(,{;})".find(str)
+	
+	toplevel_complete = _hx_local_0() > -1 or ctx.inControlStruct() or ctx.is_new()
+	haxe_Log.trace("should include: " + Std.string(toplevel_complete), _Hx_AnonObject(fileName = "HxCompletion.hx" ,lineNumber = 472 ,className = "hxsublime.completion.hx.HxCompletion" ,methodName = "shouldIncludeTopLevelCompletion" ))
+	return toplevel_complete
+	
+hxsublime_completion_hx_HxCompletion.shouldIncludeTopLevelCompletion = HxCompletion_statics_shouldIncludeTopLevelCompletion
+def HxCompletion_statics_getToplevelCompletions(ctx):
+	haxe_Log.trace("get top level completions", _Hx_AnonObject(fileName = "HxCompletion.hx" ,lineNumber = 481 ,className = "hxsublime.completion.hx.HxCompletion" ,methodName = "getToplevelCompletions" ))
+	comps = None
+	if hxsublime_completion_hx_HxCompletion.shouldIncludeTopLevelCompletion(ctx):
+		comps = hxsublime_completion_hx_TopLevel.getToplevelCompletionFiltered(ctx)
+	else:
+		comps = []
+	return comps
+	
+hxsublime_completion_hx_HxCompletion.getToplevelCompletions = HxCompletion_statics_getToplevelCompletions
+def HxCompletion_statics_createCompletionContext(project,view,offset,options,prefix):
+	haxe_Log.trace("OPTIONS:" + Std.string(options), _Hx_AnonObject(fileName = "HxCompletion.hx" ,lineNumber = 502 ,className = "hxsublime.completion.hx.HxCompletion" ,methodName = "createCompletionContext" ))
+	if options is None:
+		options = hxsublime_completion_hx_CompletionOptions(2)
+	
+	haxe_Log.trace(options, _Hx_AnonObject(fileName = "HxCompletion.hx" ,lineNumber = 508 ,className = "hxsublime.completion.hx.HxCompletion" ,methodName = "createCompletionContext" ))
+	settings = hxsublime_completion_hx_CompletionSettings(hxsublime_Settings)
+	ctx = hxsublime_completion_hx_CompletionContext(view, project, offset, options, settings, prefix)
+	return ctx
+	
+hxsublime_completion_hx_HxCompletion.createCompletionContext = HxCompletion_statics_createCompletionContext
+def HxCompletion_statics_updateCompletionCache(cache,compResult):
+	cache.output = compResult
+	cache.input = compResult.ctx
+	
+hxsublime_completion_hx_HxCompletion.updateCompletionCache = HxCompletion_statics_updateCompletionCache
+def HxCompletion_statics_log_completion_status(status,comps,hints):
+	if status != "":
+		if comps.length > 0 or hints.length > 0:
+			haxe_Log.trace(status, _Hx_AnonObject(fileName = "HxCompletion.hx" ,lineNumber = 527 ,className = "hxsublime.completion.hx.HxCompletion" ,methodName = "log_completion_status" ))
+		else:
+			hxsublime_panel_Panels.defaultPanel().writeln(status)
+	
+hxsublime_completion_hx_HxCompletion.log_completion_status = HxCompletion_statics_log_completion_status
+def HxCompletion_statics_outputToResult(ctx,temp_file,err,ret,retrieve_tl_comps):
+	r = hxsublime_compiler_Output.getCompletionOutput(temp_file, ctx.orig_file(), err, ctx.commas())
+	hints = r[0]
+	comps1 = r[1]
+	status = r[2]
+	errors = r[3]
+	comps2 = None
+	_g = []
+	_g1 = 0
+	while _g1 < len(comps1):
+		t = comps1[_g1]
+		_g1 = _g1 + 1
+		x = (t.hint, t.insert)
+		_g.append(x)
+		__builtin__.len(_g)
+		
+	
+	
+	comps2 = _g
+	
+	ctx.project.completionContext.setErrors(errors)
+	hxsublime_completion_hx_HxCompletion.highlightErrors(errors, ctx.view)
+	return hxsublime_completion_hx_CompletionResult(ret, comps2, status, hints, ctx, retrieve_tl_comps)
+	
+hxsublime_completion_hx_HxCompletion.outputToResult = HxCompletion_statics_outputToResult
+def HxCompletion_statics_useCompletionCache(lastInput,current_input):
+	return lastInput.eq(current_input)
+hxsublime_completion_hx_HxCompletion.useCompletionCache = HxCompletion_statics_useCompletionCache
+def HxCompletion_statics_supportedCompilerCompletionChar(char):
+	return "(.,".find(char) > -1
+hxsublime_completion_hx_HxCompletion.supportedCompilerCompletionChar = HxCompletion_statics_supportedCompilerCompletionChar
+def HxCompletion_statics_highlightErrors(errors,view):
+	regions = []
+	_g = 0
+	while _g < len(errors):
+		e = errors[_g]
+		_g = _g + 1
+		l = e.line
+		left = e._hx_from
+		right = e.to
+		a = view.text_point(l, left)
+		b = view.text_point(l, right)
+		x = sublime_Region(a, b)
+		regions.append(x)
+		
+		hxsublime_panel_Panels.defaultPanel().status("Error", e.file + ":" + Std.string(l) + ": characters " + Std.string(left) + "-" + Std.string(right) + ": " + e.message)
+	
+	
+	view.add_regions("haxe-error", regions, "invalid", "dot")
+	
+hxsublime_completion_hx_HxCompletion.highlightErrors = HxCompletion_statics_highlightErrors
+def HxCompletion_statics_cancelCompletion(view,hideComplete = True):
+	if hideComplete is None:
+		hideComplete = True
+	
+	if hideComplete:
+		view.run_command("hide_auto_complete")
+	
+	return [("  ...  ", "")]
+	
+hxsublime_completion_hx_HxCompletion.cancelCompletion = HxCompletion_statics_cancelCompletion
+def HxCompletion_statics_triggerAsyncCompletion(view,options,showTopLevelSnippets = False):
+	if showTopLevelSnippets is None:
+		showTopLevelSnippets = False
+	
+	asyncOptions = options.copyAsAsync()
+	def _hx_local_0():
+		hxsublime_completion_hx_HxCompletion.triggerCompletion(view, asyncOptions, showTopLevelSnippets)
+	runComplete = _hx_local_0
+	sublime_Sublime.set_timeout(runComplete, 2)
+	
+hxsublime_completion_hx_HxCompletion.triggerAsyncCompletion = HxCompletion_statics_triggerAsyncCompletion
+def HxCompletion_statics_triggerManualCompletion(view,options):
+	hint = options.types().hasHint()
+	macroComp = options.macroCompletion()
+	def _hx_local_0():
+		if hint and macroComp:
+			view.run_command("hxsublime_commands__haxe_hint_display_macro_completion")
+		elif hint:
+			view.run_command("hxsublime_commands__haxe_hint_display_completion")
+		elif macroComp:
+			view.run_command("hxsublime_commands__haxe_display_macro_completion")
+		else:
+			view.run_command("hxsublime_commands__haxe_display_completion")
+	runComplete = _hx_local_0
+	sublime_Sublime.set_timeout(runComplete, 2)
+	
+hxsublime_completion_hx_HxCompletion.triggerManualCompletion = HxCompletion_statics_triggerManualCompletion
+
+
+hxsublime_completion_hx_HxCompletion._hx_class = hxsublime_completion_hx_HxCompletion
+hxsublime_completion_hx_HxCompletion._hx_class_name = "hxsublime.completion.hx.HxCompletion"
+_hx_classes['hxsublime.completion.hx.HxCompletion'] = hxsublime_completion_hx_HxCompletion
+hxsublime_completion_hx_HxCompletion._hx_fields = []
+hxsublime_completion_hx_HxCompletion._hx_props = []
+hxsublime_completion_hx_HxCompletion._hx_methods = []
+hxsublime_completion_hx_HxCompletion._hx_statics = ["triggerCompletion","autoComplete","getAvailableAsyncCompletions","completionResultWithSmartSnippets","createNewCompletions","createCompletionBuild","runCompilerCompletion","completionFinished","hintsToSublimeCompletions","combineHintsAndComps","isIntIteratorCompletion","isAfterIntIterator","isHintCompletion","isEquivalentCompletionAlreadyRunning","shouldIncludeTopLevelCompletion","getToplevelCompletions","createCompletionContext","updateCompletionCache","log_completion_status","outputToResult","useCompletionCache","supportedCompilerCompletionChar","highlightErrors","cancelCompletion","triggerAsyncCompletion","triggerManualCompletion"]
+hxsublime_completion_hx_HxCompletion._hx_interfaces = []
+
+# print hxsublime.completion.hx.TopLevelOptions.TopLevelOptions
+class hxsublime_completion_hx_TopLevelOptions:
+
+
+	def __init__(self,val = 0):
+		if val is None:
+			val = 0
+		
+		self._opt = val
+	
+	# var _opt
+	def val(self):
+		return self._opt
+
+	def set(self,val):
+		self._opt = self._opt | val
+
+	def hasTypes(self):
+		return (self._opt & 1) > 0
+
+	def hasLocals(self):
+		return (self._opt & 2) > 0
+
+	def hasKeywords(self):
+		return (self._opt & 4) > 0
+
+	def eq(self,other):
+		return self._opt == other._opt
+
+
+
+
+
+
+
+hxsublime_completion_hx_TopLevelOptions._hx_class = hxsublime_completion_hx_TopLevelOptions
+hxsublime_completion_hx_TopLevelOptions._hx_class_name = "hxsublime.completion.hx.TopLevelOptions"
+_hx_classes['hxsublime.completion.hx.TopLevelOptions'] = hxsublime_completion_hx_TopLevelOptions
+hxsublime_completion_hx_TopLevelOptions._hx_fields = ["_opt"]
+hxsublime_completion_hx_TopLevelOptions._hx_props = []
+hxsublime_completion_hx_TopLevelOptions._hx_methods = ["val","set","hasTypes","hasLocals","hasKeywords","eq"]
+hxsublime_completion_hx_TopLevelOptions._hx_statics = []
+hxsublime_completion_hx_TopLevelOptions._hx_interfaces = []
+
+# print hxsublime.completion.hx.Toplevel.TopLevel
+class hxsublime_completion_hx_TopLevel:
+
+	pass
+
+
+
+
+hxsublime_completion_hx_TopLevel.TOP_LEVEL_KEYWORDS = [("trace\ttoplevel", "trace"), ("this\ttoplevel", "this"), ("super\ttoplevel", "super")]
+def TopLevel_statics_getToplevelKeywords(ctx):
+	if ctx.is_new():
+		return []
+	else:
+		return hxsublime_completion_hx_TopLevel.TOP_LEVEL_KEYWORDS
+hxsublime_completion_hx_TopLevel.getToplevelKeywords = TopLevel_statics_getToplevelKeywords
+def TopLevel_statics_getBuildTarget(ctx):
+	if ctx.options.macroCompletion():
+		return "neko"
+	else:
+		return ctx.build().target().plattform
+hxsublime_completion_hx_TopLevel.getBuildTarget = TopLevel_statics_getBuildTarget
+def TopLevel_statics_getLocalVars(ctx):
+	comps = []
+	def _hx_local_0():
+		p = hxsublime_tools_Regex.variables.finditer(ctx.src())
+		return python_HaxeIterator(p)
+	
+	_it = _hx_local_0()
+	while _it.hasNext():
+		v = _it.next()
+		x = None
+		a = v.group(1) + "\tvar"
+		b = v.group(1)
+		x = (a, b)
+		
+		comps.append(x)
+		__builtin__.len(comps)
+		
+	
+	return comps
+	
+hxsublime_completion_hx_TopLevel.getLocalVars = TopLevel_statics_getLocalVars
+def TopLevel_statics_getLocalFunctions(ctx):
+	comps = []
+	def _hx_local_0():
+		p = hxsublime_tools_Regex.named_functions.finditer(ctx.src())
+		return python_HaxeIterator(p)
+	
+	_it = _hx_local_0()
+	while _it.hasNext():
+		i = _it.next()
+		f = i.group(1)
+		if f != "new":
+			x = (f + "\tfunction", f)
+			comps.append(x)
+			__builtin__.len(comps)
+			
+		
+		
+	
+	return comps
+	
+hxsublime_completion_hx_TopLevel.getLocalFunctions = TopLevel_statics_getLocalFunctions
+def TopLevel_statics_getLocalFunctionParams(ctx):
+	comps = []
+	_g = 0
+	_g1 = None
+	string = ctx.src()
+	_g1 = python_lib_Re_RegexHelper.findallDynamic(hxsublime_tools_Regex.function_params, string, None, None)
+	
+	while _g < len(_g1):
+		params_text = _g1[_g]
+		_g = _g + 1
+		cleaned_params_text = python_lib_Re.sub(hxsublime_tools_Regex.param_default, "", params_text)
+		params_list = cleaned_params_text.split(",")
+		_g2 = 0
+		while _g2 < len(params_list):
+			param = params_list[_g2]
+			_g2 = _g2 + 1
+			a = param.strip(None)
+			if StringTools.startsWith(a, "?"):
+				a = python_Tools.substr(a, 1, None)
+			
+			idx = a.find(":")
+			if idx > -1:
+				a = python_Tools.substring(a, 0, idx)
+			
+			idx1 = a.find("=")
+			if idx1 > -1:
+				a = python_Tools.substring(a, 0, idx1)
+			
+			a = a.strip(None)
+			cm = (a + "\tvar", a)
+			if not Lambda.has(comps, cm):
+				comps.append(cm)
+				__builtin__.len(comps)
+			
+			
+		
+		
+	
+	
+	return comps
+	
+hxsublime_completion_hx_TopLevel.getLocalFunctionParams = TopLevel_statics_getLocalFunctionParams
+def TopLevel_statics_getLocalVarsAndFunctions(ctx):
+	comps = []
+	x = hxsublime_completion_hx_TopLevel.getLocalVars(ctx)
+	comps.extend(x)
+	
+	x = hxsublime_completion_hx_TopLevel.getLocalFunctions(ctx)
+	comps.extend(x)
+	
+	x = hxsublime_completion_hx_TopLevel.getLocalFunctionParams(ctx)
+	comps.extend(x)
+	
+	return comps
+	
+hxsublime_completion_hx_TopLevel.getLocalVarsAndFunctions = TopLevel_statics_getLocalVarsAndFunctions
+def TopLevel_statics_getImports(ctx):
+	imports = None
+	string = ctx.src()
+	imports = python_lib_Re_RegexHelper.findallDynamic(hxsublime_tools_Regex.import_line, string, None, None)
+	
+	imported = []
+	_g = 0
+	while _g < len(imports):
+		i = imports[_g]
+		_g = _g + 1
+		imp = i[1]
+		imported.append(imp)
+		__builtin__.len(imported)
+		
+	
+	
+	return imported
+	
+hxsublime_completion_hx_TopLevel.getImports = TopLevel_statics_getImports
+def TopLevel_statics_getUsings(ctx):
+	usings = None
+	string = ctx.src()
+	usings = python_lib_Re_RegexHelper.findallDynamic(hxsublime_tools_Regex.using_line, string, None, None)
+	
+	used = []
+	_g = 0
+	while _g < len(usings):
+		i = usings[_g]
+		_g = _g + 1
+		imp = i[1]
+		used.append(imp)
+		__builtin__.len(used)
+		
+	
+	
+	return used
+	
+hxsublime_completion_hx_TopLevel.getUsings = TopLevel_statics_getUsings
+def TopLevel_statics_getImportsAndUsings(ctx):
+	res = hxsublime_completion_hx_TopLevel.getImports(ctx)
+	a = hxsublime_completion_hx_TopLevel.getUsings(ctx)
+	res = res + a
+	
+	return res
+	
+hxsublime_completion_hx_TopLevel.getImportsAndUsings = TopLevel_statics_getImportsAndUsings
+def TopLevel_statics_haxeTypeAsCompletion(type):
+	insert = type.full_pack_with_optional_module_type_and_enum_value
+	display = type.type_name_with_optional_enum_value
+	display = display + "\t" + type.get_type_hint
+	return (display, insert)
+	
+hxsublime_completion_hx_TopLevel.haxeTypeAsCompletion = TopLevel_statics_haxeTypeAsCompletion
+def TopLevel_statics_getTypeComps(ctx,bundle,imported):
+	build_target = hxsublime_completion_hx_TopLevel.getBuildTarget(ctx)
+	comps = []
+	startTime = python_lib_Time.time()
+	allTypes = bundle.allTypes()
+	runTime0 = python_lib_Time.time() - startTime
+	_g = 0
+	while _g < len(allTypes):
+		t = allTypes[_g]
+		_g = _g + 1
+		if ctx.build().isTypeAvailable(t):
+			snippets = t.toSnippets(imported, ctx.orig_file())
+			comps.extend(snippets)
+		
+		
+	
+	
+	runTime1 = python_lib_Time.time() - startTime
+	_g = 0
+	_g1 = bundle.packs()
+	while _g < len(_g1):
+		p = _g1[_g]
+		_g = _g + 1
+		if ctx.build().isPackAvailable(p):
+			cm = (p + "\tpackage", p)
+			comps.append(cm)
+			__builtin__.len(comps)
+			
+		
+		
+	
+	
+	runTime2 = python_lib_Time.time() - startTime
+	haxe_Log.trace("get_type_comps time0" + Std.string(runTime0), _Hx_AnonObject(fileName = "Toplevel.hx" ,lineNumber = 170 ,className = "hxsublime.completion.hx.TopLevel" ,methodName = "getTypeComps" ))
+	haxe_Log.trace("get_type_comps time1" + Std.string(runTime1), _Hx_AnonObject(fileName = "Toplevel.hx" ,lineNumber = 171 ,className = "hxsublime.completion.hx.TopLevel" ,methodName = "getTypeComps" ))
+	haxe_Log.trace("get_type_comps time2" + Std.string(runTime2), _Hx_AnonObject(fileName = "Toplevel.hx" ,lineNumber = 172 ,className = "hxsublime.completion.hx.TopLevel" ,methodName = "getTypeComps" ))
+	return comps
+	
+hxsublime_completion_hx_TopLevel.getTypeComps = TopLevel_statics_getTypeComps
+def TopLevel_statics_getToplevelCompletion(ctx):
+	startTime = python_lib_Time.time()
+	comps = []
+	if not ctx.is_new():
+		x = hxsublime_completion_hx_TopLevel.getToplevelKeywords(ctx)
+		comps.extend(x)
+		
+		x = hxsublime_completion_hx_TopLevel.getLocalVarsAndFunctions(ctx)
+		comps.extend(x)
+		
+	
+	
+	imported = hxsublime_completion_hx_TopLevel.getImportsAndUsings(ctx)
+	runTime1 = python_lib_Time.time() - startTime
+	build_bundle = ctx.build().getTypes()
+	runTime2 = python_lib_Time.time() - startTime
+	std_bundle = ctx.build().stdBundle()
+	def _hx_local_0(t):
+		return not t.is_private or t._file == ctx.orig_file()
+	filterPrivates = _hx_local_0
+	merged_bundle = std_bundle.merge(build_bundle).filter(filterPrivates)
+	runTime3 = python_lib_Time.time() - startTime
+	comps1 = hxsublime_completion_hx_TopLevel.getTypeComps(ctx, merged_bundle, imported)
+	runTime4 = python_lib_Time.time() - startTime
+	comps.extend(comps1)
+	runTime = python_lib_Time.time() - startTime
+	haxe_Log.trace("TOP LEVEL COMPLETION TIME1:" + Std.string(runTime1), _Hx_AnonObject(fileName = "Toplevel.hx" ,lineNumber = 221 ,className = "hxsublime.completion.hx.TopLevel" ,methodName = "getToplevelCompletion" ))
+	haxe_Log.trace("TOP LEVEL COMPLETION TIME2:" + Std.string(runTime2), _Hx_AnonObject(fileName = "Toplevel.hx" ,lineNumber = 222 ,className = "hxsublime.completion.hx.TopLevel" ,methodName = "getToplevelCompletion" ))
+	haxe_Log.trace("TOP LEVEL COMPLETION TIME3:" + Std.string(runTime3), _Hx_AnonObject(fileName = "Toplevel.hx" ,lineNumber = 223 ,className = "hxsublime.completion.hx.TopLevel" ,methodName = "getToplevelCompletion" ))
+	haxe_Log.trace("TOP LEVEL COMPLETION TIME4:" + Std.string(runTime4), _Hx_AnonObject(fileName = "Toplevel.hx" ,lineNumber = 224 ,className = "hxsublime.completion.hx.TopLevel" ,methodName = "getToplevelCompletion" ))
+	haxe_Log.trace("TOP LEVEL COMPLETION TIME END:" + Std.string(runTime), _Hx_AnonObject(fileName = "Toplevel.hx" ,lineNumber = 225 ,className = "hxsublime.completion.hx.TopLevel" ,methodName = "getToplevelCompletion" ))
+	return comps
+	
+hxsublime_completion_hx_TopLevel.getToplevelCompletion = TopLevel_statics_getToplevelCompletion
+def TopLevel_statics_getToplevelCompletionFiltered(ctx):
+	comps = hxsublime_completion_hx_TopLevel.getToplevelCompletion(ctx)
+	haxe_Log.trace(ctx.prefix, _Hx_AnonObject(fileName = "Toplevel.hx" ,lineNumber = 234 ,className = "hxsublime.completion.hx.TopLevel" ,methodName = "getToplevelCompletionFiltered" ))
+	return hxsublime_completion_hx_TopLevel.filterTopLevelCompletions(ctx.prefix, comps)
+	
+hxsublime_completion_hx_TopLevel.getToplevelCompletionFiltered = TopLevel_statics_getToplevelCompletionFiltered
+def TopLevel_statics_filterTopLevelCompletions(prefix,all_comps):
+	comps = []
+	haxe_Log.trace("c : " + prefix, _Hx_AnonObject(fileName = "Toplevel.hx" ,lineNumber = 242 ,className = "hxsublime.completion.hx.TopLevel" ,methodName = "filterTopLevelCompletions" ))
+	if __builtin__.len(prefix) == 0:
+		comps = __builtin__.list(all_comps)
+	else:
+		test = []
+		_g1 = 0
+		_g = __builtin__.len(prefix)
+		while _g1 < _g:
+			def _hx_local_1():
+				nonlocal _g1
+				_hx_local_0 = _g1
+				_g1 = _g1 + 1
+				return _hx_local_0
+				
+			
+			i = _hx_local_1()
+			c = prefix[i]
+			isLower = "abcdefghijklmnopqrstuvwxyz".find(c) > -1
+			isUpper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".find(c) > -1
+			is_digit = "0123456789".find(c) > -1
+			is_special = "$_#".find(c) > -1
+			if isLower or isUpper or is_digit or is_special:
+				offsetUpper = c.upper()
+				offsetLower = c.lower()
+				test.append(offsetLower)
+				__builtin__.len(test)
+				
+			
+			
+		
+		
+		_g = 0
+		while _g < len(all_comps):
+			c = all_comps[_g]
+			_g = _g + 1
+			found = True
+			id = None
+			_this = c[1]
+			id = _this.lower()
+			
+			oldId = id
+			_g1 = 0
+			while _g1 < len(test):
+				cur = test[_g1]
+				_g1 = _g1 + 1
+				if found:
+					index = id.find(cur)
+					if index > -1:
+						id = python_Tools.substr(id, index + 1, None)
+					else:
+						found = False
+						break
+					
+				
+				
+			
+			
+			if found:
+				comps.append(c)
+				__builtin__.len(comps)
+			
+			
+		
+		
+	
+	haxe_Log.trace("number of top level completions (all: " + Std.string(__builtin__.len(all_comps)) + ", filtered: " + Std.string(__builtin__.len(comps)) + ")", _Hx_AnonObject(fileName = "Toplevel.hx" ,lineNumber = 303 ,className = "hxsublime.completion.hx.TopLevel" ,methodName = "filterTopLevelCompletions" ))
+	return comps
+	
+hxsublime_completion_hx_TopLevel.filterTopLevelCompletions = TopLevel_statics_filterTopLevelCompletions
+
+
+hxsublime_completion_hx_TopLevel._hx_class = hxsublime_completion_hx_TopLevel
+hxsublime_completion_hx_TopLevel._hx_class_name = "hxsublime.completion.hx.TopLevel"
+_hx_classes['hxsublime.completion.hx.TopLevel'] = hxsublime_completion_hx_TopLevel
+hxsublime_completion_hx_TopLevel._hx_fields = []
+hxsublime_completion_hx_TopLevel._hx_props = []
+hxsublime_completion_hx_TopLevel._hx_methods = []
+hxsublime_completion_hx_TopLevel._hx_statics = ["TOP_LEVEL_KEYWORDS","getToplevelKeywords","getBuildTarget","getLocalVars","getLocalFunctions","getLocalFunctionParams","getLocalVarsAndFunctions","getImports","getUsings","getImportsAndUsings","haxeTypeAsCompletion","getTypeComps","getToplevelCompletion","getToplevelCompletionFiltered","filterTopLevelCompletions"]
+hxsublime_completion_hx_TopLevel._hx_interfaces = []
+
+# print hxsublime.completion.hxml.HxmlCompletion.HxmlCompletion
+class hxsublime_completion_hxml_HxmlCompletion:
+
+	pass
+
+
+
+
+hxsublime_completion_hxml_HxmlCompletion.libFlag = python_lib_Re.compile("-lib\\s+(.*?)")
+def HxmlCompletion_statics_autoComplete(project,view,offset,prefix):
+	src = view.substr(sublime_Region(0, offset))
+	currentLine = None
+	startIndex = src.find("\n") + 1
+	currentLine = python_Tools.substring(src, startIndex, offset)
+	
+	m = hxsublime_completion_hxml_HxmlCompletion.libFlag.match(currentLine)
 	if m is not None:
-		return project.haxelib_manager().get_completions()
+		return project.haxelibManager().getCompletions()
 	else:
 		return []
 	
-hxsublime_completion_hxml_Base.auto_complete = Base_statics_auto_complete
+hxsublime_completion_hxml_HxmlCompletion.autoComplete = HxmlCompletion_statics_autoComplete
 
 
-hxsublime_completion_hxml_Base._hx_class = hxsublime_completion_hxml_Base
-hxsublime_completion_hxml_Base._hx_class_name = "hxsublime.completion.hxml.Base"
-_hx_classes['hxsublime.completion.hxml.Base'] = hxsublime_completion_hxml_Base
-hxsublime_completion_hxml_Base._hx_fields = []
-hxsublime_completion_hxml_Base._hx_props = []
-hxsublime_completion_hxml_Base._hx_methods = []
-hxsublime_completion_hxml_Base._hx_statics = ["lib_flag","auto_complete"]
-hxsublime_completion_hxml_Base._hx_interfaces = []
+hxsublime_completion_hxml_HxmlCompletion._hx_class = hxsublime_completion_hxml_HxmlCompletion
+hxsublime_completion_hxml_HxmlCompletion._hx_class_name = "hxsublime.completion.hxml.HxmlCompletion"
+_hx_classes['hxsublime.completion.hxml.HxmlCompletion'] = hxsublime_completion_hxml_HxmlCompletion
+hxsublime_completion_hxml_HxmlCompletion._hx_fields = []
+hxsublime_completion_hxml_HxmlCompletion._hx_props = []
+hxsublime_completion_hxml_HxmlCompletion._hx_methods = []
+hxsublime_completion_hxml_HxmlCompletion._hx_statics = ["libFlag","autoComplete"]
+hxsublime_completion_hxml_HxmlCompletion._hx_interfaces = []
 
-# print hxsublime.completion.hxsl.Base.Base
-class hxsublime_completion_hxsl_Base:
+# print hxsublime.completion.hxsl.HxslCompletion.HxslCompletion
+class hxsublime_completion_hxsl_HxslCompletion:
 
 	pass
 
 
 
 
-def Base_statics_auto_complete(project,view,offset,prefix):
+def HxslCompletion_statics_autoComplete(project,view,offset,prefix):
 	comps = []
 	_g = 0
 	_g1 = ["Float", "Float2", "Float3", "Float4", "Matrix", "M44", "M33", "M34", "M43", "Texture", "CubeTexture", "Int", "Color", "include"]
@@ -10088,19 +9967,19 @@ def Base_statics_auto_complete(project,view,offset,prefix):
 	
 	return comps
 	
-hxsublime_completion_hxsl_Base.auto_complete = Base_statics_auto_complete
+hxsublime_completion_hxsl_HxslCompletion.autoComplete = HxslCompletion_statics_autoComplete
 
 
-hxsublime_completion_hxsl_Base._hx_class = hxsublime_completion_hxsl_Base
-hxsublime_completion_hxsl_Base._hx_class_name = "hxsublime.completion.hxsl.Base"
-_hx_classes['hxsublime.completion.hxsl.Base'] = hxsublime_completion_hxsl_Base
-hxsublime_completion_hxsl_Base._hx_fields = []
-hxsublime_completion_hxsl_Base._hx_props = []
-hxsublime_completion_hxsl_Base._hx_methods = []
-hxsublime_completion_hxsl_Base._hx_statics = ["auto_complete"]
-hxsublime_completion_hxsl_Base._hx_interfaces = []
+hxsublime_completion_hxsl_HxslCompletion._hx_class = hxsublime_completion_hxsl_HxslCompletion
+hxsublime_completion_hxsl_HxslCompletion._hx_class_name = "hxsublime.completion.hxsl.HxslCompletion"
+_hx_classes['hxsublime.completion.hxsl.HxslCompletion'] = hxsublime_completion_hxsl_HxslCompletion
+hxsublime_completion_hxsl_HxslCompletion._hx_fields = []
+hxsublime_completion_hxsl_HxslCompletion._hx_props = []
+hxsublime_completion_hxsl_HxslCompletion._hx_methods = []
+hxsublime_completion_hxsl_HxslCompletion._hx_statics = ["autoComplete"]
+hxsublime_completion_hxsl_HxslCompletion._hx_interfaces = []
 
-# print hxsublime.panel.Base.PanelCloseListener
+# print hxsublime.panel.Panels.PanelCloseListener
 class hxsublime_panel_PanelCloseListener(sublime_EventListener):
 
 	def on_close(self,view):
@@ -10110,25 +9989,25 @@ class hxsublime_panel_PanelCloseListener(sublime_EventListener):
 		
 		win_id = win.id()
 		view_id = view.id()
-		if python_lib_DictImpl.hasKey(hxsublime_panel_Panels._slide_panel.h, win_id):
-			panel = hxsublime_panel_Panels.slide_panel(win)
-			if panel.output_view is not None and view_id == panel.output_view.id():
-				panel.output_view = None
+		if python_lib_DictImpl.hasKey(hxsublime_panel_Panels._slidePanels.h, win_id):
+			panel = hxsublime_panel_Panels.slidePanel(win)
+			if panel.outputView is not None and view_id == panel.outputView.id():
+				panel.outputView = None
 			
 		
 		
 		panel_win_id = view.settings().get("haxe_panel_win_id")
 		if panel_win_id is not None:
 			_g = 0
-			_g1 = [hxsublime_panel_Panels._tab_panel, hxsublime_panel_Panels._debug_panel]
+			_g1 = [hxsublime_panel_Panels._tabPanels, hxsublime_panel_Panels._debugPanels]
 			while _g < len(_g1):
 				p = _g1[_g]
 				_g = _g + 1
-				panel = p.get_or_default(panel_win_id, None)
-				if panel is not None and panel.output_view is not None and view_id == panel.output_view_id:
-					haxe_Log.trace("panel safely removed", _Hx_AnonObject(fileName = "Base.hx" ,lineNumber = 43 ,className = "hxsublime.panel.PanelCloseListener" ,methodName = "on_close" ))
-					panel.output_view = None
-					panel.output_view_id = None
+				panel = p.getOrDefault(panel_win_id, None)
+				if panel is not None and panel.outputView is not None and view_id == panel.outputViewId:
+					haxe_Log.trace("panel safely removed", _Hx_AnonObject(fileName = "Panels.hx" ,lineNumber = 43 ,className = "hxsublime.panel.PanelCloseListener" ,methodName = "on_close" ))
+					panel.outputView = None
+					panel.outputViewId = None
 				
 				
 			
@@ -10156,12 +10035,9 @@ hxsublime_panel_PanelCloseListener._hx_super = sublime_EventListener
 class hxsublime_tools_Cache:
 
 
-	def __init__(self,cache_time = -1,data = None):
+	def __init__(self,data,cache_time = -1):
 		if cache_time is None:
 			cache_time = -1
-		
-		if data is None:
-			data = None
 		
 		self.data = data
 		self.cache_time = cache_time
@@ -10174,12 +10050,12 @@ class hxsublime_tools_Cache:
 		self.data.set(id, _Hx_AnonObject(time = python_lib_Time.time() ,val = value ))
 
 	def exists(self,id):
-		return self.get_or_default(id, None) is not None
+		return self.getOrDefault(id, None) is not None
 
-	def get_or_insert(self,id,creator):
+	def getOrInsert(self,id,creator):
 		res = None
 		if self.data.exists(id):
-			res = self._get_val(id)
+			res = self.unsafeGetVal(id)
 		else:
 			res = creator()
 			self.insert(id, res)
@@ -10187,39 +10063,39 @@ class hxsublime_tools_Cache:
 		return res
 	
 
-	def _get_val(self,id):
+	def unsafeGetVal(self,id):
 		return self.data.get(id).val
 
-	def _cache_invalid(self,id):
-		return not self._cache_valid(id)
+	def isCacheInvalid(self,id):
+		return not self.isCacheValid(id)
 
-	def _cache_valid(self,id):
+	def isCacheValid(self,id):
 		now = python_lib_Time.time()
 		return now - self.data.get(id).time <= self.cache_time
 	
 
-	def get_or_default(self,id,defaultVal = None):
+	def getOrDefault(self,id,defaultVal = None):
 		if defaultVal is None:
 			defaultVal = None
 		
 		res = defaultVal
 		if self.data.exists(id):
-			if self.time_driven and self._cache_invalid(id):
+			if self.time_driven and self.isCacheInvalid(id):
 				self.data.remove(id)
 			else:
-				res = self._get_val(id)
+				res = self.unsafeGetVal(id)
 		
 		return res
 	
 
-	def get_and_delete(self,id,defaultVal = None):
+	def getAndDelete(self,id,defaultVal = None):
 		if defaultVal is None:
 			defaultVal = None
 		
 		val = defaultVal
 		if self.data.exists(id):
-			if not self.time_driven or self._cache_valid(id):
-				val = self._get_val(id)
+			if not self.time_driven or self.isCacheValid(id):
+				val = self.unsafeGetVal(id)
 			
 			self.data.remove(id)
 		
@@ -10243,11 +10119,11 @@ hxsublime_tools_Cache._hx_class_name = "hxsublime.tools.Cache"
 _hx_classes['hxsublime.tools.Cache'] = hxsublime_tools_Cache
 hxsublime_tools_Cache._hx_fields = ["time_driven","cache_time","data"]
 hxsublime_tools_Cache._hx_props = []
-hxsublime_tools_Cache._hx_methods = ["insert","exists","get_or_insert","_get_val","_cache_invalid","_cache_valid","get_or_default","get_and_delete","delete"]
+hxsublime_tools_Cache._hx_methods = ["insert","exists","getOrInsert","unsafeGetVal","isCacheInvalid","isCacheValid","getOrDefault","getAndDelete","delete"]
 hxsublime_tools_Cache._hx_statics = []
 hxsublime_tools_Cache._hx_interfaces = []
 
-# print hxsublime.panel.Base.Panels
+# print hxsublime.panel.Panels.Panels
 class hxsublime_panel_Panels:
 
 	pass
@@ -10255,10 +10131,10 @@ class hxsublime_panel_Panels:
 
 
 
-hxsublime_panel_Panels._tab_panel = hxsublime_tools_Cache(None, haxe_ds_IntMap())
-hxsublime_panel_Panels._debug_panel = hxsublime_tools_Cache(None, haxe_ds_IntMap())
-hxsublime_panel_Panels._slide_panel = haxe_ds_IntMap()
-def Panels_statics_tab_panel(win = None):
+hxsublime_panel_Panels._tabPanels = hxsublime_tools_Cache(haxe_ds_IntMap())
+hxsublime_panel_Panels._debugPanels = hxsublime_tools_Cache(haxe_ds_IntMap())
+hxsublime_panel_Panels._slidePanels = haxe_ds_IntMap()
+def Panels_statics_tabPanel(win = None):
 	if win is None:
 		win = None
 	
@@ -10268,12 +10144,12 @@ def Panels_statics_tab_panel(win = None):
 	def _hx_local_1():
 		def _hx_local_0():
 			return hxsublime_panel_TabPanel(win, "Haxe Output")
-		return hxsublime_panel_Panels._tab_panel.get_or_insert(win.id(), _hx_local_0)
+		return hxsublime_panel_Panels._tabPanels.getOrInsert(win.id(), _hx_local_0)
 	
 	return _hx_local_1()
 	
-hxsublime_panel_Panels.tab_panel = Panels_statics_tab_panel
-def Panels_statics_debug_panel(win = None):
+hxsublime_panel_Panels.tabPanel = Panels_statics_tabPanel
+def Panels_statics_debugPanel(win = None):
 	if win is None:
 		win = None
 	
@@ -10283,29 +10159,22 @@ def Panels_statics_debug_panel(win = None):
 	def _hx_local_1():
 		def _hx_local_0():
 			return hxsublime_panel_TabPanel(win, "Haxe Plugin Debug Panel")
-		return hxsublime_panel_Panels._debug_panel.get_or_insert(win.id(), _hx_local_0)
+		return hxsublime_panel_Panels._debugPanels.getOrInsert(win.id(), _hx_local_0)
 	
 	return _hx_local_1()
 	
-hxsublime_panel_Panels.debug_panel = Panels_statics_debug_panel
-def Panels_statics___slide_panel(win = None):
+hxsublime_panel_Panels.debugPanel = Panels_statics_debugPanel
+def Panels_statics_defaultPanel(win = None):
 	if win is None:
 		win = None
 	
-	return hxsublime_panel_Panels.tab_panel(win)
-	
-hxsublime_panel_Panels.__slide_panel = Panels_statics___slide_panel
-def Panels_statics_default_panel(win = None):
-	if win is None:
-		win = None
-	
-	if hxsublime_Settings.use_slide_panel():
-		return hxsublime_panel_Panels.slide_panel(win)
+	if hxsublime_Settings.useSlidePanel():
+		return hxsublime_panel_Panels.slidePanel(win)
 	else:
-		return hxsublime_panel_Panels.tab_panel(win)
+		return hxsublime_panel_Panels.tabPanel(win)
 	
-hxsublime_panel_Panels.default_panel = Panels_statics_default_panel
-def Panels_statics_slide_panel(win = None):
+hxsublime_panel_Panels.defaultPanel = Panels_statics_defaultPanel
+def Panels_statics_slidePanel(win = None):
 	if win is None:
 		win = None
 	
@@ -10313,12 +10182,12 @@ def Panels_statics_slide_panel(win = None):
 		win = sublime_Sublime.active_window()
 	
 	win_id = win.id()
-	if not python_lib_DictImpl.hasKey(hxsublime_panel_Panels._slide_panel.h, win_id):
-		hxsublime_panel_Panels._slide_panel.set(win_id, hxsublime_panel_SlidePanel(win))
+	if not python_lib_DictImpl.hasKey(hxsublime_panel_Panels._slidePanels.h, win_id):
+		hxsublime_panel_Panels._slidePanels.set(win_id, hxsublime_panel_SlidePanel(win))
 	
-	return hxsublime_panel_Panels._slide_panel.h.get(win_id, None)
+	return hxsublime_panel_Panels._slidePanels.h.get(win_id, None)
 	
-hxsublime_panel_Panels.slide_panel = Panels_statics_slide_panel
+hxsublime_panel_Panels.slidePanel = Panels_statics_slidePanel
 
 
 hxsublime_panel_Panels._hx_class = hxsublime_panel_Panels
@@ -10327,7 +10196,7 @@ _hx_classes['hxsublime.panel.Panels'] = hxsublime_panel_Panels
 hxsublime_panel_Panels._hx_fields = []
 hxsublime_panel_Panels._hx_props = []
 hxsublime_panel_Panels._hx_methods = []
-hxsublime_panel_Panels._hx_statics = ["_tab_panel","_debug_panel","_slide_panel","tab_panel","debug_panel","__slide_panel","default_panel","slide_panel"]
+hxsublime_panel_Panels._hx_statics = ["_tabPanels","_debugPanels","_slidePanels","tabPanel","debugPanel","defaultPanel","slidePanel"]
 hxsublime_panel_Panels._hx_interfaces = []
 
 # print hxsublime.panel.SlidePanel.SlidePanel
@@ -10336,13 +10205,13 @@ class hxsublime_panel_SlidePanel:
 
 	def __init__(self,win):
 		self.win = win
-		self.output_view = None
+		self.outputView = None
 	
 	# var win
-	# var output_view
-	# var output_view_id
+	# var outputView
+	# var outputViewId
 	def clear(self):
-		self.output_view = self.win.create_output_panel("haxe")
+		self.outputView = self.win.create_output_panel("haxe")
 
 	def write(self,text,scope = None,show_timestamp = True):
 		if scope is None:
@@ -10352,14 +10221,14 @@ class hxsublime_panel_SlidePanel:
 			show_timestamp = True
 		
 		win = self.win
-		if self.output_view is None:
-			self.output_view = win.create_output_panel("haxe")
+		if self.outputView is None:
+			self.outputView = win.create_output_panel("haxe")
 		
-		self.output_view.settings().set("result_file_regex", hxsublime_panel_Tools.haxe_file_regex())
+		self.outputView.settings().set("result_file_regex", hxsublime_panel_Tools.haxeFileRegex())
 		win.create_output_panel("haxe")
-		panel = self.output_view
+		panel = self.outputView
 		if show_timestamp:
-			text = hxsublime_panel_Tools.timestamp_msg(text)
+			text = hxsublime_panel_Tools.timestampMsg(text)
 		
 		def _hx_local_0():
 			x = _Hx_AnonObject(panel = "output.haxe" )
@@ -10411,13 +10280,13 @@ class hxsublime_panel_SlidePanel:
 		if show_timestamp is None:
 			show_timestamp = True
 		
-		if hxsublime_panel_Tools.valid_message(msg):
+		if hxsublime_panel_Tools.isValidMessage(msg):
 			self.write(msg + "\n", scope, show_timestamp)
 		
 	
 
 	def status(self,title,msg):
-		if hxsublime_panel_Tools.valid_message(msg):
+		if hxsublime_panel_Tools.isValidMessage(msg):
 			self.writeln(title + ": " + msg)
 		
 
@@ -10430,7 +10299,7 @@ class hxsublime_panel_SlidePanel:
 hxsublime_panel_SlidePanel._hx_class = hxsublime_panel_SlidePanel
 hxsublime_panel_SlidePanel._hx_class_name = "hxsublime.panel.SlidePanel"
 _hx_classes['hxsublime.panel.SlidePanel'] = hxsublime_panel_SlidePanel
-hxsublime_panel_SlidePanel._hx_fields = ["win","output_view","output_view_id"]
+hxsublime_panel_SlidePanel._hx_fields = ["win","outputView","outputViewId"]
 hxsublime_panel_SlidePanel._hx_props = []
 hxsublime_panel_SlidePanel._hx_methods = ["clear","write","writeln","status"]
 hxsublime_panel_SlidePanel._hx_statics = []
@@ -10448,27 +10317,27 @@ class hxsublime_panel_TabPanel:
 			panel_syntax = "Packages/Haxe/Haxe.tmLanguage"
 		
 		self.win = win
-		self.output_view = None
-		self.output_view_id = None
+		self.outputView = None
+		self.outputViewId = None
 		self.all = []
 		self.panel_name = panel_name
 		self.panel_syntax = panel_syntax
 	
 	# var win
-	# var output_view
-	# var output_view_id
 	# var all
 	# var panel_name
 	# var panel_syntax
+	# var outputView
+	# var outputViewId
 	def clear(self):
 		None
 
-	def write(self,msg,scope = None,show_timestamp = True):
+	def write(self,msg,scope = None,showTimestamp = True):
 		if scope is None:
 			scope = None
 		
-		if show_timestamp is None:
-			show_timestamp = True
+		if showTimestamp is None:
+			showTimestamp = True
 		
 		_g = self
 		def _hx_local_3():
@@ -10497,22 +10366,22 @@ class hxsublime_panel_TabPanel:
 			_g.all = _g1
 			
 			msg1 = None
-			if show_timestamp:
-				msg1 = hxsublime_panel_Tools.timestamp_msg(msg)
+			if showTimestamp:
+				msg1 = hxsublime_panel_Tools.timestampMsg(msg)
 			else:
 				msg1 = msg
-			if hxsublime_panel_Tools.valid_message(msg):
+			if hxsublime_panel_Tools.isValidMessage(msg):
 				_g.all = [msg1] + _g.all
-				v = _g.output_view
+				v = _g.outputView
 				if v is None:
-					v = hxsublime_tools_ViewTools.find_view_by_name(_g.panel_name)
+					v = hxsublime_tools_ViewTools.findViewByName(_g.panel_name)
 					if v is None:
-						v = hxsublime_panel_TabPanel.make_tab_panel(_g.win, _g.panel_name, _g.panel_syntax)
+						v = hxsublime_panel_TabPanel.makeTabPanel(_g.win, _g.panel_name, _g.panel_syntax)
 						hxsublime_tools_ViewTools.replaceContent(v, "".join(_g.all))
 					
 					
-					_g.output_view = v
-					_g.output_view_id = v.id()
+					_g.outputView = v
+					_g.outputViewId = v.id()
 				
 				
 				if v is not None:
@@ -10529,18 +10398,18 @@ class hxsublime_panel_TabPanel:
 		sublime_Sublime.set_timeout(f, 40)
 	
 
-	def writeln(self,msg,scope = None,show_timestamp = True):
+	def writeln(self,msg,scope = None,showTimestamp = True):
 		if scope is None:
 			scope = None
 		
-		if show_timestamp is None:
-			show_timestamp = True
+		if showTimestamp is None:
+			showTimestamp = True
 		
 		self.write(msg + "\n")
 	
 
 	def status(self,title,msg):
-		if hxsublime_panel_Tools.valid_message(msg):
+		if hxsublime_panel_Tools.isValidMessage(msg):
 			self.writeln(title + ": " + msg)
 		
 
@@ -10548,12 +10417,12 @@ class hxsublime_panel_TabPanel:
 
 
 
-def TabPanel_statics_make_tab_panel(win,name,syntax):
+def TabPanel_statics_makeTabPanel(win,name,syntax):
 	active = win.active_view()
 	v = win.new_file()
 	v.set_name(name)
 	v.settings().set("word_wrap", True)
-	v.settings().set("result_file_regex", hxsublime_panel_Tools.haxe_file_regex())
+	v.settings().set("result_file_regex", hxsublime_panel_Tools.haxeFileRegex())
 	v.settings().set("haxe_panel_win_id", win.id())
 	v.set_scratch(True)
 	v.set_syntax_file(syntax)
@@ -10562,16 +10431,16 @@ def TabPanel_statics_make_tab_panel(win,name,syntax):
 	win.focus_view(active)
 	return v
 	
-hxsublime_panel_TabPanel.make_tab_panel = TabPanel_statics_make_tab_panel
+hxsublime_panel_TabPanel.makeTabPanel = TabPanel_statics_makeTabPanel
 
 
 hxsublime_panel_TabPanel._hx_class = hxsublime_panel_TabPanel
 hxsublime_panel_TabPanel._hx_class_name = "hxsublime.panel.TabPanel"
 _hx_classes['hxsublime.panel.TabPanel'] = hxsublime_panel_TabPanel
-hxsublime_panel_TabPanel._hx_fields = ["win","output_view","output_view_id","all","panel_name","panel_syntax"]
+hxsublime_panel_TabPanel._hx_fields = ["win","all","panel_name","panel_syntax","outputView","outputViewId"]
 hxsublime_panel_TabPanel._hx_props = []
 hxsublime_panel_TabPanel._hx_methods = ["clear","write","writeln","status"]
-hxsublime_panel_TabPanel._hx_statics = ["make_tab_panel"]
+hxsublime_panel_TabPanel._hx_statics = ["makeTabPanel"]
 hxsublime_panel_TabPanel._hx_interfaces = []
 
 # print hxsublime.panel.Tools.Tools
@@ -10582,15 +10451,15 @@ class hxsublime_panel_Tools:
 
 
 
-def Tools_statics_haxe_file_regex():
-	return "^[0-9]{2}:[0-9]{2}:[0-9]{2}[ ]Error:[ ]" + python_Tools.substr(hxsublime_project_Tools.haxe_file_regex, 1, None)
-hxsublime_panel_Tools.haxe_file_regex = Tools_statics_haxe_file_regex
-def Tools_statics_timestamp_msg(msg):
+def Tools_statics_haxeFileRegex():
+	return "^[0-9]{2}:[0-9]{2}:[0-9]{2}[ ]Error:[ ]" + python_Tools.substr(hxsublime_project_Tools.haxeFileRegex, 1, None)
+hxsublime_panel_Tools.haxeFileRegex = Tools_statics_haxeFileRegex
+def Tools_statics_timestampMsg(msg):
 	return python_lib_datetime_DateTime.now().strftime("%H:%M:%S") + " " + msg
-hxsublime_panel_Tools.timestamp_msg = Tools_statics_timestamp_msg
-def Tools_statics_valid_message(msg):
+hxsublime_panel_Tools.timestampMsg = Tools_statics_timestampMsg
+def Tools_statics_isValidMessage(msg):
 	return msg is not None and msg != "" and msg != "\n"
-hxsublime_panel_Tools.valid_message = Tools_statics_valid_message
+hxsublime_panel_Tools.isValidMessage = Tools_statics_isValidMessage
 
 
 hxsublime_panel_Tools._hx_class = hxsublime_panel_Tools
@@ -10599,199 +10468,76 @@ _hx_classes['hxsublime.panel.Tools'] = hxsublime_panel_Tools
 hxsublime_panel_Tools._hx_fields = []
 hxsublime_panel_Tools._hx_props = []
 hxsublime_panel_Tools._hx_methods = []
-hxsublime_panel_Tools._hx_statics = ["haxe_file_regex","timestamp_msg","valid_message"]
+hxsublime_panel_Tools._hx_statics = ["haxeFileRegex","timestampMsg","isValidMessage"]
 hxsublime_panel_Tools._hx_interfaces = []
-
-# print hxsublime.project.Base.Projects
-class hxsublime_project_Projects:
-
-	pass
-
-
-
-
-hxsublime_project_Projects.projects = hxsublime_tools_Cache(None, haxe_ds_StringMap())
-hxsublime_project_Projects.userHome = python_lib_os_Path.expanduser("~")
-hxsublime_project_Projects.logFile = python_lib_os_Path.join(hxsublime_project_Projects.userHome, "st3_haxe_log.txt")
-hxsublime_project_Projects.nextServerPort = 6000
-def Projects_statics_fileLog(msg):
-	f = __builtin__.open(hxsublime_project_Projects.logFile, "a+")
-	f.write(Std.string(msg) + "\n")
-	f.close()
-	
-hxsublime_project_Projects.fileLog = Projects_statics_fileLog
-def Projects_statics_cleanup_projects():
-	win_ids = None
-	_g = []
-	_g1 = 0
-	_g2 = sublime_Sublime.windows()
-	while _g1 < len(_g2):
-		w = _g2[_g1]
-		_g1 = _g1 + 1
-		x = w.id()
-		_g.append(x)
-		__builtin__.len(_g)
-		
-	
-	
-	win_ids = _g
-	
-	remove = []
-	_it = hxsublime_project_Projects.projects.data.keys()
-	while _it.hasNext():
-		p = _it.next()
-		proj = hxsublime_project_Projects.projects.get_or_default(p, None)
-		if proj is not None and not Lambda.has(win_ids, proj.win_id):
-			remove.append(p)
-			__builtin__.len(remove)
-		
-		
-	
-	haxe_Log.trace(remove, _Hx_AnonObject(fileName = "Base.hx" ,lineNumber = 44 ,className = "hxsublime.project.Projects" ,methodName = "cleanup_projects" ))
-	_g1 = 0
-	while _g1 < len(remove):
-		pid = remove[_g1]
-		_g1 = _g1 + 1
-		haxe_Log.trace(pid, _Hx_AnonObject(fileName = "Base.hx" ,lineNumber = 46 ,className = "hxsublime.project.Projects" ,methodName = "cleanup_projects" ))
-		project = hxsublime_project_Projects.projects.data.get(pid).val
-		project.destroy()
-		haxe_Log.trace("delete project from memory", _Hx_AnonObject(fileName = "Base.hx" ,lineNumber = 49 ,className = "hxsublime.project.Projects" ,methodName = "cleanup_projects" ))
-		hxsublime_project_Projects.projects.data.remove(pid)
-	
-	
-	
-hxsublime_project_Projects.cleanup_projects = Projects_statics_cleanup_projects
-def Projects_statics_get_project_id(file,win):
-	id = None
-	if file is None:
-		id = "global" + Std.string(win.id())
-	else:
-		id = file
-	return id
-	
-hxsublime_project_Projects.get_project_id = Projects_statics_get_project_id
-def Projects_statics_get_window(view = None):
-	if view is None:
-		view = None
-	
-	win = None
-	if view is not None:
-		win = view.window()
-		if win is not None:
-			win = sublime_Sublime.active_window()
-		
-	
-	else:
-		win = sublime_Sublime.active_window()
-	return win
-	
-hxsublime_project_Projects.get_window = Projects_statics_get_window
-def Projects_statics_current_project(view = None):
-	if view is None:
-		view = None
-	
-	hxsublime_project_Projects.cleanup_projects()
-	file = hxsublime_tools_SublimeTools.getProjectFile()
-	win = hxsublime_project_Projects.get_window(view)
-	id = hxsublime_project_Projects.get_project_id(file, win)
-	haxe_Log.trace("project id:" + id, _Hx_AnonObject(fileName = "Base.hx" ,lineNumber = 85 ,className = "hxsublime.project.Projects" ,methodName = "current_project" ))
-	haxe_Log.trace("win.id:" + Std.string(win.id()), _Hx_AnonObject(fileName = "Base.hx" ,lineNumber = 87 ,className = "hxsublime.project.Projects" ,methodName = "current_project" ))
-	def _hx_local_0():
-		id1 = id
-		a1 = file
-		a2 = win
-		def _hx_local_1():
-			return hxsublime_project_Projects.create_project(id1, a1, a2)
-		return _hx_local_1
-	
-	res = hxsublime_project_Projects.projects.get_or_insert(id, _hx_local_0())
-	return res
-	
-hxsublime_project_Projects.current_project = Projects_statics_current_project
-def Projects_statics_create_project(id,file,win):
-	p = hxsublime_project_Project(id, file, win.id(), hxsublime_project_Projects.nextServerPort)
-	hxsublime_project_Projects.nextServerPort = hxsublime_project_Projects.nextServerPort + 20
-	return p
-	
-hxsublime_project_Projects.create_project = Projects_statics_create_project
-
-
-hxsublime_project_Projects._hx_class = hxsublime_project_Projects
-hxsublime_project_Projects._hx_class_name = "hxsublime.project.Projects"
-_hx_classes['hxsublime.project.Projects'] = hxsublime_project_Projects
-hxsublime_project_Projects._hx_fields = []
-hxsublime_project_Projects._hx_props = []
-hxsublime_project_Projects._hx_methods = []
-hxsublime_project_Projects._hx_statics = ["projects","userHome","logFile","nextServerPort","fileLog","cleanup_projects","get_project_id","get_window","current_project","create_project"]
-hxsublime_project_Projects._hx_interfaces = []
 
 # print hxsublime.project.CompletionState.ProjectCompletionState
 class hxsublime_project_ProjectCompletionState:
 
 
 	def __init__(self):
-		self.running = hxsublime_tools_Cache(None, haxe_ds_IntMap())
-		self.trigger = hxsublime_tools_Cache(1000, haxe_ds_IntMap())
-		self.current_id = None
+		self.running = hxsublime_tools_Cache(haxe_ds_IntMap())
+		self.trigger = hxsublime_tools_Cache(haxe_ds_IntMap(), 1000)
+		self.currentId = None
 		self.errors = []
-		self.async = hxsublime_tools_Cache(1000, haxe_ds_IntMap())
+		self.async = hxsublime_tools_Cache(haxe_ds_IntMap(), 1000)
 		self.current = _Hx_AnonObject(input = None ,output = None )
 	
 	# var running
 	# var trigger
-	# var current_id
+	# var currentId
 	# var errors
 	# var async
 	# var current
-	def add_completion_result(self,comp_result):
-		self.async.insert(comp_result.ctx.view_id, comp_result)
+	def addCompletionResult(self,compResult):
+		self.async.insert(compResult.ctx.view_id, compResult)
 
-	def is_equivalent_completion_already_running(self,ctx):
+	def isEquivalentCompletionAlreadyRunning(self,ctx):
 		complete_offset = ctx.complete_offset
 		view_id = ctx.view_id
-		last_completion_id = self.current_id
-		running_completion = self.running.get_or_default(last_completion_id, None)
+		last_completion_id = self.currentId
+		running_completion = self.running.getOrDefault(last_completion_id, None)
 		return running_completion is not None and running_completion[0] == complete_offset() and running_completion[1] == view_id
 	
 
-	def run_if_still_up_to_date(self,comp_id,run):
+	def runIfStillUpToDate(self,comp_id,run):
 		self.running.delete(comp_id)
-		if self.current_id == comp_id:
+		if self.currentId == comp_id:
 			run()
 		
 	
 
-	def set_new_completion(self,ctx):
+	def setNewCompletion(self,ctx):
 		def _hx_local_0():
 			a = ctx.complete_offset()
 			return (a, ctx.view_id)
 		
 		self.running.insert(ctx.id, _hx_local_0())
-		self.current_id = ctx.id
-		self.set_errors([])
+		self.currentId = ctx.id
+		self.setErrors([])
 	
 
-	def set_trigger(self,view,options):
-		haxe_Log.trace("SET TRIGGER", _Hx_AnonObject(fileName = "CompletionState.hx" ,lineNumber = 75 ,className = "hxsublime.project.ProjectCompletionState" ,methodName = "set_trigger" ))
+	def setTrigger(self,view,options):
+		haxe_Log.trace("SET TRIGGER", _Hx_AnonObject(fileName = "CompletionState.hx" ,lineNumber = 81 ,className = "hxsublime.project.ProjectCompletionState" ,methodName = "setTrigger" ))
 		self.trigger.insert(view.id(), options)
 	
 
-	def clear_completion(self):
+	def clearCompletion(self):
 		self.current = _Hx_AnonObject(input = None ,output = None )
 
-	def set_errors(self,errors):
+	def setErrors(self,errors):
 		self.errors = errors
 
-	def get_and_delete_trigger(self,view):
-		return self.trigger.get_and_delete(view.id(), None)
+	def getAndDeleteTrigger(self,view):
+		return self.trigger.getAndDelete(view.id(), None)
 
-	def get_and_delete_async(self,view):
-		return self.async.get_and_delete(view.id(), None)
+	def getAndDeleteAsync(self,view):
+		return self.async.getAndDelete(view.id(), None)
 
-	def get_async(self,view):
-		return self.async.get_or_default(view.id(), None)
+	def getAsync(self,view):
+		return self.async.getOrDefault(view.id(), None)
 
-	def delete_async(self,view):
+	def deleteAsync(self,view):
 		return self.async.delete(view.id())
 
 
@@ -10803,109 +10549,124 @@ class hxsublime_project_ProjectCompletionState:
 hxsublime_project_ProjectCompletionState._hx_class = hxsublime_project_ProjectCompletionState
 hxsublime_project_ProjectCompletionState._hx_class_name = "hxsublime.project.ProjectCompletionState"
 _hx_classes['hxsublime.project.ProjectCompletionState'] = hxsublime_project_ProjectCompletionState
-hxsublime_project_ProjectCompletionState._hx_fields = ["running","trigger","current_id","errors","async","current"]
+hxsublime_project_ProjectCompletionState._hx_fields = ["running","trigger","currentId","errors","async","current"]
 hxsublime_project_ProjectCompletionState._hx_props = []
-hxsublime_project_ProjectCompletionState._hx_methods = ["add_completion_result","is_equivalent_completion_already_running","run_if_still_up_to_date","set_new_completion","set_trigger","clear_completion","set_errors","get_and_delete_trigger","get_and_delete_async","get_async","delete_async"]
+hxsublime_project_ProjectCompletionState._hx_methods = ["addCompletionResult","isEquivalentCompletionAlreadyRunning","runIfStillUpToDate","setNewCompletion","setTrigger","clearCompletion","setErrors","getAndDeleteTrigger","getAndDeleteAsync","getAsync","deleteAsync"]
 hxsublime_project_ProjectCompletionState._hx_statics = []
 hxsublime_project_ProjectCompletionState._hx_interfaces = []
+
+class hxsublime_project_BuildType(_Hx_Enum):
+	def __init__(self, t, i, p): 
+		super(hxsublime_project_BuildType,self).__init__(t, i, p)
+
+
+hxsublime_project_BuildType.Build = hxsublime_project_BuildType("Build", 1, list())
+
+hxsublime_project_BuildType.Check = hxsublime_project_BuildType("Check", 2, list())
+
+hxsublime_project_BuildType.Run = hxsublime_project_BuildType("Run", 0, list())
+hxsublime_project_BuildType._hx_constructs = ["Build","Check","Run"]
+hxsublime_project_BuildType._hx_class = hxsublime_project_BuildType
+hxsublime_project_BuildType._hx_class_name = "hxsublime.project.BuildType"
+_hx_classes['hxsublime.project.BuildType'] = hxsublime_project_BuildType
 
 # print hxsublime.project.Project.Project
 class hxsublime_project_Project:
 
 
 	def __init__(self,id,file,win_id,server_port):
-		self.completion_context = hxsublime_project_ProjectCompletionState()
-		self._haxelib_manager = hxsublime_HaxeLibManager(self)
-		self.current_build = None
-		self.selecting_build = False
+		self.completionContext = hxsublime_project_ProjectCompletionState()
+		self._haxelibManager = hxsublime_HaxeLibManager(self)
+		self._currentBuild = None
+		self._selectingBuild = False
 		self.builds = []
-		self.win_id = win_id
+		self.winId = win_id
 		self.server = hxsublime_compiler_Server(server_port)
-		self.project_file = file
-		self.project_id = id
-		if self.project_file is not None:
-			self.project_path = python_lib_os_Path.normpath(python_lib_os_Path.dirname(self.project_file))
+		self._projectFile = file
+		self._projectId = id
+		if self._projectFile is not None:
+			self._projectPath = python_lib_os_Path.normpath(python_lib_os_Path.dirname(self._projectFile))
 		else:
-			self.project_path = None
-		self._update_compiler_info()
+			self._projectPath = None
+		self.updateCompilerInfo()
 	
-	# var completion_context
-	# var _haxelib_manager
-	# var current_build
-	# var selecting_build
+	# var _haxelibManager
+	# var _currentBuild
+	# var _selectingBuild
+	# var _projectFile
+	# var _projectId
+	# var _projectPath
+	# var _stdBundle
+	# var _stdPaths
+	# var _serverMode
+	# var completionContext
 	# var builds
-	# var win_id
+	# var winId
 	# var server
-	# var project_file
-	# var project_id
-	# var project_path
-	# var std_bundle
-	# var std_paths
-	# var server_mode
-	def haxelib_manager(self):
-		return self._haxelib_manager
+	def haxelibManager(self):
+		return self._haxelibManager
 
-	def project_dir(self,defaultVal):
-		if self.project_path is not None:
-			return self.project_path
+	def projectDir(self,defaultVal):
+		if self._projectPath is not None:
+			return self._projectPath
 		else:
 			return defaultVal
 
-	def nme_exec(self,view = None):
+	def nmeExec(self,view = None):
 		if view is None:
 			view = None
 		
-		return [hxsublime_Settings.haxelib_exec(), "run", "nme"]
+		return [hxsublime_Settings.haxelibExec(), "run", "nme"]
 	
 
-	def openfl_exec(self,view = None):
+	def openflExec(self,view = None):
 		if view is None:
 			view = None
 		
-		return [hxsublime_Settings.haxelib_exec(), "run", "openfl"]
+		return [hxsublime_Settings.haxelibExec(), "run", "openfl"]
 	
 
-	def haxelib_exec(self,view = None):
+	def haxelibExec(self,view = None):
 		if view is None:
 			view = None
 		
-		return [hxsublime_Settings.haxelib_exec()]
+		return [hxsublime_Settings.haxelibExec()]
 	
 
-	def haxe_exec(self,view = None):
+	def haxeExec(self,view = None):
 		if view is None:
 			view = None
 		
-		haxe_exec = hxsublime_Settings.haxe_exec(view)
-		if not python_lib_os_Path.isabs(haxe_exec) and haxe_exec != "haxe":
-			cwd = self.project_dir(".")
+		_hx_exec = hxsublime_Settings.haxeExec(view)
+		if not python_lib_os_Path.isabs(_hx_exec) and _hx_exec != "haxe":
+			cwd = self.projectDir(".")
 			def _hx_local_0():
-				_this = python_lib_os_Path.join(cwd, hxsublime_Settings.haxe_exec(view)).split("/")
+				_this = python_lib_os_Path.join(cwd, hxsublime_Settings.haxeExec(view)).split("/")
 				return python_lib_Os.sep.join(_this)
 			
-			haxe_exec = python_lib_os_Path.normpath(_hx_local_0())
+			_hx_exec = python_lib_os_Path.normpath(_hx_local_0())
 		
 		
-		return [haxe_exec]
+		return [_hx_exec]
 	
 
-	def haxe_env(self,view = None):
+	def haxeEnv(self,view = None):
 		if view is None:
 			view = None
 		
-		return hxsublime_project_Project._haxe_build_env(self.project_dir("."))
+		return hxsublime_project_Project.haxeBuildEnv(self.projectDir("."))
 	
 
-	def start_server(self,view):
-		cwd = self.project_dir(".")
-		haxe_exec = self.haxe_exec(view)[0]
-		env = self.haxe_env()
+	def startServer(self,view):
+		cwd = self.projectDir(".")
+		haxe_exec = self.haxeExec(view)[0]
+		env = self.haxeEnv()
 		self.server.start(haxe_exec, cwd, env)
 	
 
-	def restart_server(self,view):
+	def restartServer(self,view):
 		def _hx_local_0():
-			f = self.start_server
+			f = self.startServer
 			a1 = view
 			def _hx_local_1():
 				return f(a1)
@@ -10914,21 +10675,21 @@ class hxsublime_project_Project:
 		self.server.stop(_hx_local_0())
 	
 
-	def is_server_mode(self):
-		return self.server_mode and hxsublime_Settings.use_haxe_servermode()
+	def isServerMode(self):
+		return self._serverMode and hxsublime_Settings.useHaxeServermode()
 
-	def is_server_mode_for_builds(self):
-		return self.is_server_mode() and hxsublime_Settings.use_haxe_servermode_for_builds()
+	def isServerModeForBuilds(self):
+		return self.isServerMode() and hxsublime_Settings.useHaxeServermodeForBuilds()
 
-	def generate_build(self,view):
+	def generateBuild(self,view):
 		_g = self
 		fn = view.file_name()
 		def _hx_local_0():
-			return Std._hx_is(_g.current_build, hxsublime_build_HxmlBuild)
+			return Std._hx_is(_g._currentBuild, hxsublime_build_HxmlBuild)
 		is_hxml_build = _hx_local_0
-		if self.current_build is not None and is_hxml_build() and fn == self.current_build.build_file() and view.size() == 0:
+		if self._currentBuild is not None and is_hxml_build() and fn == self._currentBuild.buildFile() and view.size() == 0:
 			def _hx_local_1(v,e):
-				hxml_src = _g.current_build.make_hxml()
+				hxml_src = _g._currentBuild.makeHxml()
 				v.insert(e, 0, hxml_src)
 			
 			run_edit = _hx_local_1
@@ -10937,15 +10698,15 @@ class hxsublime_project_Project:
 		
 	
 
-	def select_build(self,view):
+	def selectBuild(self,view):
 		scopes = view.scope_name(view.sel()[0].end()).split(" ")
 		if Lambda.has(scopes, "source.hxml"):
 			view.run_command("save")
 		
-		self.extract_build_args(view, True)
+		self.extractBuildArgs(view, True)
 	
 
-	def extract_build_args(self,view = None,force_panel = False):
+	def extractBuildArgs(self,view = None,force_panel = False):
 		if view is None:
 			view = None
 		
@@ -10955,59 +10716,59 @@ class hxsublime_project_Project:
 		if view is None:
 			view = sublime_Sublime.active_window().active_view()
 		
-		folders = self._get_folders(view)
-		self.builds = self._find_builds_in_folders(folders)
+		folders = self.getFolders(view)
+		self.builds = self.findBuildsInFolders(folders)
 		num_builds = __builtin__.len(self.builds)
 		view_build_id = view.settings().get("haxe-current-build-id")
 		if view_build_id is not None and view_build_id < num_builds and not force_panel:
-			self._set_current_build(view, view_build_id)
+			self.setCurrentBuild(view, view_build_id)
 		elif num_builds == 1:
 			if force_panel:
 				sublime_Sublime.status_message("There is only one build")
 			
-			self._set_current_build(view, 0)
+			self.setCurrentBuild(view, 0)
 		
 		elif num_builds == 0 and force_panel:
 			sublime_Sublime.status_message("No build files found (e.g. hxml, nmml, xml)")
-			self._create_new_hxml(view, folders[0])
+			self.createNewHxml(view, folders[0])
 		
 		elif num_builds > 1 and force_panel:
-			self._show_build_selection_panel(view)
+			self.showBuildSelectionPanel(view)
 		else:
-			self._set_current_build(view, 0)
+			self.setCurrentBuild(view, 0)
 	
 
-	def has_build(self):
-		return self.current_build is not None
+	def hasBuild(self):
+		return self._currentBuild is not None
 
-	def check_build(self,view):
-		self._build(view, "check")
+	def checkBuild(self,view):
+		self.build(view, hxsublime_project_BuildType.Check)
 
-	def just_build(self,view):
-		self._build(view, "build")
+	def justBuild(self,view):
+		self.build(view, hxsublime_project_BuildType.Build)
 
-	def run_build(self,view):
-		self._build(view, "run")
+	def runBuild(self,view):
+		self.build(view, hxsublime_project_BuildType.Run)
 
-	def _update_compiler_info(self):
-		info = hxsublime_project_Project._collect_compiler_info(self.haxe_exec(), self.project_path)
+	def updateCompilerInfo(self):
+		info = hxsublime_project_Project.collectCompilerInfo(self.haxeExec(), self._projectPath)
 		bundle = info[0]
 		ver = info[1]
 		std_paths = info[2]
-		self.server_mode = ver is None or ver >= 209
-		self.std_bundle = bundle
-		self.std_paths = std_paths
+		self._serverMode = ver is None or ver >= 209
+		self._stdBundle = bundle
+		self._stdPaths = std_paths
 	
 
-	def _find_builds_in_folders(self,folders):
+	def findBuildsInFolders(self,folders):
 		builds = []
-		haxe_Log.trace("find builds start", _Hx_AnonObject(fileName = "Project.hx" ,lineNumber = 240 ,className = "hxsublime.project.Project" ,methodName = "_find_builds_in_folders" ))
+		haxe_Log.trace("find builds start", _Hx_AnonObject(fileName = "Project.hx" ,lineNumber = 257 ,className = "hxsublime.project.Project" ,methodName = "findBuildsInFolders" ))
 		_g = 0
 		while _g < len(folders):
 			f = folders[_g]
 			_g = _g + 1
 			x = None
-			_this = hxsublime_build_Tools.find_hxml_projects(self, f)
+			_this = hxsublime_build_Tools.findHxmlProjects(self, f)
 			def _hx_local_0(x1):
 				return x1
 			x = __builtin__.list(__builtin__.map(_hx_local_0, _this))
@@ -11015,7 +10776,7 @@ class hxsublime_project_Project:
 			builds.extend(x)
 			
 			x = None
-			_this = hxsublime_build_Tools.find_nme_projects(self, f)
+			_this = hxsublime_build_Tools.findNmeProjects(self, f)
 			def _hx_local_1(x1):
 				return x1
 			x = __builtin__.list(__builtin__.map(_hx_local_1, _this))
@@ -11023,7 +10784,7 @@ class hxsublime_project_Project:
 			builds.extend(x)
 			
 			x = None
-			_this = hxsublime_build_Tools.find_openfl_projects(self, f)
+			_this = hxsublime_build_Tools.findOpenflProjects(self, f)
 			def _hx_local_2(x1):
 				return x1
 			x = __builtin__.list(__builtin__.map(_hx_local_2, _this))
@@ -11032,37 +10793,37 @@ class hxsublime_project_Project:
 			
 		
 		
-		haxe_Log.trace("find builds end", _Hx_AnonObject(fileName = "Project.hx" ,lineNumber = 248 ,className = "hxsublime.project.Project" ,methodName = "_find_builds_in_folders" ))
+		haxe_Log.trace("find builds end", _Hx_AnonObject(fileName = "Project.hx" ,lineNumber = 265 ,className = "hxsublime.project.Project" ,methodName = "findBuildsInFolders" ))
 		return builds
 	
 
-	def _get_view_file_name(self,view):
+	def getViewFileName(self,view):
 		if view is None:
 			view = sublime_Sublime.active_window().active_view()
 		
 		return view.file_name()
 	
 
-	def _get_current_window(self,view):
-		return hxsublime_project_Tools.get_window(view)
+	def getCurrentWindow(self,view):
+		return hxsublime_project_Tools.getWindow(view)
 
-	def _get_folders(self,view):
-		win = self._get_current_window(view)
+	def getFolders(self,view):
+		win = self.getCurrentWindow(view)
 		folders = win.folders()
 		return folders
 	
 
-	def _create_new_hxml(self,view,folder):
+	def createNewHxml(self,view,folder):
 		win = sublime_Sublime.active_window()
 		f = python_lib_os_Path.join(folder, "build.hxml")
-		self.current_build = None
-		self.get_build(view)
-		self.current_build.setHxml(f)
+		self._currentBuild = None
+		self.getBuild(view)
+		self._currentBuild.setHxml(f)
 		win.open_file(f, sublime_Sublime.TRANSIENT)
-		self._set_current_build(view, 0)
+		self.setCurrentBuild(view, 0)
 	
 
-	def _show_build_selection_panel(self,view):
+	def showBuildSelectionPanel(self,view):
 		_g1 = self
 		buildsView = None
 		_g = []
@@ -11071,7 +10832,7 @@ class hxsublime_project_Project:
 		while _g11 < len(_g2):
 			b = _g2[_g11]
 			_g11 = _g11 + 1
-			x = [b.to_string(), python_lib_os_Path.basename(b.build_file())]
+			x = [b.toString(), python_lib_os_Path.basename(b.buildFile())]
 			_g.append(x)
 			__builtin__.len(_g)
 			
@@ -11079,61 +10840,59 @@ class hxsublime_project_Project:
 		
 		buildsView = _g
 		
-		self.selecting_build = True
+		self._selectingBuild = True
 		sublime_Sublime.status_message("Please select your build")
 		def _hx_local_0(i):
-			_g1.selecting_build = False
-			_g1._set_current_build(view, i)
+			_g1._selectingBuild = False
+			_g1.setCurrentBuild(view, i)
 		
-		on_selected = _hx_local_0
+		onSelected = _hx_local_0
 		win = sublime_Sublime.active_window()
-		win.show_quick_panel(buildsView, on_selected, sublime_Sublime.MONOSPACE_FONT)
+		win.show_quick_panel(buildsView, onSelected, sublime_Sublime.MONOSPACE_FONT)
 	
 
-	def _set_current_build(self,view,id):
-		haxe_Log.trace("_set_current_build", _Hx_AnonObject(fileName = "Project.hx" ,lineNumber = 307 ,className = "hxsublime.project.Project" ,methodName = "_set_current_build" ))
+	def setCurrentBuild(self,view,id):
+		haxe_Log.trace("setCurrentBuild", _Hx_AnonObject(fileName = "Project.hx" ,lineNumber = 327 ,className = "hxsublime.project.Project" ,methodName = "setCurrentBuild" ))
 		if id < 0 or id >= __builtin__.len(self.builds):
 			id = 0
 		
 		if __builtin__.len(self.builds) > 0:
 			view.settings().set("haxe-current-build-id", id)
-			self.current_build = self.builds[id]
-			self.current_build.set_std_bundle(self.std_bundle)
-			view.set_status("haxe-build", self.current_build.to_string())
+			self._currentBuild = self.builds[id]
+			self._currentBuild.setStdBundle(self._stdBundle)
+			view.set_status("haxe-build", self._currentBuild.toString())
 		
 		else:
 			view.set_status("haxe-build", "No build found/selected")
 	
 
-	def _build(self,view,type = "run"):
-		if type is None:
-			type = "run"
-		
+	def build(self,view,type):
 		if view is None:
 			view = sublime_Sublime.active_window().active_view()
 		
 		win = view.window()
-		env = hxsublime_project_Project._haxe_build_env(self.project_dir("."))
+		env = hxsublime_project_Project.haxeBuildEnv(self.projectDir("."))
 		build = None
-		if self.has_build():
-			build = self.get_original_build(view)
+		if self.hasBuild():
+			build = self.getOriginalBuild(view)
 		else:
-			self.extract_build_args(view)
-			build = self.get_original_build(view)
+			self.extractBuildArgs(view)
+			build = self.getOriginalBuild(view)
 		
 		r = None
-		if type == "run":
-			r = build.prepare_run_cmd(self, self.is_server_mode_for_builds(), view)
-		elif type == "build":
-			r = build.prepare_build_cmd(self, self.is_server_mode_for_builds(), view)
-		else:
-			r = build.prepare_check_cmd(self, self.is_server_mode(), view)
+		if (type.index) == 0:
+			r = build.prepareRunCmd(self, self.isServerModeForBuilds(), view)
+		elif (type.index) == 1:
+			r = build.prepareBuildCmd(self, self.isServerModeForBuilds(), view)
+		elif (type.index) == 2:
+			r = build.prepareCheckCmd(self, self.isServerMode(), view)
+		
 		cmd = r[0]
 		build_folder = r[1]
-		escaped_cmd = build.escape_cmd(cmd)
-		hxsublime_panel_Panels.default_panel().writeln("running: " + " ".join(escaped_cmd))
+		escaped_cmd = build.escapeCmd(cmd)
+		hxsublime_panel_Panels.defaultPanel().writeln("running: " + " ".join(escaped_cmd))
 		def _hx_local_0():
-			x = _Hx_AnonObject(cmd = cmd ,is_check_run = type == "check" ,working_dir = build_folder ,file_regex = hxsublime_project_Tools.haxe_file_regex ,env = env )
+			x = _Hx_AnonObject(cmd = cmd ,is_check_run = type == hxsublime_project_BuildType.Check ,working_dir = build_folder ,file_regex = hxsublime_project_Tools.haxeFileRegex ,env = env )
 			def _hx_local_2():
 				def _hx_local_1():
 					d = python_lib_Dict()
@@ -11156,15 +10915,15 @@ class hxsublime_project_Project:
 		win.run_command("hxsublime_commands__haxe_exec", _hx_local_0())
 	
 
-	def clear_build(self):
-		self.current_build = None
-		self.completion_context.clear_completion()
+	def clearBuild(self):
+		self._currentBuild = None
+		self.completionContext.clearCompletion()
 	
 
 	def destroy(self):
 		self.server.stop()
 
-	def _create_default_build(self,view):
+	def createDefaultBuild(self,view):
 		fn = view.file_name()
 		src_dir = python_lib_os_Path.dirname(fn)
 		src = view.substr(sublime_Region(0, view.size()))
@@ -11215,75 +10974,68 @@ class hxsublime_project_Project:
 		
 		build.main = ".".join(main)
 		build.output = python_lib_os_Path.join(folder, build.main.lower() + ".js")
-		build.add_arg(("-cp", src_dir))
-		build.add_arg(("-js", build.output))
+		build.addArg(("-cp", src_dir))
+		build.addArg(("-js", build.output))
 		build.setHxml(python_lib_os_Path.join(src_dir, "build.hxml"))
 		return build
 	
 
-	def get_original_build(self,view):
-		if self.current_build is None and view.score_selector(0, "source.haxe.2") > 0:
-			self.current_build = self._create_default_build(view)
+	def getOriginalBuild(self,view):
+		if self._currentBuild is None and view.score_selector(0, "source.haxe.2") > 0:
+			self._currentBuild = self.createDefaultBuild(view)
 		
-		return self.current_build
+		return self._currentBuild
 	
 
-	def get_build(self,view):
-		return self.get_original_build(view).copy()
+	def getBuild(self,view):
+		return self.getOriginalBuild(view).copy()
 
 
 
 
 
-def Project_statics__haxe_build_env(project_dir):
-	lib_path = hxsublime_Settings.haxe_library_path()
-	haxe_inst_path = hxsublime_Settings.haxe_inst_path()
-	neko_inst_path = hxsublime_Settings.neko_inst_path()
+def Project_statics_haxeBuildEnv(project_dir):
+	lib_path = hxsublime_Settings.haxeLibraryPath()
+	haxe_inst_path = hxsublime_Settings.haxeInstPath()
+	neko_inst_path = hxsublime_Settings.nekoInstPath()
 	env = python_lib_Os.environ.copy()
 	env_path = python_lib_Os.environ.copy().get("PATH", "")
 	paths = []
-	def _hx_local_0(s):
-		return s
-	do_encode = _hx_local_0
 	path = None
 	if lib_path is not None:
-		if hxsublime_tools_PathTools.is_abs_path(lib_path):
+		if hxsublime_tools_PathTools.isAbsPath(lib_path):
 			path = lib_path
 		else:
 			path = python_lib_os_Path.normpath(python_lib_os_Path.join(project_dir, lib_path))
-		def _hx_local_1():
-			_this = path.split("/")
-			return python_lib_Os.sep.join(_this)
+		val = None
+		_this = path.split("/")
+		val = python_lib_Os.sep.join(_this)
 		
-		val = do_encode(_hx_local_1())
 		python_lib_DictImpl.set(env, "HAXE_LIBRARY_PATH", val)
 		
-		def _hx_local_2():
-			_this = path.split("/")
-			return python_lib_Os.sep.join(_this)
+		val = None
+		_this = path.split("/")
+		val = python_lib_Os.sep.join(_this)
 		
-		val = do_encode(_hx_local_2())
 		python_lib_DictImpl.set(env, "HAXE_STD_PATH", val)
 		
 	
 	
 	if haxe_inst_path is not None:
-		if hxsublime_tools_PathTools.is_abs_path(haxe_inst_path):
+		if hxsublime_tools_PathTools.isAbsPath(haxe_inst_path):
 			path = haxe_inst_path
 		else:
 			path = python_lib_os_Path.normpath(python_lib_os_Path.join(project_dir, haxe_inst_path))
-		def _hx_local_3():
-			_this = path.split("/")
-			return python_lib_Os.sep.join(_this)
+		val = None
+		_this = path.split("/")
+		val = python_lib_Os.sep.join(_this)
 		
-		val = do_encode(_hx_local_3())
 		python_lib_DictImpl.set(env, "HAXEPATH", val)
 		
-		def _hx_local_4():
-			_this = path.split("/")
-			return python_lib_Os.sep.join(_this)
+		x = None
+		_this = path.split("/")
+		x = python_lib_Os.sep.join(_this)
 		
-		x = do_encode(_hx_local_4())
 		paths.append(x)
 		__builtin__.len(paths)
 		
@@ -11292,18 +11044,16 @@ def Project_statics__haxe_build_env(project_dir):
 	
 	if neko_inst_path is not None:
 		path = python_lib_os_Path.normpath(python_lib_os_Path.join(project_dir, neko_inst_path))
-		def _hx_local_5():
-			_this = path.split("/")
-			return python_lib_Os.sep.join(_this)
+		val = None
+		_this = path.split("/")
+		val = python_lib_Os.sep.join(_this)
 		
-		val = do_encode(_hx_local_5())
 		python_lib_DictImpl.set(env, "NEKO_INSTPATH", val)
 		
-		def _hx_local_6():
-			_this = path.split("/")
-			return python_lib_Os.sep.join(_this)
+		x = None
+		_this = path.split("/")
+		x = python_lib_Os.sep.join(_this)
 		
-		x = do_encode(_hx_local_6())
 		paths.append(x)
 		
 	
@@ -11315,25 +11065,25 @@ def Project_statics__haxe_build_env(project_dir):
 	
 	return env
 	
-hxsublime_project_Project._haxe_build_env = Project_statics__haxe_build_env
-def Project_statics__get_compiler_info_env(project_path):
-	return hxsublime_project_Project._haxe_build_env(project_path)
-hxsublime_project_Project._get_compiler_info_env = Project_statics__get_compiler_info_env
-def Project_statics__collect_compiler_info(haxe_exec,project_path):
-	env = hxsublime_project_Project._get_compiler_info_env(project_path)
-	cmd = haxe_exec
+hxsublime_project_Project.haxeBuildEnv = Project_statics_haxeBuildEnv
+def Project_statics_getCompilerInfoEnv(project_path):
+	return hxsublime_project_Project.haxeBuildEnv(project_path)
+hxsublime_project_Project.getCompilerInfoEnv = Project_statics_getCompilerInfoEnv
+def Project_statics_collectCompilerInfo(haxeExec,project_path):
+	env = hxsublime_project_Project.getCompilerInfoEnv(project_path)
+	cmd = __builtin__.list(haxeExec)
 	cmd.extend(["-main", "Nothing", "-v", "--no-output"])
-	r = hxsublime_Execute.run_cmd(cmd, None, None, env)
+	r = hxsublime_Execute.runCmd(cmd, None, None, env)
 	out = r[0]
 	err = r[1]
-	std_classpaths = hxsublime_project_Project._extract_std_classpaths(out)
-	bundle = hxsublime_project_Project._collect_std_classes_and_packs(std_classpaths)
-	ver = hxsublime_project_Project._extract_haxe_version(out)
-	return (bundle, ver, std_classpaths)
+	stdClasspaths = hxsublime_project_Project.parseStdClasspaths(out)
+	bundle = hxsublime_project_Project.collectStdClassesAndPacks(stdClasspaths)
+	ver = hxsublime_project_Project.extractHaxeVersion(out)
+	return (bundle, ver, stdClasspaths)
 	
-hxsublime_project_Project._collect_compiler_info = Project_statics__collect_compiler_info
-def Project_statics__extract_haxe_version(out):
-	ver = python_lib_Re.search(hxsublime_project_Project._haxe_version, out)
+hxsublime_project_Project.collectCompilerInfo = Project_statics_collectCompilerInfo
+def Project_statics_extractHaxeVersion(out):
+	ver = python_lib_Re.search(hxsublime_project_Project.haxeVersionRegex, out)
 	if ver is not None:
 		x = ver.group(1)
 		x1 = float(x)
@@ -11343,8 +11093,8 @@ def Project_statics__extract_haxe_version(out):
 	else:
 		return None
 	
-hxsublime_project_Project._extract_haxe_version = Project_statics__extract_haxe_version
-def Project_statics__remove_trailing_path_sep(path):
+hxsublime_project_Project.extractHaxeVersion = Project_statics_extractHaxeVersion
+def Project_statics_removeTrailingPathSep(path):
 	if __builtin__.len(path) > 1:
 		last_pos = __builtin__.len(path) - 1
 		last_char = path[last_pos]
@@ -11355,13 +11105,13 @@ def Project_statics__remove_trailing_path_sep(path):
 	
 	return path
 	
-hxsublime_project_Project._remove_trailing_path_sep = Project_statics__remove_trailing_path_sep
-def Project_statics__is_valid_classpath(path):
+hxsublime_project_Project.removeTrailingPathSep = Project_statics_removeTrailingPathSep
+def Project_statics_isValidClasspath(path):
 	return __builtin__.len(path) > 1 and python_lib_os_Path.exists(path) and python_lib_os_Path.isdir(path)
-hxsublime_project_Project._is_valid_classpath = Project_statics__is_valid_classpath
-def Project_statics__extract_std_classpaths(out):
-	m = hxsublime_project_Project._classpath_line.match(out)
-	std_classpaths = []
+hxsublime_project_Project.isValidClasspath = Project_statics_isValidClasspath
+def Project_statics_parseStdClasspaths(out):
+	m = hxsublime_project_Project.classpathLineRegex.match(out)
+	stdClasspaths = []
 	all_paths = m.group(1).split(";")
 	ignored_paths = [".", "./"]
 	std_paths = None
@@ -11380,39 +11130,161 @@ def Project_statics__extract_std_classpaths(out):
 	while _it.hasNext():
 		p = _it.next()
 		p1 = python_lib_os_Path.normpath(p)
-		p1 = hxsublime_project_Project._remove_trailing_path_sep(p1)
-		if hxsublime_project_Project._is_valid_classpath(p1):
-			std_classpaths.append(p1)
+		p1 = hxsublime_project_Project.removeTrailingPathSep(p1)
+		if hxsublime_project_Project.isValidClasspath(p1):
+			stdClasspaths.append(p1)
 		
 	
-	return std_classpaths
+	return stdClasspaths
 	
-hxsublime_project_Project._extract_std_classpaths = Project_statics__extract_std_classpaths
-def Project_statics__collect_std_classes_and_packs(std_cps):
-	bundle = hxsublime_tools_HxSrcTools.empty_type_bundle()
+hxsublime_project_Project.parseStdClasspaths = Project_statics_parseStdClasspaths
+def Project_statics_collectStdClassesAndPacks(stdCps):
+	bundle = hxsublime_tools_HxSrcTools.emptyTypeBundle()
 	_g = 0
-	while _g < len(std_cps):
-		p = std_cps[_g]
+	while _g < len(stdCps):
+		p = stdCps[_g]
 		_g = _g + 1
-		bundle1 = hxsublime_Types.extract_types(p, [], [], 0, [], False)
+		bundle1 = hxsublime_Types.extractTypes(p, [], [], 0, [], False)
 		bundle = bundle.merge(bundle1)
 	
 	
 	return bundle
 	
-hxsublime_project_Project._collect_std_classes_and_packs = Project_statics__collect_std_classes_and_packs
-hxsublime_project_Project._classpath_line = python_lib_Re.compile("Classpath : (.*)")
-hxsublime_project_Project._haxe_version = python_lib_Re.compile("haxe_([0-9]{3})", python_lib_Re.M)
+hxsublime_project_Project.collectStdClassesAndPacks = Project_statics_collectStdClassesAndPacks
+hxsublime_project_Project.classpathLineRegex = python_lib_Re.compile("Classpath : (.*)")
+hxsublime_project_Project.haxeVersionRegex = python_lib_Re.compile("haxe_([0-9]{3})", python_lib_Re.M)
 
 
 hxsublime_project_Project._hx_class = hxsublime_project_Project
 hxsublime_project_Project._hx_class_name = "hxsublime.project.Project"
 _hx_classes['hxsublime.project.Project'] = hxsublime_project_Project
-hxsublime_project_Project._hx_fields = ["completion_context","_haxelib_manager","current_build","selecting_build","builds","win_id","server","project_file","project_id","project_path","std_bundle","std_paths","server_mode"]
+hxsublime_project_Project._hx_fields = ["_haxelibManager","_currentBuild","_selectingBuild","_projectFile","_projectId","_projectPath","_stdBundle","_stdPaths","_serverMode","completionContext","builds","winId","server"]
 hxsublime_project_Project._hx_props = []
-hxsublime_project_Project._hx_methods = ["haxelib_manager","project_dir","nme_exec","openfl_exec","haxelib_exec","haxe_exec","haxe_env","start_server","restart_server","is_server_mode","is_server_mode_for_builds","generate_build","select_build","extract_build_args","has_build","check_build","just_build","run_build","_update_compiler_info","_find_builds_in_folders","_get_view_file_name","_get_current_window","_get_folders","_create_new_hxml","_show_build_selection_panel","_set_current_build","_build","clear_build","destroy","_create_default_build","get_original_build","get_build"]
-hxsublime_project_Project._hx_statics = ["_haxe_build_env","_get_compiler_info_env","_collect_compiler_info","_extract_haxe_version","_remove_trailing_path_sep","_is_valid_classpath","_extract_std_classpaths","_collect_std_classes_and_packs","_classpath_line","_haxe_version"]
+hxsublime_project_Project._hx_methods = ["haxelibManager","projectDir","nmeExec","openflExec","haxelibExec","haxeExec","haxeEnv","startServer","restartServer","isServerMode","isServerModeForBuilds","generateBuild","selectBuild","extractBuildArgs","hasBuild","checkBuild","justBuild","runBuild","updateCompilerInfo","findBuildsInFolders","getViewFileName","getCurrentWindow","getFolders","createNewHxml","showBuildSelectionPanel","setCurrentBuild","build","clearBuild","destroy","createDefaultBuild","getOriginalBuild","getBuild"]
+hxsublime_project_Project._hx_statics = ["haxeBuildEnv","getCompilerInfoEnv","collectCompilerInfo","extractHaxeVersion","removeTrailingPathSep","isValidClasspath","parseStdClasspaths","collectStdClassesAndPacks","classpathLineRegex","haxeVersionRegex"]
 hxsublime_project_Project._hx_interfaces = []
+
+# print hxsublime.project.Projects.Projects
+class hxsublime_project_Projects:
+
+	def fileLog(self,msg):
+		f = __builtin__.open(hxsublime_project_Projects.logFile, "a+")
+		f.write(Std.string(msg) + "\n")
+		f.close()
+	
+
+
+
+
+
+hxsublime_project_Projects.projects = hxsublime_tools_Cache(haxe_ds_StringMap())
+hxsublime_project_Projects.userHome = python_lib_os_Path.expanduser("~")
+hxsublime_project_Projects.logFile = python_lib_os_Path.join(hxsublime_project_Projects.userHome, "st3_haxe_log.txt")
+hxsublime_project_Projects.nextServerPort = 6000
+def Projects_statics_cleanupProjects():
+	win_ids = None
+	_g = []
+	_g1 = 0
+	_g2 = sublime_Sublime.windows()
+	while _g1 < len(_g2):
+		w = _g2[_g1]
+		_g1 = _g1 + 1
+		x = w.id()
+		_g.append(x)
+		__builtin__.len(_g)
+		
+	
+	
+	win_ids = _g
+	
+	remove = []
+	_it = hxsublime_project_Projects.projects.data.keys()
+	while _it.hasNext():
+		p = _it.next()
+		proj = hxsublime_project_Projects.projects.getOrDefault(p, None)
+		if proj is not None and not Lambda.has(win_ids, proj.winId):
+			remove.append(p)
+			__builtin__.len(remove)
+		
+		
+	
+	haxe_Log.trace(remove, _Hx_AnonObject(fileName = "Projects.hx" ,lineNumber = 46 ,className = "hxsublime.project.Projects" ,methodName = "cleanupProjects" ))
+	_g1 = 0
+	while _g1 < len(remove):
+		pid = remove[_g1]
+		_g1 = _g1 + 1
+		haxe_Log.trace(pid, _Hx_AnonObject(fileName = "Projects.hx" ,lineNumber = 48 ,className = "hxsublime.project.Projects" ,methodName = "cleanupProjects" ))
+		project = hxsublime_project_Projects.projects.data.get(pid).val
+		project.destroy()
+		haxe_Log.trace("delete project from memory", _Hx_AnonObject(fileName = "Projects.hx" ,lineNumber = 51 ,className = "hxsublime.project.Projects" ,methodName = "cleanupProjects" ))
+		hxsublime_project_Projects.projects.data.remove(pid)
+	
+	
+	
+hxsublime_project_Projects.cleanupProjects = Projects_statics_cleanupProjects
+def Projects_statics_getProjectId(file,win):
+	id = None
+	if file is None:
+		id = "global" + Std.string(win.id())
+	else:
+		id = file
+	return id
+	
+hxsublime_project_Projects.getProjectId = Projects_statics_getProjectId
+def Projects_statics_getWindow(view = None):
+	if view is None:
+		view = None
+	
+	win = None
+	if view is not None:
+		win = view.window()
+		if win is not None:
+			win = sublime_Sublime.active_window()
+		
+	
+	else:
+		win = sublime_Sublime.active_window()
+	return win
+	
+hxsublime_project_Projects.getWindow = Projects_statics_getWindow
+def Projects_statics_currentProject(view = None):
+	if view is None:
+		view = None
+	
+	hxsublime_project_Projects.cleanupProjects()
+	file = hxsublime_tools_SublimeTools.getProjectFile()
+	win = hxsublime_project_Projects.getWindow(view)
+	id = hxsublime_project_Projects.getProjectId(file, win)
+	haxe_Log.trace("project id:" + id, _Hx_AnonObject(fileName = "Projects.hx" ,lineNumber = 87 ,className = "hxsublime.project.Projects" ,methodName = "currentProject" ))
+	haxe_Log.trace("win.id:" + Std.string(win.id()), _Hx_AnonObject(fileName = "Projects.hx" ,lineNumber = 88 ,className = "hxsublime.project.Projects" ,methodName = "currentProject" ))
+	def _hx_local_0():
+		id1 = id
+		a1 = file
+		a2 = win
+		def _hx_local_1():
+			return hxsublime_project_Projects.createProject(id1, a1, a2)
+		return _hx_local_1
+	
+	res = hxsublime_project_Projects.projects.getOrInsert(id, _hx_local_0())
+	return res
+	
+hxsublime_project_Projects.currentProject = Projects_statics_currentProject
+def Projects_statics_createProject(id,file,win):
+	p = hxsublime_project_Project(id, file, win.id(), hxsublime_project_Projects.nextServerPort)
+	hxsublime_project_Projects.nextServerPort = hxsublime_project_Projects.nextServerPort + 20
+	return p
+	
+hxsublime_project_Projects.createProject = Projects_statics_createProject
+
+
+hxsublime_project_Projects._hx_class = hxsublime_project_Projects
+hxsublime_project_Projects._hx_class_name = "hxsublime.project.Projects"
+_hx_classes['hxsublime.project.Projects'] = hxsublime_project_Projects
+hxsublime_project_Projects._hx_fields = []
+hxsublime_project_Projects._hx_props = []
+hxsublime_project_Projects._hx_methods = ["fileLog"]
+hxsublime_project_Projects._hx_statics = ["projects","userHome","logFile","nextServerPort","cleanupProjects","getProjectId","getWindow","currentProject","createProject"]
+hxsublime_project_Projects._hx_interfaces = []
 
 # print hxsublime.project.Tools.Tools
 class hxsublime_project_Tools:
@@ -11422,7 +11294,7 @@ class hxsublime_project_Tools:
 
 
 
-def Tools_statics_get_window(view):
+def Tools_statics_getWindow(view):
 	win = None
 	if view is not None:
 		win = view.window()
@@ -11434,10 +11306,10 @@ def Tools_statics_get_window(view):
 		win = sublime_Sublime.active_window()
 	return win
 	
-hxsublime_project_Tools.get_window = Tools_statics_get_window
-hxsublime_project_Tools._win_start = "(?:(?:[A-Za-z][:])"
-hxsublime_project_Tools._unix_start = "(?:[/]?)"
-hxsublime_project_Tools.haxe_file_regex = "^(" + hxsublime_project_Tools._win_start + "|" + hxsublime_project_Tools._unix_start + ")?(?:[^:]*)):([0-9]+): (?:character(?:s?)|line(?:s?))? ([0-9]+)-?[0-9]*\\s?:(.*)$"
+hxsublime_project_Tools.getWindow = Tools_statics_getWindow
+hxsublime_project_Tools.winStart = "(?:(?:[A-Za-z][:])"
+hxsublime_project_Tools.unixStart = "(?:[/]?)"
+hxsublime_project_Tools.haxeFileRegex = "^(" + hxsublime_project_Tools.winStart + "|" + hxsublime_project_Tools.unixStart + ")?(?:[^:]*)):([0-9]+): (?:character(?:s?)|line(?:s?))? ([0-9]+)-?[0-9]*\\s?:(.*)$"
 
 
 hxsublime_project_Tools._hx_class = hxsublime_project_Tools
@@ -11446,7 +11318,7 @@ _hx_classes['hxsublime.project.Tools'] = hxsublime_project_Tools
 hxsublime_project_Tools._hx_fields = []
 hxsublime_project_Tools._hx_props = []
 hxsublime_project_Tools._hx_methods = []
-hxsublime_project_Tools._hx_statics = ["get_window","_win_start","_unix_start","haxe_file_regex"]
+hxsublime_project_Tools._hx_statics = ["getWindow","winStart","unixStart","haxeFileRegex"]
 hxsublime_project_Tools._hx_interfaces = []
 
 # print hxsublime.tools.HxSrcTools.Regex
@@ -11457,28 +11329,21 @@ class hxsublime_tools_Regex:
 
 
 
-hxsublime_tools_Regex.compact_func = python_lib_Re.compile("\\(.*\\)")
-hxsublime_tools_Regex.compact_prop = python_lib_Re.compile(":.*\\.([a-z_0-9]+)", python_lib_Re.I)
 hxsublime_tools_Regex.space_chars = python_lib_Re.compile("\\s")
 hxsublime_tools_Regex.word_chars = python_lib_Re.compile("[a-z0-9._]", python_lib_Re.I)
 hxsublime_tools_Regex.import_line = python_lib_Re.compile("^([ \t]*)import\\s+([a-z0-9._]+);", python_lib_Re.I | python_lib_Re.M)
 hxsublime_tools_Regex.using_line = python_lib_Re.compile("^([ \t]*)using\\s+([a-z0-9._]+);", python_lib_Re.I | python_lib_Re.M)
 hxsublime_tools_Regex.package_line = python_lib_Re.compile("\\s*package\\s*([a-z0-9.]*)\\s*;", python_lib_Re.I)
-hxsublime_tools_Regex.type_decl_with_scope = python_lib_Re.compile("(private\\s+)?(?:extern\\s+)?(class|typedef|enum|interface|abstract)\\s+([A-Z][a-zA-Z0-9_]*)\\s*(<[a-zA-Z0-9_,]+>)?", python_lib_Re.M)
-hxsublime_tools_Regex.type_decl = python_lib_Re.compile("(class|typedef|enum|interface|abstract)\\s+([A-Z][a-zA-Z0-9_]*)\\s*(<[a-zA-Z0-9_,]+>)?", python_lib_Re.M)
-hxsublime_tools_Regex.enum_start_decl = python_lib_Re.compile("enum\\s+([A-Z][a-zA-Z0-9_]*)\\s*(<[a-zA-Z0-9_,]+>)?", python_lib_Re.M)
-hxsublime_tools_Regex.skippable = python_lib_Re.compile("^[a-zA-Z0-9_\\s]*$")
-hxsublime_tools_Regex.in_anonymous = python_lib_Re.compile("[{,]\\s*([a-zA-Z0-9_\"']+)\\s*:\\s*$", python_lib_Re.M | python_lib_Re.U)
 hxsublime_tools_Regex.variables = python_lib_Re.compile("var\\s+([^:;\\s]*)", python_lib_Re.I)
-hxsublime_tools_Regex.functions = python_lib_Re.compile("function\\s+([^;\\.\\(\\)\\s]*)", python_lib_Re.I)
 hxsublime_tools_Regex.named_functions = python_lib_Re.compile("function\\s+([a-zA-Z0-9_]+)\\s*", python_lib_Re.I)
 hxsublime_tools_Regex.function_params = python_lib_Re.compile("function\\s+[a-zA-Z0-9_]+\\s*\\(([^\\)]*)", python_lib_Re.M)
 hxsublime_tools_Regex.param_default = python_lib_Re.compile("(=\\s*\"*[^\"]*\")", python_lib_Re.M)
-hxsublime_tools_Regex.is_type = python_lib_Re.compile("^[A-Z][a-zA-Z0-9_]*$")
+hxsublime_tools_Regex.isType = python_lib_Re.compile("^[A-Z][a-zA-Z0-9_]*$")
+hxsublime_tools_Regex.typeDeclWithScope = python_lib_Re.compile("(private\\s+)?(?:extern\\s+)?(class|typedef|enum|interface|abstract)\\s+([A-Z][a-zA-Z0-9_]*)\\s*(<[a-zA-Z0-9_,]+>)?", python_lib_Re.M)
 hxsublime_tools_Regex.comments = python_lib_Re.compile("(//[^\n\r]*?[\n\r]|/\\*(.*?)\\*/)", python_lib_Re.MULTILINE | python_lib_Re.DOTALL)
-hxsublime_tools_Regex._field = python_lib_Re.compile("((?:(?:public|static|inline|private)\\s+)*)(var|function)\\s+([a-zA-Z_][a-zA-Z0-9_]*)", python_lib_Re.MULTILINE)
-hxsublime_tools_Regex._type_decl_with_scope = python_lib_Re.compile("(private\\s+)?(extern\\s+)?(class|typedef|enum|interface|abstract)\\s+([A-Z][a-zA-Z0-9_]*)\\s*(<[a-zA-Z0-9,_]+>)?(:?\\{|\\s+)", python_lib_Re.M)
-hxsublime_tools_Regex.enum_constructor_start_decl = python_lib_Re.compile("\\s+([a-zA-Z_]+)", python_lib_Re.M)
+hxsublime_tools_Regex.fieldRegex = python_lib_Re.compile("((?:(?:public|static|inline|private)\\s+)*)(var|function)\\s+([a-zA-Z_][a-zA-Z0-9_]*)", python_lib_Re.MULTILINE)
+hxsublime_tools_Regex.typeDeclWithScopeRegex = python_lib_Re.compile("(private\\s+)?(extern\\s+)?(class|typedef|enum|interface|abstract)\\s+([A-Z][a-zA-Z0-9_]*)\\s*(<[a-zA-Z0-9,_]+>)?(:?\\{|\\s+)", python_lib_Re.M)
+hxsublime_tools_Regex.enumConstructorStartDecl = python_lib_Re.compile("\\s+([a-zA-Z_]+)", python_lib_Re.M)
 
 
 hxsublime_tools_Regex._hx_class = hxsublime_tools_Regex
@@ -11487,7 +11352,7 @@ _hx_classes['hxsublime.tools.Regex'] = hxsublime_tools_Regex
 hxsublime_tools_Regex._hx_fields = []
 hxsublime_tools_Regex._hx_props = []
 hxsublime_tools_Regex._hx_methods = []
-hxsublime_tools_Regex._hx_statics = ["compact_func","compact_prop","space_chars","word_chars","import_line","using_line","package_line","type_decl_with_scope","type_decl","enum_start_decl","skippable","in_anonymous","variables","functions","named_functions","function_params","param_default","is_type","comments","_field","_type_decl_with_scope","enum_constructor_start_decl"]
+hxsublime_tools_Regex._hx_statics = ["space_chars","word_chars","import_line","using_line","package_line","variables","named_functions","function_params","param_default","isType","typeDeclWithScope","comments","fieldRegex","typeDeclWithScopeRegex","enumConstructorStartDecl"]
 hxsublime_tools_Regex._hx_interfaces = []
 
 # print hxsublime.tools.HxSrcTools.HxSrcTools
@@ -11498,71 +11363,71 @@ class hxsublime_tools_HxSrcTools:
 
 
 
-def HxSrcTools_statics_get_types_from_src(src,module_name,file,src_with_comments):
-	if module_name is None:
+def HxSrcTools_statics_getTypesFromSrc(src,moduleName,file,src_with_comments):
+	if moduleName is None:
 		_this = python_lib_os_Path.splitext(python_lib_os_Path.basename(file))
-		module_name = _this[0]
+		moduleName = _this[0]
 	
 	
-	pack = hxsublime_tools_HxSrcTools.get_package(src)
+	pack = hxsublime_tools_HxSrcTools.getPackage(src)
 	res = haxe_ds_StringMap()
 	def _hx_local_0():
-		p = hxsublime_tools_Regex._type_decl_with_scope.finditer(src)
+		p = hxsublime_tools_Regex.typeDeclWithScopeRegex.finditer(src)
 		return python_HaxeIterator(p)
 	
 	_it = _hx_local_0()
 	while _it.hasNext():
 		decl = _it.next()
-		is_private = decl.group(1) is not None
+		isPrivate = decl.group(1) is not None
 		type_name = decl.group(4)
 		if type_name == "NME_":
-			haxe_Log.trace(Std.string(decl.group(0)), _Hx_AnonObject(fileName = "HxSrcTools.hx" ,lineNumber = 71 ,className = "hxsublime.tools.HxSrcTools" ,methodName = "get_types_from_src" ))
+			haxe_Log.trace(Std.string(decl.group(0)), _Hx_AnonObject(fileName = "HxSrcTools.hx" ,lineNumber = 80 ,className = "hxsublime.tools.HxSrcTools" ,methodName = "getTypesFromSrc" ))
 		
 		kind = decl.group(3)
-		is_extern = decl.group(2) is not None
-		is_module_type = type_name == module_name
-		is_std_type = module_name == "StdTypes"
-		full_type = hxsublime_tools_HaxeType(pack, module_name, type_name, kind, is_private, is_module_type, is_std_type, is_extern, file, src, src_with_comments, decl)
-		if full_type.is_enum():
-			full_type._enum_constructors = hxsublime_tools_HxSrcTools._extract_enum_constructors_from_src(src, decl.end(4))
+		isExtern = decl.group(2) is not None
+		isModuleType = type_name == moduleName
+		isStdType = moduleName == "StdTypes"
+		fullType = hxsublime_tools_HaxeType(pack, moduleName, type_name, kind, isPrivate, isModuleType, isStdType, isExtern, file, src, src_with_comments, decl)
+		if fullType.kind == "enum":
+			fullType._enumConstructors = hxsublime_tools_HxSrcTools.extractEnumConstructorsFromSrc(src, decl.end(4))
 		
-		if not res.exists(full_type.full_qualified_name()):
-			res.set(full_type.full_qualified_name(), full_type)
+		if not res.exists(fullType.fullQualifiedName()):
+			res.set(fullType.fullQualifiedName(), fullType)
 		
 	
 	return hxsublime_tools_HaxeTypeBundle(res)
 	
-hxsublime_tools_HxSrcTools.get_types_from_src = HxSrcTools_statics_get_types_from_src
-def HxSrcTools_statics__extract_enum_constructors_from_src(src,start_pos):
+hxsublime_tools_HxSrcTools.getTypesFromSrc = HxSrcTools_statics_getTypesFromSrc
+def HxSrcTools_statics_extractEnumConstructorsFromSrc(src,start_pos):
 	constructors = None
-	start = hxsublime_tools_HxSrcTools.search_next_char_on_same_nesting_level(src, ["{"], start_pos)
+	start = hxsublime_tools_HxSrcTools.searchNextCharOnSameNestingLevel(src, ["{"], start_pos)
 	if start is not None:
-		end = hxsublime_tools_HxSrcTools.search_next_char_on_same_nesting_level(src, ["}"], start[0] + 1)
+		end = hxsublime_tools_HxSrcTools.searchNextCharOnSameNestingLevel(src, ["}"], start[0] + 1)
 		if end is not None:
 			def _hx_local_0():
 				startIndex = start[0] + 1
 				endIndex = end[0] - 1
 				return python_Tools.substring(src, startIndex, endIndex)
 			
-			constructors = hxsublime_tools_HxSrcTools._extract_enum_constructors_from_enum(_hx_local_0())
+			constructors = hxsublime_tools_HxSrcTools.extractEnumConstructorsFromEnum(_hx_local_0())
 		
 		
 	
 	
 	return constructors
 	
-hxsublime_tools_HxSrcTools._extract_enum_constructors_from_src = HxSrcTools_statics__extract_enum_constructors_from_src
-def HxSrcTools_statics__extract_enum_constructors_from_enum(enumStr):
+hxsublime_tools_HxSrcTools.extractEnumConstructorsFromSrc = HxSrcTools_statics_extractEnumConstructorsFromSrc
+def HxSrcTools_statics_extractEnumConstructorsFromEnum(enumStr):
 	constructors = []
 	start = 0
 	while True:
-		m = hxsublime_tools_Regex.enum_constructor_start_decl.match(enumStr, start)
+		m = hxsublime_tools_Regex.enumConstructorStartDecl.match(enumStr, start)
 		if m is not None:
 			constructor = m.group(1)
 			constructors.append(constructor)
 			__builtin__.len(constructors)
 			
-			end = hxsublime_tools_HxSrcTools.search_next_char_on_same_nesting_level(enumStr, [";"], m.end(1))
+			end = hxsublime_tools_HxSrcTools.searchNextCharOnSameNestingLevel(enumStr, [";"], m.end(1))
 			if end is not None:
 				start = end[0] + 1
 			else:
@@ -11573,20 +11438,20 @@ def HxSrcTools_statics__extract_enum_constructors_from_enum(enumStr):
 	
 	return constructors
 	
-hxsublime_tools_HxSrcTools._extract_enum_constructors_from_enum = HxSrcTools_statics__extract_enum_constructors_from_enum
-def HxSrcTools_statics_skip_whitespace_or_comments(hx_src_section,start_pos):
+hxsublime_tools_HxSrcTools.extractEnumConstructorsFromEnum = HxSrcTools_statics_extractEnumConstructorsFromEnum
+def HxSrcTools_statics_skipWhitespaceOrComments(hxSrcSection,start_pos):
 	in_single_comment = False
 	in_multi_comment = False
-	count = __builtin__.len(hx_src_section)
+	count = __builtin__.len(hxSrcSection)
 	pos = start_pos
 	while True:
 		if pos > count - 1:
 			break
 		
-		c = hx_src_section[pos]
+		c = hxSrcSection[pos]
 		next = None
 		if pos < count - 1:
-			next = hx_src_section[pos + 1]
+			next = hxSrcSection[pos + 1]
 		else:
 			next = None
 		if in_single_comment and c == "\n":
@@ -11610,14 +11475,14 @@ def HxSrcTools_statics_skip_whitespace_or_comments(hx_src_section,start_pos):
 		elif c == " " or c == "\t" or c == "\n":
 			pos = pos + 1
 		else:
-			b = python_Tools.substring(hx_src_section, start_pos, pos)
+			b = python_Tools.substring(hxSrcSection, start_pos, pos)
 			return (pos, b)
 		
 	
 	return None
 	
-hxsublime_tools_HxSrcTools.skip_whitespace_or_comments = HxSrcTools_statics_skip_whitespace_or_comments
-def HxSrcTools_statics_is_same_nesting_level_at_pos(hx_src_section,end_pos,start_pos):
+hxsublime_tools_HxSrcTools.skipWhitespaceOrComments = HxSrcTools_statics_skipWhitespaceOrComments
+def HxSrcTools_statics_isSameNestingLevelAtPos(hxSrcSection,end_pos,start_pos):
 	if end_pos < start_pos:
 		return False
 	
@@ -11628,23 +11493,31 @@ def HxSrcTools_statics_is_same_nesting_level_at_pos(hx_src_section,end_pos,start
 	in_string = False
 	string_char = None
 	in_regexp = False
-	count = __builtin__.len(hx_src_section)
+	count = __builtin__.len(hxSrcSection)
 	cur = ""
 	pos = start_pos
+	lastPos = count - 1
 	while True:
-		if pos == end_pos or pos > count - 1:
+		if pos == end_pos or pos > lastPos:
 			return open_pars == 0 and open_braces == 0 and open_brackets == 0 and open_angle_brackets == 0 and not in_string and not in_regexp
 		
-		c = hx_src_section[pos]
+		c = hxSrcSection[pos]
+		ccode = ord(c)
+		hasNext = pos < lastPos
 		next = None
-		if pos < count - 1:
-			next = hx_src_section[pos + 1]
+		if hasNext:
+			next = hxSrcSection[pos + 1]
 		else:
 			next = None
+		nextCode = None
+		if hasNext:
+			nextCode = ord(next)
+		else:
+			nextCode = None
 		if in_regexp:
 			pos = pos + 1
 			cur = cur + c
-			if c != "\\" and next == "/":
+			if ccode != 92 and nextCode == 47:
 				in_regexp = False
 			
 			continue
@@ -11656,7 +11529,7 @@ def HxSrcTools_statics_is_same_nesting_level_at_pos(hx_src_section,end_pos,start
 				cur = cur + c
 				in_string = False
 			
-			elif c == "\\" and next == string_char:
+			elif ccode == 92 and next == string_char:
 				pos = pos + 2
 				cur = cur + c + next
 				in_string = False
@@ -11668,57 +11541,57 @@ def HxSrcTools_statics_is_same_nesting_level_at_pos(hx_src_section,end_pos,start
 			continue
 		
 		
-		if c == "~" and next == "/":
+		if ccode == 126 and nextCode == 47:
 			pos = pos + 2
 			in_regexp = True
 			cur = cur + c
 		
-		elif c == "'" or c == "\"":
+		elif ccode == 39 or ccode == 34:
 			in_string = True
 			string_char = c
 			cur = cur + c
 			pos = pos + 1
 		
-		elif c == "-" and next == ">":
+		elif ccode == 45 and nextCode == 62:
 			cur = cur + "->"
 			pos = pos + 2
 		
-		elif c == "{":
+		elif ccode == 123:
 			pos = pos + 1
 			open_braces = open_braces + 1
 			cur = cur + c
 		
-		elif c == "}":
+		elif ccode == 125:
 			pos = pos + 1
 			open_braces = open_braces - 1
 			cur = cur + c
 		
-		elif c == "(":
+		elif ccode == 40:
 			pos = pos + 1
 			open_pars = open_pars + 1
 			cur = cur + c
 		
-		elif c == ")":
+		elif ccode == 41:
 			pos = pos + 1
 			open_pars = open_pars - 1
 			cur = cur + c
 		
-		elif c == "[":
+		elif ccode == 91:
 			pos = pos + 1
 			open_brackets = open_brackets + 1
 			cur = cur + c
 		
-		elif c == "]":
+		elif ccode == 93:
 			pos = pos + 1
 			open_brackets = open_brackets - 1
 			cur = cur + c
 		
-		elif c == "<":
+		elif ccode == 60:
 			pos = pos + 1
 			open_angle_brackets = open_angle_brackets + 1
 			cur = cur + c
 		
-		elif c == ">":
+		elif ccode == 62:
 			pos = pos + 1
 			open_angle_brackets = open_angle_brackets - 1
 			cur = cur + c
@@ -11730,8 +11603,8 @@ def HxSrcTools_statics_is_same_nesting_level_at_pos(hx_src_section,end_pos,start
 	
 	return False
 	
-hxsublime_tools_HxSrcTools.is_same_nesting_level_at_pos = HxSrcTools_statics_is_same_nesting_level_at_pos
-def HxSrcTools_statics_search_next_char_on_same_nesting_level(hx_src_section,chars,start_pos):
+hxsublime_tools_HxSrcTools.isSameNestingLevelAtPos = HxSrcTools_statics_isSameNestingLevelAtPos
+def HxSrcTools_statics_searchNextCharOnSameNestingLevel(hxSrcSection,chars,start_pos):
 	open_pars = 0
 	open_braces = 0
 	open_brackets = 0
@@ -11739,17 +11612,17 @@ def HxSrcTools_statics_search_next_char_on_same_nesting_level(hx_src_section,cha
 	in_string = False
 	string_char = None
 	in_regexp = False
-	count = __builtin__.len(hx_src_section)
+	count = __builtin__.len(hxSrcSection)
 	cur = ""
 	pos = start_pos
 	while True:
 		if pos > count - 1:
 			break
 		
-		c = hx_src_section[pos]
+		c = hxSrcSection[pos]
 		next = None
 		if pos < count - 1:
-			next = hx_src_section[pos + 1]
+			next = hxSrcSection[pos + 1]
 		else:
 			next = None
 		if in_regexp:
@@ -11779,7 +11652,7 @@ def HxSrcTools_statics_search_next_char_on_same_nesting_level(hx_src_section,cha
 			continue
 		
 		
-		if c in chars and open_pars == 0 and open_braces == 0 and open_brackets == 0 and open_angle_brackets == 0:
+		if open_pars == 0 and open_braces == 0 and open_brackets == 0 and open_angle_brackets == 0 and c in chars:
 			return (pos, cur)
 		
 		if c == "~" and next == "/":
@@ -11844,8 +11717,8 @@ def HxSrcTools_statics_search_next_char_on_same_nesting_level(hx_src_section,cha
 	
 	return None
 	
-hxsublime_tools_HxSrcTools.search_next_char_on_same_nesting_level = HxSrcTools_statics_search_next_char_on_same_nesting_level
-def HxSrcTools_statics_reverse_search_next_char_on_same_nesting_level(hx_src_section,chars,start_pos):
+hxsublime_tools_HxSrcTools.searchNextCharOnSameNestingLevel = HxSrcTools_statics_searchNextCharOnSameNestingLevel
+def HxSrcTools_statics_reverse_search_next_char_on_same_nesting_level(hxSrcSection,chars,start_pos):
 	open_pars = 0
 	open_braces = 0
 	open_brackets = 0
@@ -11858,10 +11731,10 @@ def HxSrcTools_statics_reverse_search_next_char_on_same_nesting_level(hx_src_sec
 		if pos <= -1:
 			break
 		
-		c = hx_src_section[pos]
+		c = hxSrcSection[pos]
 		next = None
 		if pos > 0:
-			next = hx_src_section[pos - 1]
+			next = hxSrcSection[pos - 1]
 		else:
 			next = None
 		if in_string:
@@ -11879,7 +11752,7 @@ def HxSrcTools_statics_reverse_search_next_char_on_same_nesting_level(hx_src_sec
 			continue
 		
 		
-		if c in chars and open_pars == 0 and open_braces == 0 and open_brackets == 0 and open_angle_brackets == 0:
+		if open_pars == 0 and open_braces == 0 and open_brackets == 0 and open_angle_brackets == 0 and c in chars:
 			return (pos, cur)
 		
 		if c == "'" or c == "\"":
@@ -11940,10 +11813,10 @@ def HxSrcTools_statics_reverse_search_next_char_on_same_nesting_level(hx_src_sec
 	return None
 	
 hxsublime_tools_HxSrcTools.reverse_search_next_char_on_same_nesting_level = HxSrcTools_statics_reverse_search_next_char_on_same_nesting_level
-def HxSrcTools_statics_strip_comments(src):
+def HxSrcTools_statics_stripComments(src):
 	return hxsublime_tools_Regex.comments.sub("", src)
-hxsublime_tools_HxSrcTools.strip_comments = HxSrcTools_statics_strip_comments
-def HxSrcTools_statics_get_package(src):
+hxsublime_tools_HxSrcTools.stripComments = HxSrcTools_statics_stripComments
+def HxSrcTools_statics_getPackage(src):
 	pack = ""
 	all = python_lib_Re_RegexHelper.findallDynamic(hxsublime_tools_Regex.package_line, src, None, None)
 	_g = 0
@@ -11955,8 +11828,8 @@ def HxSrcTools_statics_get_package(src):
 	
 	return pack
 	
-hxsublime_tools_HxSrcTools.get_package = HxSrcTools_statics_get_package
-def HxSrcTools_statics_split_function_signature(signature):
+hxsublime_tools_HxSrcTools.getPackage = HxSrcTools_statics_getPackage
+def HxSrcTools_statics_splitFunctionSignature(signature):
 	open_pars = 0
 	open_braces = 0
 	open_brackets = 0
@@ -12024,10 +11897,10 @@ def HxSrcTools_statics_split_function_signature(signature):
 	
 	return types
 	
-hxsublime_tools_HxSrcTools.split_function_signature = HxSrcTools_statics_split_function_signature
-def HxSrcTools_statics_empty_type_bundle():
+hxsublime_tools_HxSrcTools.splitFunctionSignature = HxSrcTools_statics_splitFunctionSignature
+def HxSrcTools_statics_emptyTypeBundle():
 	return hxsublime_tools_HaxeTypeBundle(haxe_ds_StringMap())
-hxsublime_tools_HxSrcTools.empty_type_bundle = HxSrcTools_statics_empty_type_bundle
+hxsublime_tools_HxSrcTools.emptyTypeBundle = HxSrcTools_statics_emptyTypeBundle
 
 
 hxsublime_tools_HxSrcTools._hx_class = hxsublime_tools_HxSrcTools
@@ -12036,7 +11909,7 @@ _hx_classes['hxsublime.tools.HxSrcTools'] = hxsublime_tools_HxSrcTools
 hxsublime_tools_HxSrcTools._hx_fields = []
 hxsublime_tools_HxSrcTools._hx_props = []
 hxsublime_tools_HxSrcTools._hx_methods = []
-hxsublime_tools_HxSrcTools._hx_statics = ["get_types_from_src","_extract_enum_constructors_from_src","_extract_enum_constructors_from_enum","skip_whitespace_or_comments","is_same_nesting_level_at_pos","search_next_char_on_same_nesting_level","reverse_search_next_char_on_same_nesting_level","strip_comments","get_package","split_function_signature","empty_type_bundle"]
+hxsublime_tools_HxSrcTools._hx_statics = ["getTypesFromSrc","extractEnumConstructorsFromSrc","extractEnumConstructorsFromEnum","skipWhitespaceOrComments","isSameNestingLevelAtPos","searchNextCharOnSameNestingLevel","reverse_search_next_char_on_same_nesting_level","stripComments","getPackage","splitFunctionSignature","emptyTypeBundle"]
 hxsublime_tools_HxSrcTools._hx_interfaces = []
 
 # print hxsublime.tools.HxSrcTools.HaxeModule
@@ -12071,16 +11944,16 @@ class hxsublime_tools_HaxeTypeBundle:
 
 
 	def __init__(self,types):
-		self.all_types_cache_set = False
-		self.all_types_cache = None
-		self.all_types_and_enum_constructors_cache_set = False
-		self.all_types_and_enum_constructors_cache = None
-		self.all_types_and_enum_constructors_with_info_cache_set = False
-		self.all_types_and_enum_constructors_with_info_cache = None
-		self.all_modules_list_cache_set = False
-		self.all_modules_list_cache = None
-		self.all_modules_cache_set = False
-		self.all_modules_cache = None
+		self.allTypes_cache_set = False
+		self.allTypes_cache = None
+		self.allTypesAndEnumConstructors_cache_set = False
+		self.allTypesAndEnumConstructors_cache = None
+		self.allTypesAndEnumConstructorsWithInfo_cache_set = False
+		self.allTypesAndEnumConstructorsWithInfo_cache = None
+		self.allModulesList_cache_set = False
+		self.allModulesList_cache = None
+		self.allModules_cache_set = False
+		self.allModules_cache = None
 		self.packs_cache_set = False
 		self.packs_cache = None
 		self.toString_cache_set = False
@@ -12104,6 +11977,9 @@ class hxsublime_tools_HaxeTypeBundle:
 	
 
 	def merge(self,other):
+		return self.mergeAll([other])
+
+	def mergeAll(self,others):
 		res = None
 		_g = haxe_ds_StringMap()
 		_it = self._types.keys()
@@ -12114,10 +11990,16 @@ class hxsublime_tools_HaxeTypeBundle:
 		
 		res = _g
 		
-		_it = other._types.keys()
-		while _it.hasNext():
-			k = _it.next()
-			res.set(k, other._types.get(k))
+		_g1 = 0
+		while _g1 < len(others):
+			o = others[_g1]
+			_g1 = _g1 + 1
+			_it = o._types.keys()
+			while _it.hasNext():
+				k = _it.next()
+				res.set(k, o._types.get(k))
+		
+		
 		return hxsublime_tools_HaxeTypeBundle(res)
 	
 
@@ -12151,37 +12033,37 @@ class hxsublime_tools_HaxeTypeBundle:
 		return self.packs_cache
 	
 
-	# var all_modules_cache
-	# var all_modules_cache_set
-	def all_modules(self):
+	# var allModules_cache
+	# var allModules_cache_set
+	def allModules(self):
 		_g = self
-		if not self.all_modules_cache_set:
-			self.all_modules_cache_set = True
+		if not self.allModules_cache_set:
+			self.allModules_cache_set = True
 			def _hx_local_0():
 				res = haxe_ds_StringMap()
 				_it = _g._types.keys()
 				while _it.hasNext():
 					k = _it.next()
 					t = _g._types.get(k)
-					res.set(t.full_pack_with_module(), hxsublime_tools_HaxeModule(t.pack, t.module, t.file()))
+					res.set(t.fullPackWithModule(), hxsublime_tools_HaxeModule(t.pack, t.module, t._file))
 				
 				return res
 			
 			eval = _hx_local_0
-			self.all_modules_cache = eval()
+			self.allModules_cache = eval()
 		
 		
-		return self.all_modules_cache
+		return self.allModules_cache
 	
 
-	# var all_modules_list_cache
-	# var all_modules_list_cache_set
-	def all_modules_list(self):
+	# var allModulesList_cache
+	# var allModulesList_cache_set
+	def allModulesList(self):
 		_g = self
-		if not self.all_modules_list_cache_set:
-			self.all_modules_list_cache_set = True
+		if not self.allModulesList_cache_set:
+			self.allModulesList_cache_set = True
 			def _hx_local_0():
-				mods = _g.all_modules()
+				mods = _g.allModules()
 				_g1 = []
 				_it = _hx_functools.partial(HxOverrides_iterator, mods)()
 				while _it.hasNext():
@@ -12193,27 +12075,27 @@ class hxsublime_tools_HaxeTypeBundle:
 				
 			
 			eval = _hx_local_0
-			self.all_modules_list_cache = eval()
+			self.allModulesList_cache = eval()
 		
 		
-		return self.all_modules_list_cache
+		return self.allModulesList_cache
 	
 
-	# var all_types_and_enum_constructors_with_info_cache
-	# var all_types_and_enum_constructors_with_info_cache_set
-	def all_types_and_enum_constructors_with_info(self):
+	# var allTypesAndEnumConstructorsWithInfo_cache
+	# var allTypesAndEnumConstructorsWithInfo_cache_set
+	def allTypesAndEnumConstructorsWithInfo(self):
 		_g = self
-		if not self.all_types_and_enum_constructors_with_info_cache_set:
-			self.all_types_and_enum_constructors_with_info_cache_set = True
+		if not self.allTypesAndEnumConstructorsWithInfo_cache_set:
+			self.allTypesAndEnumConstructorsWithInfo_cache_set = True
 			def _hx_local_0():
 				res = haxe_ds_StringMap()
 				_it = _g._types.keys()
 				while _it.hasNext():
 					k = _it.next()
 					t = _g._types.get(k)
-					if t.is_enum():
+					if t.kind == "enum":
 						_g1 = 0
-						_g2 = t.full_qualified_enum_constructors_with_optional_module()
+						_g2 = t.fullQualifiedEnumConstructorsWithOptionalModule()
 						while _g1 < len(_g2):
 							ec = _g2[_g1]
 							_g1 = _g1 + 1
@@ -12221,26 +12103,26 @@ class hxsublime_tools_HaxeTypeBundle:
 						
 					
 					
-					fq_name = t.full_qualified_name_with_optional_module()
+					fq_name = t.fullQualifiedNameWithOptionalModule()
 					res.set(fq_name, t)
 				
 				return res
 			
 			eval = _hx_local_0
-			self.all_types_and_enum_constructors_with_info_cache = eval()
+			self.allTypesAndEnumConstructorsWithInfo_cache = eval()
 		
 		
-		return self.all_types_and_enum_constructors_with_info_cache
+		return self.allTypesAndEnumConstructorsWithInfo_cache
 	
 
-	# var all_types_and_enum_constructors_cache
-	# var all_types_and_enum_constructors_cache_set
-	def all_types_and_enum_constructors(self):
+	# var allTypesAndEnumConstructors_cache
+	# var allTypesAndEnumConstructors_cache_set
+	def allTypesAndEnumConstructors(self):
 		_g = self
-		if not self.all_types_and_enum_constructors_cache_set:
-			self.all_types_and_enum_constructors_cache_set = True
+		if not self.allTypesAndEnumConstructors_cache_set:
+			self.allTypesAndEnumConstructors_cache_set = True
 			def _hx_local_0():
-				res = _g.all_types_and_enum_constructors_with_info()
+				res = _g.allTypesAndEnumConstructorsWithInfo()
 				_g1 = []
 				_it = res.keys()
 				while _it.hasNext():
@@ -12252,18 +12134,18 @@ class hxsublime_tools_HaxeTypeBundle:
 				
 			
 			eval = _hx_local_0
-			self.all_types_and_enum_constructors_cache = eval()
+			self.allTypesAndEnumConstructors_cache = eval()
 		
 		
-		return self.all_types_and_enum_constructors_cache
+		return self.allTypesAndEnumConstructors_cache
 	
 
-	# var all_types_cache
-	# var all_types_cache_set
-	def all_types(self):
+	# var allTypes_cache
+	# var allTypes_cache_set
+	def allTypes(self):
 		_g1 = self
-		if not self.all_types_cache_set:
-			self.all_types_cache_set = True
+		if not self.allTypes_cache_set:
+			self.allTypes_cache_set = True
 			def _hx_local_0():
 				_g = []
 				_it = _hx_functools.partial(HxOverrides_iterator, _g1._types)()
@@ -12275,10 +12157,10 @@ class hxsublime_tools_HaxeTypeBundle:
 				return _g
 			
 			eval = _hx_local_0
-			self.all_types_cache = eval()
+			self.allTypes_cache = eval()
 		
 		
-		return self.all_types_cache
+		return self.allTypes_cache
 	
 
 	def filter(self,fn):
@@ -12294,24 +12176,6 @@ class hxsublime_tools_HaxeTypeBundle:
 		return hxsublime_tools_HaxeTypeBundle(res)
 	
 
-	def filter_by_classpath(self,cp):
-		def _hx_local_1():
-			def _hx_local_0(p):
-				return p.classpath() == cp
-			return self.filter(_hx_local_0)
-		
-		return _hx_local_1()
-	
-
-	def filter_by_classpaths(self,cps):
-		def _hx_local_1():
-			def _hx_local_0(p):
-				return Lambda.has(cps, p.classpath())
-			return self.filter(_hx_local_0)
-		
-		return _hx_local_1()
-	
-
 
 
 
@@ -12321,9 +12185,9 @@ class hxsublime_tools_HaxeTypeBundle:
 hxsublime_tools_HaxeTypeBundle._hx_class = hxsublime_tools_HaxeTypeBundle
 hxsublime_tools_HaxeTypeBundle._hx_class_name = "hxsublime.tools.HaxeTypeBundle"
 _hx_classes['hxsublime.tools.HaxeTypeBundle'] = hxsublime_tools_HaxeTypeBundle
-hxsublime_tools_HaxeTypeBundle._hx_fields = ["_types","toString_cache","toString_cache_set","packs_cache","packs_cache_set","all_modules_cache","all_modules_cache_set","all_modules_list_cache","all_modules_list_cache_set","all_types_and_enum_constructors_with_info_cache","all_types_and_enum_constructors_with_info_cache_set","all_types_and_enum_constructors_cache","all_types_and_enum_constructors_cache_set","all_types_cache","all_types_cache_set"]
+hxsublime_tools_HaxeTypeBundle._hx_fields = ["_types","toString_cache","toString_cache_set","packs_cache","packs_cache_set","allModules_cache","allModules_cache_set","allModulesList_cache","allModulesList_cache_set","allTypesAndEnumConstructorsWithInfo_cache","allTypesAndEnumConstructorsWithInfo_cache_set","allTypesAndEnumConstructors_cache","allTypesAndEnumConstructors_cache_set","allTypes_cache","allTypes_cache_set"]
 hxsublime_tools_HaxeTypeBundle._hx_props = []
-hxsublime_tools_HaxeTypeBundle._hx_methods = ["toString","merge","packs","all_modules","all_modules_list","all_types_and_enum_constructors_with_info","all_types_and_enum_constructors","all_types","filter","filter_by_classpath","filter_by_classpaths"]
+hxsublime_tools_HaxeTypeBundle._hx_methods = ["toString","merge","mergeAll","packs","allModules","allModulesList","allTypesAndEnumConstructorsWithInfo","allTypesAndEnumConstructors","allTypes","filter"]
 hxsublime_tools_HaxeTypeBundle._hx_statics = []
 hxsublime_tools_HaxeTypeBundle._hx_interfaces = [hxsublime_macros_LazyFunctionSupport]
 
@@ -12337,34 +12201,34 @@ class hxsublime_tools_EnumConstructor:
 	
 	# var name
 	# var enumType
-	def to_snippet_insert(self,import_list,insert_file):
+	def toSnippetInsert(self,import_list,insert_file):
 		_g = 0
 		while _g < len(import_list):
 			i = import_list[_g]
 			_g = _g + 1
-			if self.enumType.file() == insert_file or i == self.enumType.full_qualified_name_with_optional_module() or i == self.enumType.full_pack_with_module() or i == self.enumType.full_qualified_name_with_optional_module() + "." + self.name:
+			if self.enumType._file == insert_file or i == self.enumType.fullQualifiedNameWithOptionalModule() or i == self.enumType.fullPackWithModule() or i == self.enumType.fullQualifiedNameWithOptionalModule() + "." + self.name:
 				return self.name
 			
 		
 		
-		return self.enumType.full_qualified_name_with_optional_module() + "." + self.name
+		return self.enumType.fullQualifiedNameWithOptionalModule() + "." + self.name
 	
 
-	def type_hint(self):
+	def typeHint(self):
 		return "enum value"
 
-	def to_snippet(self,insert_file,import_list):
+	def toSnippet(self,insert_file,import_list):
 		location = None
 		def _hx_local_0():
-			_this = self.enumType.full_pack_with_optional_module()
+			_this = self.enumType.fullPackWithOptionalModule()
 			return __builtin__.len(_this)
 		
 		if _hx_local_0() > 0:
-			location = " (" + self.enumType.full_pack_with_optional_module() + ")"
+			location = " (" + self.enumType.fullPackWithOptionalModule() + ")"
 		else:
 			location = ""
-		display = self.enumType.name + "." + self.name + location + "\t" + self.type_hint()
-		insert = self.to_snippet_insert(import_list, insert_file)
+		display = self.enumType.name + "." + self.name + location + "\t" + self.typeHint()
+		insert = self.toSnippetInsert(import_list, insert_file)
 		return (display, insert)
 	
 
@@ -12382,7 +12246,7 @@ hxsublime_tools_EnumConstructor._hx_class_name = "hxsublime.tools.EnumConstructo
 _hx_classes['hxsublime.tools.EnumConstructor'] = hxsublime_tools_EnumConstructor
 hxsublime_tools_EnumConstructor._hx_fields = ["name","enumType"]
 hxsublime_tools_EnumConstructor._hx_props = []
-hxsublime_tools_EnumConstructor._hx_methods = ["to_snippet_insert","type_hint","to_snippet","toString"]
+hxsublime_tools_EnumConstructor._hx_methods = ["toSnippetInsert","typeHint","toSnippet","toString"]
 hxsublime_tools_EnumConstructor._hx_statics = []
 hxsublime_tools_EnumConstructor._hx_interfaces = []
 
@@ -12391,44 +12255,44 @@ class hxsublime_tools_HaxeField:
 
 
 	def __init__(self,type,name,kind,is_static,is_public,is_inline,is_private,match_decl):
-		self.to_expression_cache_set = False
-		self.to_expression_cache = None
+		self.toExpression_cache_set = False
+		self.toExpression_cache = None
 		self.toString_cache_set = False
 		self.toString_cache = None
-		self.is_function_cache_set = False
-		self.is_function_cache = None
+		self.isFunction_cache_set = False
+		self.isFunction_cache = None
 		self.file_cache_set = False
 		self.file_cache = None
-		self.is_var_cache_set = False
-		self.is_var_cache = None
-		self.src_pos_cache_set = False
-		self.src_pos_cache = None
+		self.isVar_cache_set = False
+		self.isVar_cache = None
+		self.srcPos_cache_set = False
+		self.srcPos_cache = None
 		self.type = type
 		self.name = name
 		self.kind = kind
-		self.is_static = is_static
-		self.is_public = is_public
-		self.is_inline = is_inline
-		self.is_private = is_private
+		self.isStatic = is_static
+		self.isPublic = is_public
+		self.isInline = is_inline
+		self.isPrivate = is_private
 		self.match_decl = match_decl
 	
 	# var type
 	# var name
 	# var kind
-	# var is_static
-	# var is_public
-	# var is_inline
-	# var is_private
+	# var isStatic
+	# var isPublic
+	# var isInline
+	# var isPrivate
 	# var match_decl
-	# var src_pos_cache
-	# var src_pos_cache_set
-	def src_pos(self):
+	# var srcPos_cache
+	# var srcPos_cache_set
+	def srcPos(self):
 		_g = self
-		if not self.src_pos_cache_set:
-			self.src_pos_cache_set = True
+		if not self.srcPos_cache_set:
+			self.srcPos_cache_set = True
 			def _hx_local_1():
 				def _hx_local_0():
-					p = hxsublime_tools_Regex._field.finditer(_g.type.src_with_comments)
+					p = hxsublime_tools_Regex.fieldRegex.finditer(_g.type.src_with_comments)
 					return python_HaxeIterator(p)
 				
 				_it = _hx_local_0()
@@ -12440,25 +12304,25 @@ class hxsublime_tools_HaxeField:
 				return None
 			
 			eval = _hx_local_1
-			self.src_pos_cache = eval()
+			self.srcPos_cache = eval()
 		
 		
-		return self.src_pos_cache
+		return self.srcPos_cache
 	
 
-	# var is_var_cache
-	# var is_var_cache_set
-	def is_var(self):
+	# var isVar_cache
+	# var isVar_cache_set
+	def isVar(self):
 		_g = self
-		if not self.is_var_cache_set:
-			self.is_var_cache_set = True
+		if not self.isVar_cache_set:
+			self.isVar_cache_set = True
 			def _hx_local_0():
 				return _g.kind == "var"
 			eval = _hx_local_0
-			self.is_var_cache = eval()
+			self.isVar_cache = eval()
 		
 		
-		return self.is_var_cache
+		return self.isVar_cache
 	
 
 	# var file_cache
@@ -12468,7 +12332,7 @@ class hxsublime_tools_HaxeField:
 		if not self.file_cache_set:
 			self.file_cache_set = True
 			def _hx_local_0():
-				return _g.type.file()
+				return _g.type._file
 			eval = _hx_local_0
 			self.file_cache = eval()
 		
@@ -12476,19 +12340,19 @@ class hxsublime_tools_HaxeField:
 		return self.file_cache
 	
 
-	# var is_function_cache
-	# var is_function_cache_set
-	def is_function(self):
+	# var isFunction_cache
+	# var isFunction_cache_set
+	def isFunction(self):
 		_g = self
-		if not self.is_function_cache_set:
-			self.is_function_cache_set = True
+		if not self.isFunction_cache_set:
+			self.isFunction_cache_set = True
 			def _hx_local_0():
 				return _g.kind == "function"
 			eval = _hx_local_0
-			self.is_function_cache = eval()
+			self.isFunction_cache = eval()
 		
 		
-		return self.is_function_cache
+		return self.isFunction_cache
 	
 
 	# var toString_cache
@@ -12498,7 +12362,7 @@ class hxsublime_tools_HaxeField:
 		if not self.toString_cache_set:
 			self.toString_cache_set = True
 			def _hx_local_0():
-				return _g.type.full_qualified_name_with_optional_module() + ("::" if (_g.is_static or _g.name == "new") else ".") + _g.name
+				return _g.type.fullQualifiedNameWithOptionalModule() + ("::" if (_g.isStatic or _g.name == "new") else ".") + _g.name
 			eval = _hx_local_0
 			self.toString_cache = eval()
 		
@@ -12506,19 +12370,19 @@ class hxsublime_tools_HaxeField:
 		return self.toString_cache
 	
 
-	# var to_expression_cache
-	# var to_expression_cache_set
-	def to_expression(self):
+	# var toExpression_cache
+	# var toExpression_cache_set
+	def toExpression(self):
 		_g = self
-		if not self.to_expression_cache_set:
-			self.to_expression_cache_set = True
+		if not self.toExpression_cache_set:
+			self.toExpression_cache_set = True
 			def _hx_local_0():
-				return _g.type.full_qualified_name_with_optional_module() + "." + _g.name
+				return _g.type.fullQualifiedNameWithOptionalModule() + "." + _g.name
 			eval = _hx_local_0
-			self.to_expression_cache = eval()
+			self.toExpression_cache = eval()
 		
 		
-		return self.to_expression_cache
+		return self.toExpression_cache
 	
 
 
@@ -12530,9 +12394,9 @@ class hxsublime_tools_HaxeField:
 hxsublime_tools_HaxeField._hx_class = hxsublime_tools_HaxeField
 hxsublime_tools_HaxeField._hx_class_name = "hxsublime.tools.HaxeField"
 _hx_classes['hxsublime.tools.HaxeField'] = hxsublime_tools_HaxeField
-hxsublime_tools_HaxeField._hx_fields = ["type","name","kind","is_static","is_public","is_inline","is_private","match_decl","src_pos_cache","src_pos_cache_set","is_var_cache","is_var_cache_set","file_cache","file_cache_set","is_function_cache","is_function_cache_set","toString_cache","toString_cache_set","to_expression_cache","to_expression_cache_set"]
+hxsublime_tools_HaxeField._hx_fields = ["type","name","kind","isStatic","isPublic","isInline","isPrivate","match_decl","srcPos_cache","srcPos_cache_set","isVar_cache","isVar_cache_set","file_cache","file_cache_set","isFunction_cache","isFunction_cache_set","toString_cache","toString_cache_set","toExpression_cache","toExpression_cache_set"]
 hxsublime_tools_HaxeField._hx_props = []
-hxsublime_tools_HaxeField._hx_methods = ["src_pos","is_var","file","is_function","toString","to_expression"]
+hxsublime_tools_HaxeField._hx_methods = ["srcPos","isVar","file","isFunction","toString","toExpression"]
 hxsublime_tools_HaxeField._hx_statics = []
 hxsublime_tools_HaxeField._hx_interfaces = [hxsublime_macros_LazyFunctionSupport]
 
@@ -12543,50 +12407,46 @@ class hxsublime_tools_HaxeType:
 	def __init__(self,pack,module,name,kind,is_private,is_module_type,is_std_type,is_extern,file,src,src_with_comments,match_decl):
 		self.toString_cache_set = False
 		self.toString_cache = None
-		self.full_qualified_name_cache_set = False
-		self.full_qualified_name_cache = None
+		self.fullQualifiedName_cache_set = False
+		self.fullQualifiedName_cache = None
 		self.classpath_cache_set = False
 		self.classpath_cache = None
-		self.full_qualified_enum_constructors_with_optional_module_cache_set = False
-		self.full_qualified_enum_constructors_with_optional_module_cache = None
-		self.enum_constructors_cache_set = False
-		self.enum_constructors_cache = None
-		self.full_qualified_name_with_optional_module_cache_set = False
-		self.full_qualified_name_with_optional_module_cache = None
-		self.pack_suffix_cache_set = False
-		self.pack_suffix_cache = None
-		self.pack_list_cache_set = False
-		self.pack_list_cache = None
-		self.is_class_cache_set = False
-		self.is_class_cache = None
-		self.is_enum_cache_set = False
-		self.is_enum_cache = None
-		self.full_pack_with_module_cache_set = False
-		self.full_pack_with_module_cache = None
-		self.full_pack_with_optional_module_cache_set = False
-		self.full_pack_with_optional_module_cache = None
-		self.toplevel_pack_cache_set = False
-		self.toplevel_pack_cache = None
-		self.src_pos_cache_set = False
-		self.src_pos_cache = None
-		self.stripped_end_decl_pos_cache_set = False
-		self.stripped_end_decl_pos_cache = None
-		self.class_body_start_cache_set = False
-		self.class_body_start_cache = None
-		self.public_static_functions_cache_set = False
-		self.public_static_functions_cache = None
-		self.public_static_vars_cache_set = False
-		self.public_static_vars_cache = None
-		self.all_fields_list_cache_set = False
-		self.all_fields_list_cache = None
-		self.all_fields_cache_set = False
-		self.all_fields_cache = None
-		self.public_static_fields_cache_set = False
-		self.public_static_fields_cache = None
-		self.class_body_cache_set = False
-		self.class_body_cache = None
-		self.stripped_start_decl_pos_cache_set = False
-		self.stripped_start_decl_pos_cache = None
+		self.fullQualifiedEnumConstructorsWithOptionalModule_cache_set = False
+		self.fullQualifiedEnumConstructorsWithOptionalModule_cache = None
+		self.enumConstructors_cache_set = False
+		self.enumConstructors_cache = None
+		self.fullQualifiedNameWithOptionalModule_cache_set = False
+		self.fullQualifiedNameWithOptionalModule_cache = None
+		self.packSuffix_cache_set = False
+		self.packSuffix_cache = None
+		self.packList_cache_set = False
+		self.packList_cache = None
+		self.fullPackWithModule_cache_set = False
+		self.fullPackWithModule_cache = None
+		self.fullPackWithOptionalModule_cache_set = False
+		self.fullPackWithOptionalModule_cache = None
+		self.toplevelPack_cache_set = False
+		self.toplevelPack_cache = None
+		self.srcPos_cache_set = False
+		self.srcPos_cache = None
+		self.strippedEndDeclPos_cache_set = False
+		self.strippedEndDeclPos_cache = None
+		self.classBodyStart_cache_set = False
+		self.classBodyStart_cache = None
+		self.publicStaticFunctions_cache_set = False
+		self.publicStaticFunctions_cache = None
+		self.publicStaticVars_cache_set = False
+		self.publicStaticVars_cache = None
+		self.allFieldsList_cache_set = False
+		self.allFieldsList_cache = None
+		self.allFields_cache_set = False
+		self.allFields_cache = None
+		self.publicStaticFields_cache_set = False
+		self.publicStaticFields_cache = None
+		self.classBody_cache_set = False
+		self.classBody_cache = None
+		self.strippedStartDeclPos_cache_set = False
+		self.strippedStartDeclPos_cache = None
 		self._src = src
 		self.src_with_comments = src_with_comments
 		self.match_decl = match_decl
@@ -12596,10 +12456,10 @@ class hxsublime_tools_HaxeType:
 		self.kind = kind
 		self.name = name
 		self.is_module_type = is_module_type
-		self.is_std_type = is_std_type
-		self.is_extern = is_extern
+		self.isStdType = is_std_type
+		self.isExtern = is_extern
 		self._file = file
-		self._enum_constructors = None
+		self._enumConstructors = None
 	
 	# var _src
 	# var src_with_comments
@@ -12610,132 +12470,132 @@ class hxsublime_tools_HaxeType:
 	# var kind
 	# var name
 	# var is_module_type
-	# var is_std_type
-	# var is_extern
+	# var isStdType
+	# var isExtern
 	# var _file
-	# var _enum_constructors
+	# var _enumConstructors
 	def src(self):
 		return self._src
 
 	def file(self):
 		return self._file
 
-	# var stripped_start_decl_pos_cache
-	# var stripped_start_decl_pos_cache_set
-	def stripped_start_decl_pos(self):
+	# var strippedStartDeclPos_cache
+	# var strippedStartDeclPos_cache_set
+	def strippedStartDeclPos(self):
 		_g = self
-		if not self.stripped_start_decl_pos_cache_set:
-			self.stripped_start_decl_pos_cache_set = True
+		if not self.strippedStartDeclPos_cache_set:
+			self.strippedStartDeclPos_cache_set = True
 			def _hx_local_0():
 				return _g.match_decl.start(0)
 			eval = _hx_local_0
-			self.stripped_start_decl_pos_cache = eval()
+			self.strippedStartDeclPos_cache = eval()
 		
 		
-		return self.stripped_start_decl_pos_cache
+		return self.strippedStartDeclPos_cache
 	
 
-	# var class_body_cache
-	# var class_body_cache_set
-	def class_body(self):
+	# var classBody_cache
+	# var classBody_cache_set
+	def classBody(self):
 		_g = self
-		if not self.class_body_cache_set:
-			self.class_body_cache_set = True
+		if not self.classBody_cache_set:
+			self.classBody_cache_set = True
 			def _hx_local_0():
 				res = None
-				if _g.stripped_end_decl_pos is None:
+				if _g.strippedEndDeclPos is None:
 					res = ""
 				else:
-					_this = _g.src()
-					startIndex = _g.stripped_start_decl_pos()
-					endIndex = _g.stripped_end_decl_pos()
-					res = python_Tools.substring(_this, startIndex, endIndex)
+					startIndex = _g.strippedStartDeclPos()
+					endIndex = _g.strippedEndDeclPos()
+					res = python_Tools.substring(_g._src, startIndex, endIndex)
 				
 				return res
 			
 			eval = _hx_local_0
-			self.class_body_cache = eval()
+			self.classBody_cache = eval()
 		
 		
-		return self.class_body_cache
+		return self.classBody_cache
 	
 
-	# var public_static_fields_cache
-	# var public_static_fields_cache_set
-	def public_static_fields(self):
+	# var publicStaticFields_cache
+	# var publicStaticFields_cache_set
+	def publicStaticFields(self):
 		_g = self
-		if not self.public_static_fields_cache_set:
-			self.public_static_fields_cache_set = True
+		if not self.publicStaticFields_cache_set:
+			self.publicStaticFields_cache_set = True
 			def _hx_local_0():
 				res = []
-				x = _g.public_static_vars()
+				x = _g.publicStaticVars()
 				res.extend(x)
 				
-				x = _g.public_static_functions()
+				x = _g.publicStaticFunctions()
 				res.extend(x)
 				
 				return res
 			
 			eval = _hx_local_0
-			self.public_static_fields_cache = eval()
+			self.publicStaticFields_cache = eval()
 		
 		
-		return self.public_static_fields_cache
+		return self.publicStaticFields_cache
 	
 
-	# var all_fields_cache
-	# var all_fields_cache_set
-	def all_fields(self):
+	# var allFields_cache
+	# var allFields_cache_set
+	def allFields(self):
 		_g = self
-		if not self.all_fields_cache_set:
-			self.all_fields_cache_set = True
-			def _hx_local_2():
+		if not self.allFields_cache_set:
+			self.allFields_cache_set = True
+			def _hx_local_1():
+				startTime = python_lib_Time.time()
 				res = haxe_ds_StringMap()
-				if _g.class_body is not None:
-					def _hx_local_0():
-						p = hxsublime_tools_Regex._field.finditer(_g.class_body())
-						return python_HaxeIterator(p)
+				if _g.classBody() is not None:
+					startPos = None
+					_this = _g.classBodyStart()
+					startPos = _this[0]
 					
-					_it = _hx_local_0()
-					while _it.hasNext():
-						decl = _it.next()
+					for decl in hxsublime_tools_Regex.fieldRegex.finditer(_g.classBody()):
 						modifiers = decl.group(1)
-						is_static = modifiers is not None and modifiers.find("static") > -1
-						is_inline = modifiers is not None and modifiers.find("inline") > -1
-						is_private = modifiers is not None and modifiers.find("private") > -1
-						is_public = modifiers is not None and modifiers.find("public") > -1
-						kind = decl.group(2)
-						name = decl.group(3)
-						if name == "WAIT_END_RET":
-							haxe_Log.trace(modifiers, _Hx_AnonObject(fileName = "HxSrcTools.hx" ,lineNumber = 1073 ,className = "hxsublime.tools.HaxeType" ,methodName = "all_fields" ))
+						isStatic = modifiers is not None and modifiers.find("static") > -1
+						isInline = modifiers is not None and modifiers.find("inline") > -1
+						isPrivate = modifiers is not None and modifiers.find("private") > -1
+						isPublic = modifiers is not None and modifiers.find("public") > -1
+						def _hx_local_0():
+							return hxsublime_tools_HxSrcTools.isSameNestingLevelAtPos(_g.classBody(), decl.start(0), startPos)
+						sameNestingLevel = _hx_local_0
+						if isPrivate or isPublic or isStatic or _g.isExtern or sameNestingLevel():
+							kind = decl.group(2)
+							name = decl.group(3)
+							res.set(name, hxsublime_tools_HaxeField(_g, name, kind, isStatic, isPublic, isInline, isPrivate, decl))
 						
-						def _hx_local_1():
-							_this = _g.class_body_start()
-							return _this[0]
 						
-						if is_private or is_public or is_static or _g.is_extern or hxsublime_tools_HxSrcTools.is_same_nesting_level_at_pos(_g.class_body(), decl.start(0), _hx_local_1()):
-							res.set(name, hxsublime_tools_HaxeField(_g, name, kind, is_static, is_public, is_inline, is_private, decl))
-						
+						startPos = decl.start(0)
 					
 				
+				
+				runTime = python_lib_Time.time() - startTime
+				if runTime > 0.02:
+					haxe_Log.trace("allFields Time " + _g._file + " : " + Std.string(runTime), _Hx_AnonObject(fileName = "HxSrcTools.hx" ,lineNumber = 1115 ,className = "hxsublime.tools.HaxeType" ,methodName = "allFields" ))
 				
 				return res
 			
-			eval = _hx_local_2
-			self.all_fields_cache = eval()
+			eval = _hx_local_1
+			self.allFields_cache = eval()
 		
 		
-		return self.all_fields_cache
+		return self.allFields_cache
 	
 
-	# var all_fields_list_cache
-	# var all_fields_list_cache_set
-	def all_fields_list(self):
+	# var allFieldsList_cache
+	# var allFieldsList_cache_set
+	def allFieldsList(self):
 		_g = self
-		if not self.all_fields_list_cache_set:
-			self.all_fields_list_cache_set = True
+		if not self.allFieldsList_cache_set:
+			self.allFieldsList_cache_set = True
 			def _hx_local_0():
-				all = _g.all_fields()
+				all = _g.allFields()
 				_g1 = []
 				_it = _hx_functools.partial(HxOverrides_iterator, all)()
 				while _it.hasNext():
@@ -12747,25 +12607,25 @@ class hxsublime_tools_HaxeType:
 				
 			
 			eval = _hx_local_0
-			self.all_fields_list_cache = eval()
+			self.allFieldsList_cache = eval()
 		
 		
-		return self.all_fields_list_cache
+		return self.allFieldsList_cache
 	
 
-	# var public_static_vars_cache
-	# var public_static_vars_cache_set
-	def public_static_vars(self):
+	# var publicStaticVars_cache
+	# var publicStaticVars_cache_set
+	def publicStaticVars(self):
 		_g = self
-		if not self.public_static_vars_cache_set:
-			self.public_static_vars_cache_set = True
+		if not self.publicStaticVars_cache_set:
+			self.publicStaticVars_cache_set = True
 			def _hx_local_0():
-				all = _g.all_fields()
+				all = _g.allFields()
 				_g1 = []
 				_it = _hx_functools.partial(HxOverrides_iterator, all)()
 				while _it.hasNext():
 					e = _it.next()
-					if e.is_static and e.is_var():
+					if e.isStatic and e.isVar():
 						_g1.append(e)
 						__builtin__.len(_g1)
 				
@@ -12774,25 +12634,25 @@ class hxsublime_tools_HaxeType:
 				
 			
 			eval = _hx_local_0
-			self.public_static_vars_cache = eval()
+			self.publicStaticVars_cache = eval()
 		
 		
-		return self.public_static_vars_cache
+		return self.publicStaticVars_cache
 	
 
-	# var public_static_functions_cache
-	# var public_static_functions_cache_set
-	def public_static_functions(self):
+	# var publicStaticFunctions_cache
+	# var publicStaticFunctions_cache_set
+	def publicStaticFunctions(self):
 		_g = self
-		if not self.public_static_functions_cache_set:
-			self.public_static_functions_cache_set = True
+		if not self.publicStaticFunctions_cache_set:
+			self.publicStaticFunctions_cache_set = True
 			def _hx_local_0():
-				all = _g.all_fields()
+				all = _g.allFields()
 				_g1 = []
 				_it = _hx_functools.partial(HxOverrides_iterator, all)()
 				while _it.hasNext():
 					e = _it.next()
-					if e.is_static and e.is_function():
+					if e.isStatic and e.isFunction():
 						_g1.append(e)
 						__builtin__.len(_g1)
 				
@@ -12801,45 +12661,45 @@ class hxsublime_tools_HaxeType:
 				
 			
 			eval = _hx_local_0
-			self.public_static_functions_cache = eval()
+			self.publicStaticFunctions_cache = eval()
 		
 		
-		return self.public_static_functions_cache
+		return self.publicStaticFunctions_cache
 	
 
-	# var class_body_start_cache
-	# var class_body_start_cache_set
-	def class_body_start(self):
+	# var classBodyStart_cache
+	# var classBodyStart_cache_set
+	def classBodyStart(self):
 		_g = self
-		if not self.class_body_start_cache_set:
-			self.class_body_start_cache_set = True
+		if not self.classBodyStart_cache_set:
+			self.classBodyStart_cache_set = True
 			def _hx_local_0():
 				start = _g.match_decl.start(0)
-				if _g.is_abstract() or _g.is_class():
-					return hxsublime_tools_HxSrcTools.search_next_char_on_same_nesting_level(_g.src(), ["{"], start)
+				if _g.kind == "abstract" or _g.kind == "class":
+					return hxsublime_tools_HxSrcTools.searchNextCharOnSameNestingLevel(_g._src, ["{"], start)
 				else:
 					return (0, "")
 			
 			eval = _hx_local_0
-			self.class_body_start_cache = eval()
+			self.classBodyStart_cache = eval()
 		
 		
-		return self.class_body_start_cache
+		return self.classBodyStart_cache
 	
 
-	# var stripped_end_decl_pos_cache
-	# var stripped_end_decl_pos_cache_set
-	def stripped_end_decl_pos(self):
+	# var strippedEndDeclPos_cache
+	# var strippedEndDeclPos_cache_set
+	def strippedEndDeclPos(self):
 		_g = self
-		if not self.stripped_end_decl_pos_cache_set:
-			self.stripped_end_decl_pos_cache_set = True
+		if not self.strippedEndDeclPos_cache_set:
+			self.strippedEndDeclPos_cache_set = True
 			def _hx_local_0():
-				class_body_start = _g.class_body_start()
+				classBodyStart = _g.classBodyStart()
 				res = None
-				if class_body_start is not None:
-					class_body_end = hxsublime_tools_HxSrcTools.search_next_char_on_same_nesting_level(_g.src(), ["}"], class_body_start[0] + 1)
-					if class_body_end is not None:
-						res = class_body_end[0]
+				if classBodyStart is not None:
+					classBodyEnd = hxsublime_tools_HxSrcTools.searchNextCharOnSameNestingLevel(_g._src, ["}"], classBodyStart[0] + 1)
+					if classBodyEnd is not None:
+						res = classBodyEnd[0]
 					else:
 						res = None
 				
@@ -12848,56 +12708,56 @@ class hxsublime_tools_HaxeType:
 				return res
 			
 			eval = _hx_local_0
-			self.stripped_end_decl_pos_cache = eval()
+			self.strippedEndDeclPos_cache = eval()
 		
 		
-		return self.stripped_end_decl_pos_cache
+		return self.strippedEndDeclPos_cache
 	
 
-	# var src_pos_cache
-	# var src_pos_cache_set
-	def src_pos(self):
+	# var srcPos_cache
+	# var srcPos_cache_set
+	def srcPos(self):
 		_g = self
-		if not self.src_pos_cache_set:
-			self.src_pos_cache_set = True
+		if not self.srcPos_cache_set:
+			self.srcPos_cache_set = True
 			def _hx_local_0():
-				for decl in hxsublime_tools_Regex.type_decl_with_scope.finditer(_g.src_with_comments):
+				for decl in hxsublime_tools_Regex.typeDeclWithScope.finditer(_g.src_with_comments):
 					if decl.group(0) == _g.match_decl.group(0):
 						return decl.start(0)
 					
 				return None
 			
 			eval = _hx_local_0
-			self.src_pos_cache = eval()
+			self.srcPos_cache = eval()
 		
 		
-		return self.src_pos_cache
+		return self.srcPos_cache
 	
 
-	def to_snippet(self,insert_file,import_list):
+	def toSnippet(self,insert_file,import_list):
 		location = None
 		def _hx_local_0():
-			_this = self.full_pack_with_optional_module()
+			_this = self.fullPackWithOptionalModule()
 			return __builtin__.len(_this)
 		
 		if _hx_local_0() > 0:
-			location = " (" + self.full_pack_with_optional_module() + ")"
+			location = " (" + self.fullPackWithOptionalModule() + ")"
 		else:
 			location = ""
-		display = self.name + location + "\t" + self.type_hint()
-		insert = self.to_snippet_insert(import_list, insert_file)
+		display = self.name + location + "\t" + self.kind
+		insert = self.toSnippetInsert(import_list, insert_file)
 		return (display, insert)
 	
 
-	def to_snippets(self,import_list,insert_file):
-		res = [self.to_snippet(insert_file, import_list)]
-		if self.is_enum() and self._enum_constructors is not None:
+	def toSnippets(self,import_list,insert_file):
+		res = [self.toSnippet(insert_file, import_list)]
+		if self.kind == "enum" and self._enumConstructors is not None:
 			_g = 0
-			_g1 = self.enum_constructors()
+			_g1 = self.enumConstructors()
 			while _g < len(_g1):
 				ev = _g1[_g]
 				_g = _g + 1
-				x = ev.to_snippet(insert_file, import_list)
+				x = ev.toSnippet(insert_file, import_list)
 				res.append(x)
 				__builtin__.len(res)
 				
@@ -12907,183 +12767,156 @@ class hxsublime_tools_HaxeType:
 		return res
 	
 
-	def to_snippet_insert(self,import_list,insert_file):
+	def toSnippetInsert(self,import_list,insert_file):
 		_g = 0
 		while _g < len(import_list):
 			i = import_list[_g]
 			_g = _g + 1
-			if self._file == insert_file or i == self.full_pack_with_module() or i == self.full_qualified_name_with_optional_module() or i == self.full_qualified_name():
+			if self._file == insert_file or i == self.fullPackWithModule() or i == self.fullQualifiedNameWithOptionalModule() or i == self.fullQualifiedName():
 				return self.name
 			
 		
 		
-		return self.full_qualified_name_with_optional_module()
+		return self.fullQualifiedNameWithOptionalModule()
 	
 
-	# var toplevel_pack_cache
-	# var toplevel_pack_cache_set
-	def toplevel_pack(self):
+	# var toplevelPack_cache
+	# var toplevelPack_cache_set
+	def toplevelPack(self):
 		_g = self
-		if not self.toplevel_pack_cache_set:
-			self.toplevel_pack_cache_set = True
+		if not self.toplevelPack_cache_set:
+			self.toplevelPack_cache_set = True
 			def _hx_local_0():
-				pl = _g.pack_list()
+				pl = _g.packList()
 				if __builtin__.len(pl) > 0:
 					return pl[0]
 				
 				return None
 			
 			eval = _hx_local_0
-			self.toplevel_pack_cache = eval()
+			self.toplevelPack_cache = eval()
 		
 		
-		return self.toplevel_pack_cache
+		return self.toplevelPack_cache
 	
 
-	def type_hint(self):
+	def typeHint(self):
 		return self.kind
 
-	# var full_pack_with_optional_module_cache
-	# var full_pack_with_optional_module_cache_set
-	def full_pack_with_optional_module(self):
+	# var fullPackWithOptionalModule_cache
+	# var fullPackWithOptionalModule_cache_set
+	def fullPackWithOptionalModule(self):
 		_g = self
-		if not self.full_pack_with_optional_module_cache_set:
-			self.full_pack_with_optional_module_cache_set = True
+		if not self.fullPackWithOptionalModule_cache_set:
+			self.fullPackWithOptionalModule_cache_set = True
 			def _hx_local_0():
 				mod = None
-				if _g.is_module_type or _g.is_std_type:
+				if _g.is_module_type or _g.isStdType:
 					mod = ""
 				else:
-					mod = _g.pack_suffix() + _g.module
+					mod = _g.packSuffix() + _g.module
 				return _g.pack + mod
 			
 			eval = _hx_local_0
-			self.full_pack_with_optional_module_cache = eval()
+			self.fullPackWithOptionalModule_cache = eval()
 		
 		
-		return self.full_pack_with_optional_module_cache
+		return self.fullPackWithOptionalModule_cache
 	
 
-	# var full_pack_with_module_cache
-	# var full_pack_with_module_cache_set
-	def full_pack_with_module(self):
+	# var fullPackWithModule_cache
+	# var fullPackWithModule_cache_set
+	def fullPackWithModule(self):
 		_g = self
-		if not self.full_pack_with_module_cache_set:
-			self.full_pack_with_module_cache_set = True
+		if not self.fullPackWithModule_cache_set:
+			self.fullPackWithModule_cache_set = True
 			def _hx_local_0():
-				return _g.pack + _g.pack_suffix() + _g.module
+				return _g.pack + _g.packSuffix() + _g.module
 			eval = _hx_local_0
-			self.full_pack_with_module_cache = eval()
+			self.fullPackWithModule_cache = eval()
 		
 		
-		return self.full_pack_with_module_cache
+		return self.fullPackWithModule_cache
 	
 
-	# var is_enum_cache
-	# var is_enum_cache_set
-	def is_enum(self):
-		_g = self
-		if not self.is_enum_cache_set:
-			self.is_enum_cache_set = True
-			def _hx_local_0():
-				return _g.kind == "enum"
-			eval = _hx_local_0
-			self.is_enum_cache = eval()
-		
-		
-		return self.is_enum_cache
-	
+	def isEnum(self):
+		return self.kind == "enum"
 
-	# var is_class_cache
-	# var is_class_cache_set
-	def is_class(self):
-		_g = self
-		if not self.is_class_cache_set:
-			self.is_class_cache_set = True
-			def _hx_local_0():
-				return _g.kind == "class"
-			eval = _hx_local_0
-			self.is_class_cache = eval()
-		
-		
-		return self.is_class_cache
-	
+	def isClass(self):
+		return self.kind == "class"
 
-	def is_abstract(self):
+	def isAbstract(self):
 		return self.kind == "abstract"
 
-	def __repr__(self):
-		return self.toString()
-
-	# var pack_list_cache
-	# var pack_list_cache_set
-	def pack_list(self):
+	# var packList_cache
+	# var packList_cache_set
+	def packList(self):
 		_g = self
-		if not self.pack_list_cache_set:
-			self.pack_list_cache_set = True
+		if not self.packList_cache_set:
+			self.packList_cache_set = True
 			def _hx_local_0():
 				if __builtin__.len(_g.pack) > 0:
 					return _g.pack.split(".")
 				else:
 					return []
 			eval = _hx_local_0
-			self.pack_list_cache = eval()
+			self.packList_cache = eval()
 		
 		
-		return self.pack_list_cache
+		return self.packList_cache
 	
 
-	# var pack_suffix_cache
-	# var pack_suffix_cache_set
-	def pack_suffix(self):
+	# var packSuffix_cache
+	# var packSuffix_cache_set
+	def packSuffix(self):
 		_g = self
-		if not self.pack_suffix_cache_set:
-			self.pack_suffix_cache_set = True
+		if not self.packSuffix_cache_set:
+			self.packSuffix_cache_set = True
 			def _hx_local_0():
 				if __builtin__.len(_g.pack) == 0:
 					return ""
 				else:
 					return "."
 			eval = _hx_local_0
-			self.pack_suffix_cache = eval()
+			self.packSuffix_cache = eval()
 		
 		
-		return self.pack_suffix_cache
+		return self.packSuffix_cache
 	
 
-	# var full_qualified_name_with_optional_module_cache
-	# var full_qualified_name_with_optional_module_cache_set
-	def full_qualified_name_with_optional_module(self):
+	# var fullQualifiedNameWithOptionalModule_cache
+	# var fullQualifiedNameWithOptionalModule_cache_set
+	def fullQualifiedNameWithOptionalModule(self):
 		_g = self
-		if not self.full_qualified_name_with_optional_module_cache_set:
-			self.full_qualified_name_with_optional_module_cache_set = True
+		if not self.fullQualifiedNameWithOptionalModule_cache_set:
+			self.fullQualifiedNameWithOptionalModule_cache_set = True
 			def _hx_local_0():
 				mod = None
-				if _g.is_module_type or _g.is_std_type:
+				if _g.is_module_type or _g.isStdType:
 					mod = ""
 				else:
 					mod = _g.module + "."
-				return _g.pack + _g.pack_suffix() + mod + _g.name
+				return _g.pack + _g.packSuffix() + mod + _g.name
 			
 			eval = _hx_local_0
-			self.full_qualified_name_with_optional_module_cache = eval()
+			self.fullQualifiedNameWithOptionalModule_cache = eval()
 		
 		
-		return self.full_qualified_name_with_optional_module_cache
+		return self.fullQualifiedNameWithOptionalModule_cache
 	
 
-	# var enum_constructors_cache
-	# var enum_constructors_cache_set
-	def enum_constructors(self):
+	# var enumConstructors_cache
+	# var enumConstructors_cache_set
+	def enumConstructors(self):
 		_g = self
-		if not self.enum_constructors_cache_set:
-			self.enum_constructors_cache_set = True
+		if not self.enumConstructors_cache_set:
+			self.enumConstructors_cache_set = True
 			def _hx_local_0():
 				res = None
-				if _g.is_enum() and _g._enum_constructors is not None:
+				if _g.kind == "enum" and _g._enumConstructors is not None:
 					_g1 = []
 					_g2 = 0
-					_g3 = _g._enum_constructors
+					_g3 = _g._enumConstructors
 					while _g2 < len(_g3):
 						e = _g3[_g2]
 						_g2 = _g2 + 1
@@ -13100,27 +12933,27 @@ class hxsublime_tools_HaxeType:
 				return res
 			
 			eval = _hx_local_0
-			self.enum_constructors_cache = eval()
+			self.enumConstructors_cache = eval()
 		
 		
-		return self.enum_constructors_cache
+		return self.enumConstructors_cache
 	
 
-	# var full_qualified_enum_constructors_with_optional_module_cache
-	# var full_qualified_enum_constructors_with_optional_module_cache_set
-	def full_qualified_enum_constructors_with_optional_module(self):
+	# var fullQualifiedEnumConstructorsWithOptionalModule_cache
+	# var fullQualifiedEnumConstructorsWithOptionalModule_cache_set
+	def fullQualifiedEnumConstructorsWithOptionalModule(self):
 		_g = self
-		if not self.full_qualified_enum_constructors_with_optional_module_cache_set:
-			self.full_qualified_enum_constructors_with_optional_module_cache_set = True
+		if not self.fullQualifiedEnumConstructorsWithOptionalModule_cache_set:
+			self.fullQualifiedEnumConstructorsWithOptionalModule_cache_set = True
 			def _hx_local_0():
 				res = None
-				if not _g.is_enum() or _g._enum_constructors is None:
+				if not (_g.kind == "enum") or _g._enumConstructors is None:
 					res = []
 				else:
-					fqName = _g.full_qualified_name_with_optional_module()
+					fqName = _g.fullQualifiedNameWithOptionalModule()
 					_g1 = []
 					_g2 = 0
-					_g3 = _g._enum_constructors
+					_g3 = _g._enumConstructors
 					while _g2 < len(_g3):
 						e = _g3[_g2]
 						_g2 = _g2 + 1
@@ -13134,10 +12967,10 @@ class hxsublime_tools_HaxeType:
 				return res
 			
 			eval = _hx_local_0
-			self.full_qualified_enum_constructors_with_optional_module_cache = eval()
+			self.fullQualifiedEnumConstructorsWithOptionalModule_cache = eval()
 		
 		
-		return self.full_qualified_enum_constructors_with_optional_module_cache
+		return self.fullQualifiedEnumConstructorsWithOptionalModule_cache
 	
 
 	# var classpath_cache
@@ -13150,7 +12983,7 @@ class hxsublime_tools_HaxeType:
 				path_append = None
 				_g = []
 				_g2 = 0
-				_g3 = _g1.pack_list()
+				_g3 = _g1.packList()
 				while _g2 < len(_g3):
 					_ = _g3[_g2]
 					_g2 = _g2 + 1
@@ -13173,19 +13006,19 @@ class hxsublime_tools_HaxeType:
 		return self.classpath_cache
 	
 
-	# var full_qualified_name_cache
-	# var full_qualified_name_cache_set
-	def full_qualified_name(self):
+	# var fullQualifiedName_cache
+	# var fullQualifiedName_cache_set
+	def fullQualifiedName(self):
 		_g = self
-		if not self.full_qualified_name_cache_set:
-			self.full_qualified_name_cache_set = True
+		if not self.fullQualifiedName_cache_set:
+			self.fullQualifiedName_cache_set = True
 			def _hx_local_0():
-				return _g.pack + _g.pack_suffix() + _g.module + "." + _g.name
+				return _g.pack + _g.packSuffix() + _g.module + "." + _g.name
 			eval = _hx_local_0
-			self.full_qualified_name_cache = eval()
+			self.fullQualifiedName_cache = eval()
 		
 		
-		return self.full_qualified_name_cache
+		return self.fullQualifiedName_cache
 	
 
 	# var toString_cache
@@ -13197,7 +13030,7 @@ class hxsublime_tools_HaxeType:
 			def _hx_local_4():
 				def _hx_local_3():
 					def _hx_local_0():
-						_this = _g.enum_constructors()
+						_this = _g.enumConstructors()
 						def _hx_local_2():
 							def _hx_local_1(ec):
 								return ec.toString()
@@ -13205,7 +13038,7 @@ class hxsublime_tools_HaxeType:
 						
 						return _hx_local_2()
 					
-					return "{" + " pack:" + Std.string(_g.pack) + ", " + " module:" + Std.string(_g.module) + ", " + " name:" + Std.string(_g.name) + ", " + " kind:" + Std.string(_g.kind) + ", " + " enum_constructors:" + Std.string(_hx_local_0()) + ", " + " is_private:" + Std.string(_g.is_private) + ", " + " is_module_type:" + Std.string(_g.is_module_type) + ", " + " is_std_type:" + Std.string(_g.is_std_type) + ", " + " is_extern:" + Std.string(_g.is_extern) + ", " + " file:'" + Std.string(_g.file()) + "'" + " classpath:'" + Std.string(_g.classpath()) + "'" + " }"
+					return "{" + " pack:" + Std.string(_g.pack) + ", " + " module:" + Std.string(_g.module) + ", " + " name:" + Std.string(_g.name) + ", " + " kind:" + Std.string(_g.kind) + ", " + " enum_constructors:" + Std.string(_hx_local_0()) + ", " + " is_private:" + Std.string(_g.is_private) + ", " + " is_module_type:" + Std.string(_g.is_module_type) + ", " + " isStdType:" + Std.string(_g.isStdType) + ", " + " is_extern:" + Std.string(_g.isExtern) + ", " + " file:'" + Std.string(_g._file) + "'" + " classpath:'" + Std.string(_g.classpath()) + "'" + " }"
 				
 				return _hx_local_3()
 			
@@ -13225,9 +13058,9 @@ class hxsublime_tools_HaxeType:
 hxsublime_tools_HaxeType._hx_class = hxsublime_tools_HaxeType
 hxsublime_tools_HaxeType._hx_class_name = "hxsublime.tools.HaxeType"
 _hx_classes['hxsublime.tools.HaxeType'] = hxsublime_tools_HaxeType
-hxsublime_tools_HaxeType._hx_fields = ["_src","src_with_comments","match_decl","is_private","pack","module","kind","name","is_module_type","is_std_type","is_extern","_file","_enum_constructors","stripped_start_decl_pos_cache","stripped_start_decl_pos_cache_set","class_body_cache","class_body_cache_set","public_static_fields_cache","public_static_fields_cache_set","all_fields_cache","all_fields_cache_set","all_fields_list_cache","all_fields_list_cache_set","public_static_vars_cache","public_static_vars_cache_set","public_static_functions_cache","public_static_functions_cache_set","class_body_start_cache","class_body_start_cache_set","stripped_end_decl_pos_cache","stripped_end_decl_pos_cache_set","src_pos_cache","src_pos_cache_set","toplevel_pack_cache","toplevel_pack_cache_set","full_pack_with_optional_module_cache","full_pack_with_optional_module_cache_set","full_pack_with_module_cache","full_pack_with_module_cache_set","is_enum_cache","is_enum_cache_set","is_class_cache","is_class_cache_set","pack_list_cache","pack_list_cache_set","pack_suffix_cache","pack_suffix_cache_set","full_qualified_name_with_optional_module_cache","full_qualified_name_with_optional_module_cache_set","enum_constructors_cache","enum_constructors_cache_set","full_qualified_enum_constructors_with_optional_module_cache","full_qualified_enum_constructors_with_optional_module_cache_set","classpath_cache","classpath_cache_set","full_qualified_name_cache","full_qualified_name_cache_set","toString_cache","toString_cache_set"]
+hxsublime_tools_HaxeType._hx_fields = ["_src","src_with_comments","match_decl","is_private","pack","module","kind","name","is_module_type","isStdType","isExtern","_file","_enumConstructors","strippedStartDeclPos_cache","strippedStartDeclPos_cache_set","classBody_cache","classBody_cache_set","publicStaticFields_cache","publicStaticFields_cache_set","allFields_cache","allFields_cache_set","allFieldsList_cache","allFieldsList_cache_set","publicStaticVars_cache","publicStaticVars_cache_set","publicStaticFunctions_cache","publicStaticFunctions_cache_set","classBodyStart_cache","classBodyStart_cache_set","strippedEndDeclPos_cache","strippedEndDeclPos_cache_set","srcPos_cache","srcPos_cache_set","toplevelPack_cache","toplevelPack_cache_set","fullPackWithOptionalModule_cache","fullPackWithOptionalModule_cache_set","fullPackWithModule_cache","fullPackWithModule_cache_set","packList_cache","packList_cache_set","packSuffix_cache","packSuffix_cache_set","fullQualifiedNameWithOptionalModule_cache","fullQualifiedNameWithOptionalModule_cache_set","enumConstructors_cache","enumConstructors_cache_set","fullQualifiedEnumConstructorsWithOptionalModule_cache","fullQualifiedEnumConstructorsWithOptionalModule_cache_set","classpath_cache","classpath_cache_set","fullQualifiedName_cache","fullQualifiedName_cache_set","toString_cache","toString_cache_set"]
 hxsublime_tools_HaxeType._hx_props = []
-hxsublime_tools_HaxeType._hx_methods = ["src","file","stripped_start_decl_pos","class_body","public_static_fields","all_fields","all_fields_list","public_static_vars","public_static_functions","class_body_start","stripped_end_decl_pos","src_pos","to_snippet","to_snippets","to_snippet_insert","toplevel_pack","type_hint","full_pack_with_optional_module","full_pack_with_module","is_enum","is_class","is_abstract","__repr__","pack_list","pack_suffix","full_qualified_name_with_optional_module","enum_constructors","full_qualified_enum_constructors_with_optional_module","classpath","full_qualified_name","toString"]
+hxsublime_tools_HaxeType._hx_methods = ["src","file","strippedStartDeclPos","classBody","publicStaticFields","allFields","allFieldsList","publicStaticVars","publicStaticFunctions","classBodyStart","strippedEndDeclPos","srcPos","toSnippet","toSnippets","toSnippetInsert","toplevelPack","typeHint","fullPackWithOptionalModule","fullPackWithModule","isEnum","isClass","isAbstract","packList","packSuffix","fullQualifiedNameWithOptionalModule","enumConstructors","fullQualifiedEnumConstructorsWithOptionalModule","classpath","fullQualifiedName","toString"]
 hxsublime_tools_HaxeType._hx_statics = []
 hxsublime_tools_HaxeType._hx_interfaces = [hxsublime_macros_LazyFunctionSupport]
 
@@ -13247,9 +13080,9 @@ hxsublime_tools_PathTools.removeDir = PathTools_statics_removeDir
 def PathTools_statics_joinNorm(path1,path2):
 	return python_lib_os_Path.normpath(python_lib_os_Path.join(path1, path2))
 hxsublime_tools_PathTools.joinNorm = PathTools_statics_joinNorm
-def PathTools_statics_is_abs_path(path):
+def PathTools_statics_isAbsPath(path):
 	return python_lib_os_Path.normpath(path) == python_lib_os_Path.abspath(path)
-hxsublime_tools_PathTools.is_abs_path = PathTools_statics_is_abs_path
+hxsublime_tools_PathTools.isAbsPath = PathTools_statics_isAbsPath
 
 
 hxsublime_tools_PathTools._hx_class = hxsublime_tools_PathTools
@@ -13258,7 +13091,7 @@ _hx_classes['hxsublime.tools.PathTools'] = hxsublime_tools_PathTools
 hxsublime_tools_PathTools._hx_fields = []
 hxsublime_tools_PathTools._hx_props = []
 hxsublime_tools_PathTools._hx_methods = []
-hxsublime_tools_PathTools._hx_statics = ["removeDir","joinNorm","is_abs_path"]
+hxsublime_tools_PathTools._hx_statics = ["removeDir","joinNorm","isAbsPath"]
 hxsublime_tools_PathTools._hx_interfaces = []
 
 # print hxsublime.tools.ScopeTools.ScopeTools
@@ -13322,107 +13155,9 @@ def StringTools_statics_startsWithAny(s,l):
 	return False
 	
 hxsublime_tools_StringTools.startsWithAny = StringTools_statics_startsWithAny
-def StringTools_statics_reverse(s):
-	return s[::-1]
-hxsublime_tools_StringTools.reverse = StringTools_statics_reverse
 def StringTools_statics_isWhitespaceOrEmpty(s):
 	return python_lib_Re.match(hxsublime_tools_StringTools._whitespace, s) is not None
 hxsublime_tools_StringTools.isWhitespaceOrEmpty = StringTools_statics_isWhitespaceOrEmpty
-def StringTools_statics_unicodeToStr(s,encoding,errors = ""):
-	if errors is None:
-		errors = ""
-	
-	return s.decode(encoding, errors)
-	
-hxsublime_tools_StringTools.unicodeToStr = StringTools_statics_unicodeToStr
-def StringTools_statics_strToUnicodeToStr(s,encoding1,encoding2):
-	return hxsublime_tools_StringTools.unicodeToStr(python_lib_StringTools.encode(s, encoding1), encoding2)
-hxsublime_tools_StringTools.strToUnicodeToStr = StringTools_statics_strToUnicodeToStr
-def StringTools_statics_strToUnicode(s,encoding,errors = ""):
-	if errors is None:
-		errors = ""
-	
-	return python_lib_StringTools.encode(s, encoding, errors)
-	
-hxsublime_tools_StringTools.strToUnicode = StringTools_statics_strToUnicode
-def StringTools_statics_toUnicode(s):
-	res = None
-	if s is None:
-		return None
-	else:
-		try:
-			res = hxsublime_tools_StringTools.strToUnicode(s, "utf-8", "ignore")
-		except Exception as _hx_e:
-			_hx_e1 = _hx_e.val if isinstance(_hx_e, _HxException) else _hx_e
-			if True:
-				e = _hx_e1
-				try:
-					res = hxsublime_tools_StringTools.strToUnicode(s, "ascii")
-				except Exception as _hx_e:
-					_hx_e1 = _hx_e.val if isinstance(_hx_e, _HxException) else _hx_e
-					if True:
-						e1 = _hx_e1
-						try:
-							res = hxsublime_tools_StringTools.strToUnicode(s, "iso-8859-1")
-						except Exception as _hx_e:
-							_hx_e1 = _hx_e.val if isinstance(_hx_e, _HxException) else _hx_e
-							if True:
-								e2 = _hx_e1
-								try:
-									res = hxsublime_tools_StringTools.strToUnicode(s, "ascii")
-								except Exception as _hx_e:
-									_hx_e1 = _hx_e.val if isinstance(_hx_e, _HxException) else _hx_e
-									if True:
-										e3 = _hx_e1
-										raise _HxException("cannot decode str")
-									else:
-										raise _hx_e
-							else:
-								raise _hx_e
-					else:
-						raise _hx_e
-			else:
-				raise _hx_e
-	return res
-	
-hxsublime_tools_StringTools.toUnicode = StringTools_statics_toUnicode
-def StringTools_statics_st3EncodeUtf8(s):
-	return hxsublime_tools_StringTools.encodeUtf8(s)
-hxsublime_tools_StringTools.st3EncodeUtf8 = StringTools_statics_st3EncodeUtf8
-def StringTools_statics_st2EncodeUtf8(s):
-	return s
-hxsublime_tools_StringTools.st2EncodeUtf8 = StringTools_statics_st2EncodeUtf8
-def StringTools_statics_st2ToUnicode(s):
-	return s
-hxsublime_tools_StringTools.st2ToUnicode = StringTools_statics_st2ToUnicode
-def StringTools_statics_encodeUtf8Bytes(s):
-	return s.decode("utf-8", "ignore")
-hxsublime_tools_StringTools.encodeUtf8Bytes = StringTools_statics_encodeUtf8Bytes
-def StringTools_statics_encodeUtf8(s):
-	if s is None:
-		return None
-	
-	res = None
-	try:
-		res = hxsublime_tools_StringTools.strToUnicodeToStr(s, "ascii", "utf-8")
-	except Exception as _hx_e:
-		_hx_e1 = _hx_e.val if isinstance(_hx_e, _HxException) else _hx_e
-		if True:
-			e = _hx_e1
-			try:
-				res = hxsublime_tools_StringTools.strToUnicodeToStr(s, "iso-8859-1", "utf-8")
-			except Exception as _hx_e:
-				_hx_e1 = _hx_e.val if isinstance(_hx_e, _HxException) else _hx_e
-				if True:
-					e1 = _hx_e1
-					raise _HxException("cannot decode str")
-				else:
-					raise _hx_e
-		else:
-			raise _hx_e
-	return res
-	
-hxsublime_tools_StringTools.encodeUtf8 = StringTools_statics_encodeUtf8
 
 
 hxsublime_tools_StringTools._hx_class = hxsublime_tools_StringTools
@@ -13431,7 +13166,7 @@ _hx_classes['hxsublime.tools.StringTools'] = hxsublime_tools_StringTools
 hxsublime_tools_StringTools._hx_fields = []
 hxsublime_tools_StringTools._hx_props = []
 hxsublime_tools_StringTools._hx_methods = []
-hxsublime_tools_StringTools._hx_statics = ["_whitespace","startsWithAny","reverse","isWhitespaceOrEmpty","unicodeToStr","strToUnicodeToStr","strToUnicode","toUnicode","st3EncodeUtf8","st2EncodeUtf8","st2ToUnicode","encodeUtf8Bytes","encodeUtf8"]
+hxsublime_tools_StringTools._hx_statics = ["_whitespace","startsWithAny","isWhitespaceOrEmpty"]
 hxsublime_tools_StringTools._hx_interfaces = []
 
 # print hxsublime.tools.SublimeTools.SublimeTools
@@ -13602,7 +13337,7 @@ def ViewTools_statics_asyncEdit(view,doEdit):
 	sublime_Sublime.set_timeout(start, 10)
 	
 hxsublime_tools_ViewTools.asyncEdit = ViewTools_statics_asyncEdit
-def ViewTools_statics_find_view_by_name(name):
+def ViewTools_statics_findViewByName(name):
 	windows = sublime_Sublime.windows()
 	_g = 0
 	while _g < len(windows):
@@ -13622,7 +13357,7 @@ def ViewTools_statics_find_view_by_name(name):
 	
 	return None
 	
-hxsublime_tools_ViewTools.find_view_by_name = ViewTools_statics_find_view_by_name
+hxsublime_tools_ViewTools.findViewByName = ViewTools_statics_findViewByName
 def ViewTools_statics_createMissingFolders(view):
 	fn = view.file_name()
 	path = python_lib_os_Path.dirname(fn)
@@ -13691,7 +13426,7 @@ _hx_classes['hxsublime.tools.ViewTools'] = hxsublime_tools_ViewTools
 hxsublime_tools_ViewTools._hx_fields = []
 hxsublime_tools_ViewTools._hx_props = []
 hxsublime_tools_ViewTools._hx_methods = []
-hxsublime_tools_ViewTools._hx_statics = ["insertSnippet","insertAtCursor","getFirstCursorPos","asyncEdit","find_view_by_name","createMissingFolders","getContentUntilFirstCursor","getContentUntil","getContent","isHxsl","isSupported","isUnsupported","getScopesAt","isHaxe","isHxml","isErazor","isNmml","replaceContent","inHaxeCode","inHaxeString","inHaxeComments"]
+hxsublime_tools_ViewTools._hx_statics = ["insertSnippet","insertAtCursor","getFirstCursorPos","asyncEdit","findViewByName","createMissingFolders","getContentUntilFirstCursor","getContentUntil","getContent","isHxsl","isSupported","isUnsupported","getScopesAt","isHaxe","isHxml","isErazor","isNmml","replaceContent","inHaxeCode","inHaxeString","inHaxeComments"]
 hxsublime_tools_ViewTools._hx_interfaces = []
 
 # print js.Boot.Boot
