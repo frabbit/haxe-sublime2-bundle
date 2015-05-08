@@ -1,21 +1,18 @@
-
 package sublime;
 
-import python.lib.Types;
 import sublime.Command;
 import sublime.Window;
+import python.KwArgs;
 
+@:pythonImport("sublime_plugin","WindowCommand")
 extern class WindowCommand extends Command {
 
 	var window:Window;
 
 	public function new (w:Window):Void;
 
-	static function __init__ ():Void 
-	{
-		python.Macros.importFromAs("sublime_plugin","WindowCommand", "sublime.WindowCommand");
-	}
+
 	// 	None	Called when the command is run.
-	public function run(args:KwArgs):Void;
+	public function run(args:KwArgs<Dynamic>):Void;
 
 }

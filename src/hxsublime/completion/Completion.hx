@@ -8,14 +8,14 @@ import hxsublime.project.Project;
 import hxsublime.tools.ScopeTools;
 import hxsublime.tools.ViewTools;
 import python.lib.Time;
-import python.lib.Types.Tup2;
+import python.Tuple;
 import sublime.EventListener;
 import sublime.View;
 
 
 class CompletionListener extends EventListener {
 
-    public function on_query_completions(view:View, prefix:String, locations:Array<Int>) 
+    public function on_query_completions(view:View, prefix:String, locations:Array<Int>)
     {
         var project = Projects.currentProject(view);
         return Completion.dispatchAutoComplete(project, view, prefix, locations[0]);
@@ -23,46 +23,46 @@ class CompletionListener extends EventListener {
 
 }
 
-class Completion 
+class Completion
 {
     // auto complete is triggered, this function dispatches to actual completion based
     // on the file type of the current view
 
-    public static function getCompletionScopes (view:View, location:Int) 
+    public static function getCompletionScopes (view:View, location:Int)
     {
         return ViewTools.getScopesAt(view, location);
     }
 
-    public static function getCompletionOffset (location:Int, prefix:String) 
+    public static function getCompletionOffset (location:Int, prefix:String)
     {
         return location - prefix.length;
     }
 
-    public static function canRunCompletion(offset, scopes:Array<String>) 
+    public static function canRunCompletion(offset, scopes:Array<String>)
     {
         return if (offset == 0) false else isSupportedScope(scopes);
     }
 
-    public static function isSupportedScope(scopes:Array<String>) 
+    public static function isSupportedScope(scopes:Array<String>)
     {
         return !ScopeTools.containsStringOrComment(scopes);
     }
 
-    public static function emptyHandler(project:Project, view:View, offset:Int, prefix:String) 
+    public static function emptyHandler(project:Project, view:View, offset:Int, prefix:String)
     {
         return [];
     }
 
-    public static function getAutoCompleteHandler (view:View, scopes:Array<String>) 
+    public static function getAutoCompleteHandler (view:View, scopes:Array<String>)
     {
         var handler = if (Lambda.has(scopes, Config.SOURCE_HXML)) // hxml completion
             HxmlCompletion.autoComplete;
         else if (Lambda.has(scopes, Config.SOURCE_HAXE)) // hx can be hxsl or haxe
-            if (ViewTools.isHxsl(view)) 
+            if (ViewTools.isHxsl(view))
             {
                 HxslCompletion.autoComplete; // hxsl completion
-            } 
-            else 
+            }
+            else
             {
                 hxsublime.completion.hx.HxCompletion.autoComplete; // hx completion
             }
@@ -72,7 +72,7 @@ class Completion
         return handler;
     }
 
-    public static function dispatchAutoComplete (project:Project, view:View, prefix:String, location:Int) 
+    public static function dispatchAutoComplete (project:Project, view:View, prefix:String, location:Int)
     {
         var startTime = Time.time();
 
@@ -88,7 +88,7 @@ class Completion
             trace("run handler");
             var handler = getAutoCompleteHandler(view, scopes);
             comps = handler(project, view, offset, prefix);
-            
+
         } else {
             trace("no handler");
             comps = [];
@@ -100,7 +100,7 @@ class Completion
         return comps;
     }
 
-    public static function logCompletionInfo (startTime:Int, endTime:Int, comps:Array<Tup2<String,String>>) 
+    public static function logCompletionInfo (startTime:Float, endTime:Float, comps:Array<Tuple2<String,String>>)
     {
         var runTime = endTime-startTime;
         trace("on_query_completion time: " + Std.string(runTime));

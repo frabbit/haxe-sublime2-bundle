@@ -8,19 +8,17 @@ import hxsublime.project.Project;
 import hxsublime.Settings;
 import hxsublime.tools.StringTools;
 import hxsublime.tools.ViewTools;
-import python.lib.Builtin;
+import python.lib.Builtins;
 import python.lib.Re;
 import python.lib.Time;
-import python.lib.Types.Tup2;
-import python.lib.Types.Tup4;
-import python.lib.Types.Tup5;
+import python.Tuple;
 import sublime.Region;
 import sublime.View;
 
-using python.lib.StringTools;
+using hxsublime.support.StringTools;
 
 
-using python.lib.ArrayTools;
+using hxsublime.support.ArrayTools;
 
 
 
@@ -30,11 +28,11 @@ typedef SettingsInterface = {
     public function topLevelCompletionsOnDemand(?view:View):Bool;
     public function isAsyncCompletion(?view:View):Bool;
     public function showOnlyAsyncCompletions(?view:View):Bool;
-    public function getCompletionDelays(?view:View):Tup2<Int, Int>;
+    public function getCompletionDelays(?view:View):Tuple2<Int, Int>;
     public function showCompletionTimes(?view:View):Bool;
 }
 
-class CompletionSettings implements LazyFunctionSupport 
+class CompletionSettings implements LazyFunctionSupport
 {
     var settings:SettingsInterface;
     public function new(settings)

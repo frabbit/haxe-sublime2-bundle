@@ -2,7 +2,7 @@ package hxsublime.commands;
 
 import hxsublime.commands.FindDeclaration.HaxeFindDeclarationCommand;
 import hxsublime.panel.Panels;
-import python.lib.Types.Dict;
+import python.Dict;
 import sublime.View;
 
 class HaxeShowDocCommand extends HaxeFindDeclarationCommand
@@ -16,11 +16,11 @@ class HaxeShowDocCommand extends HaxeFindDeclarationCommand
     override public function handleSuccessfulResult(view:View, json_res:Dict<String,Dynamic>, using_insert, insert_before, insert_after, expr_end, build, temp_path, temp_file)
     {
         var doc = null;
-        if (json_res.hasKey("doc")) 
+        if (json_res.hasKey("doc"))
         {
             doc = json_res.get("doc", null);
         }
-        else 
+        else
         {
             doc = "No documentation found";
         }

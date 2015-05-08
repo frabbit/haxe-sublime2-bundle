@@ -10,21 +10,19 @@ import hxsublime.project.Project;
 import hxsublime.Settings;
 import hxsublime.tools.StringTools;
 import hxsublime.tools.ViewTools;
-import python.lib.Builtin;
+import python.lib.Builtins;
 import python.lib.Re;
 import python.lib.Time;
-import python.lib.Types.Tup2;
-import python.lib.Types.Tup4;
-import python.lib.Types.Tup5;
+import python.Tuple;
 import sublime.Region;
 import sublime.View;
 
-using python.lib.StringTools;
+using hxsublime.support.StringTools;
 
 
-using python.lib.ArrayTools;
+using hxsublime.support.ArrayTools;
 
-class CompletionOptions implements LazyFunctionSupport 
+class CompletionOptions implements LazyFunctionSupport
 {
 
     var _types:CompletionTypes;
@@ -40,48 +38,48 @@ class CompletionOptions implements LazyFunctionSupport
         this._trigger = trigger;
     }
 
-    public function copyAsManual() 
+    public function copyAsManual()
     {
         return new CompletionOptions(Constants.COMPLETION_TRIGGER_MANUAL, this._context, this.types().val(), this._toplevel.val());
     }
 
-    public function copyAsAsync() 
+    public function copyAsAsync()
     {
         return new CompletionOptions(Constants.COMPLETION_TRIGGER_ASYNC, this._context, this.types().val(), this._toplevel.val());
     }
 
     @property
-    public function types() 
+    public function types()
     {
         return this._types;
     }
 
 
     @lazyFunction
-    public function asyncTrigger() 
+    public function asyncTrigger()
     {
         return this._trigger == Constants.COMPLETION_TRIGGER_ASYNC;
     }
 
     @lazyFunction
-    public function manualCompletion() 
+    public function manualCompletion()
     {
         return this._trigger == Constants.COMPLETION_TRIGGER_MANUAL;
     }
 
     @lazyFunction
-    public function macroCompletion() 
+    public function macroCompletion()
     {
         return this._context == Constants.COMPILER_CONTEXT_MACRO;
     }
 
     @lazyFunction
-    public function regularCompletion() 
+    public function regularCompletion()
     {
         return this._context == Constants.COMPILER_CONTEXT_REGULAR;
     }
 
-    public function eq (other:CompletionOptions) 
+    public function eq (other:CompletionOptions)
     {
         return this._trigger == other._trigger && this._types.eq(other._types) && this._toplevel.eq(other._toplevel) && this._context == other._context;
     }

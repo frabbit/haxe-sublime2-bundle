@@ -6,7 +6,7 @@ import hxsublime.tools.HxSrcTools;
 import hxsublime.tools.ViewTools;
 import python.lib.Os;
 import python.lib.os.Path;
-import python.lib.Types.KwArgs;
+import python.KwArgs;
 import sublime.Edit;
 import sublime.EventListener;
 import sublime.Region;
@@ -37,16 +37,16 @@ private class State {
     }
 
 
-    override public function run( kwArgs:KwArgs ) 
+    override public function run( kwArgs:KwArgs<Dynamic> )
     {
 
         var paths = kwArgs.get("paths", []);
         var t = kwArgs.get("t", "class");
-        
+
 
         trace("createtype");
-        
-        
+
+
         var view = win.active_view();
 
         var project = Projects.currentProject(view);
@@ -59,7 +59,7 @@ private class State {
         }
 
         var pack = [];
-        
+
         if (builds.length == 0 && view != null && view.file_name() != null)
         {
             trace(view.file_name());
@@ -94,14 +94,14 @@ private class State {
                 {
                     trace("class path: " + cp);
                     trace("path: " + path);
-                    if (path.startsWith( cp )) 
+                    if (path.startsWith( cp ))
                     {
-                        
+
                         this.classpath = path.substring(0,cp.length);
                         trace("this.classpath: " + this.classpath);
-                        
+
                         var rel_path = path.substr(cp.length+1);
-                        
+
                         trace(rel_path);
                         if (rel_path.length == 0)
                         {
@@ -111,28 +111,28 @@ private class State {
                         {
                             var sub_packs = rel_path.split(Os.sep);
                             trace("subpacks:" + Std.string(sub_packs));
-                            for (p in sub_packs) 
+                            for (p in sub_packs)
                             {
 
                                 if (p.indexOf(".") > -1)
-                                { 
+                                {
                                     break;
                                 }
                                 else if (p != null) {
                                     pack.push(p);
-                                   
+
                                     found = true;
                                 }
                             }
                         }
                     }
-     
-                    if (found) 
+
+                    if (found)
                     {
                         break;
                     }
                 }
-                if (found) 
+                if (found)
                 {
                     break;
                 }
@@ -149,7 +149,7 @@ private class State {
 
         trace(pack);
         // so default text ends with .
-        
+
         var packSuggestion = pack.join(".");
         if (packSuggestion.length > 0) {
             packSuggestion += ".";
@@ -159,7 +159,7 @@ private class State {
         win.show_input_panel("Enter "+t+" name : " , packSuggestion , function (inp) this.onDone(inp, t) , this.onChange , this.onCancel );
     }
 
-    public function onDone( inp:String, cur_type:String ) 
+    public function onDone( inp:String, cur_type:String )
     {
 
         var fn = this.classpath;
@@ -171,7 +171,7 @@ private class State {
         while( parts.length > 0 )
         {
             var p = parts.shift();
-            
+
             fn = Path.join( fn , p );
 
             if (hxsublime.tools.HxSrcTools.Regex.isType.match( p ) != null)
@@ -179,7 +179,7 @@ private class State {
                 cl = p;
                 break;
             }
-            else 
+            else
             {
                 pack.push(p);
             }
@@ -203,15 +203,15 @@ private class State {
 
         Sublime.active_window().open_file( fn );
     }
- 
 
-    public function onChange( inp:String ) 
+
+    public function onChange( inp:String )
     {
         //sublime.status_message( "Current classpath : " + this.classpath )
         trace( inp );
     }
 
-    public function onCancel( ) 
+    public function onCancel( )
     {
         trace("cancel");
     }
@@ -223,8 +223,8 @@ private class State {
     override public function on_load (view:View)
     {
         var can_create_file = view != null && view.file_name() != null && State.current_create_type_info.exists(view.file_name()) && view.size() == 0;
-        
-        if (can_create_file) 
+
+        if (can_create_file)
         {
             this.create_file(view);
         }
@@ -233,7 +233,7 @@ private class State {
     public function create_file(view:View)
     {
         var data = State.current_create_type_info.get(view.file_name());
-        
+
         function run_edit(v:View, edit:Edit)
         {
             trace(data);

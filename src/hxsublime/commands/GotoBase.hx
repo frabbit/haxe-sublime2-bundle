@@ -4,16 +4,16 @@ import haxe.ds.StringMap;
 import hxsublime.project.Projects;
 import hxsublime.tools.HxSrcTools.HaxeType;
 import hxsublime.tools.ViewTools;
-import python.lib.Types.Tup2;
+import python.Tuple;
+import python.KwArgs;
 import sublime.Edit;
 import sublime.EventListener;
 import sublime.Region;
 import sublime.Sublime;
 import sublime.TextCommand;
-import python.lib.Types;
 import sublime.View;
 
-private class State 
+private class State
 {
     public static var _find_decl_file = null;
     public static var _find_decl_pos = null;
@@ -29,7 +29,7 @@ private class State
     {
         return throw "abstract method";
     }
-    function getData (types:StringMap<HaxeType>):Array<Tup2<String, T>>
+    function getData (types:StringMap<HaxeType>):Array<Tuple2<String, T>>
     {
         return throw "abstract method";
     }
@@ -44,23 +44,23 @@ private class State
         return throw "abstract method";
     }
 
-    override public function run( edit:Edit, ?kwArgs:KwArgs ) 
+    override public function run( edit:Edit, ?kwArgs:KwArgs<Dynamic> )
     {
-        
+
 
         trace("run HaxeListBuildFieldsCommand");
 
         var view = this.view;
 
         var project = Projects.currentProject(view);
-        
 
-        if (!project.hasBuild()) 
+
+        if (!project.hasBuild())
         {
             project.extractBuildArgs(view, false);
         }
 
-        if (!project.hasBuild()) 
+        if (!project.hasBuild())
         {
             project.extractBuildArgs(view, true);
             return;
@@ -75,11 +75,11 @@ private class State
         var bundle_types = bundle.allTypesAndEnumConstructorsWithInfo();
 
         var filtered_types = new StringMap();
-        
+
         for (k in bundle_types.keys())
         {
             var t = bundle_types.get(k);
-            if (build.isTypeAvailable(t)) 
+            if (build.isTypeAvailable(t))
             {
                 filtered_types.set(k, t);
             }
@@ -88,21 +88,21 @@ private class State
 
         var function_list = this.getEntries(filtered_types);
         var function_list_data = this.getData(filtered_types);
-        
+
 
         trace(Std.string(function_list));
 
         trace(Std.string(function_list.length));
 
-        
+
         this.selecting_build = true;
         Sublime.status_message("Please select a type");
-        
+
         var win = view.window();
 
         var sel = view.sel();
 
-        if (sel.length == 1 && sel[0].begin() != sel[0].end()) 
+        if (sel.length == 1 && sel[0].begin() != sel[0].end())
         {
             State._init_text = ViewTools.getContent(view).substring(sel[0].begin(), sel[0].end());
         }
@@ -115,17 +115,17 @@ private class State
         {
             State._init_text = "";
         }
-        
+
         function onSelected (i:Int)
         {
-            
+
             State._is_open = false;
             State._init_text = "";
             if (i >= 0)
             {
                 var selected_type = function_list_data[i];
                 trace("selected field: " + Std.string(selected_type._1));
-                
+
                 var src_pos = this.getSrcPos(selected_type._2);
 
                 var goto_file = this.getFile(selected_type._2);
@@ -152,7 +152,7 @@ private class State
                 Sublime.set_timeout(show, 130);
             }
         }
-        State._is_open = true;    
+        State._is_open = true;
         win.show_quick_panel( function_list , onSelected  , Sublime.MONOSPACE_FONT );
     }
 
@@ -165,17 +165,17 @@ private class State
 
     override public function on_activated(view:View)
     {
-        
-        
+
+
         // global _find_decl_pos, _find_decl_file, _is_open, _init_text
         var find_pos = State._find_decl_pos;
         var find_file = State._find_decl_file;
         trace("HaxeGotoBaseListener::on_activated");
-        
-        
+
+
         trace(Std.string(view));
 
-        
+
         if (view != null && State._is_open)
         {
             State._is_open = false;
@@ -183,14 +183,14 @@ private class State
             ViewTools.insertAtCursor(view, State._init_text);
             State._init_text = "";
         }
-                        
+
 
         if (view != null && view.file_name() != null)
         {
-        
+
             if (view.file_name() == find_file)
             {
-        
+
                 view.sel().clear();
 
                 var min = find_pos;

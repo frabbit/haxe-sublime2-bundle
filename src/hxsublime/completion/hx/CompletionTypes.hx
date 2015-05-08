@@ -8,22 +8,20 @@ import hxsublime.project.Project;
 import hxsublime.Settings;
 import hxsublime.tools.StringTools;
 import hxsublime.tools.ViewTools;
-import python.lib.Builtin;
+import python.lib.Builtins;
 import python.lib.Re;
 import python.lib.Time;
-import python.lib.Types.Tup2;
-import python.lib.Types.Tup4;
-import python.lib.Types.Tup5;
+import python.Tuple;
 import sublime.Region;
 import sublime.View;
 
-using python.lib.StringTools;
+using hxsublime.support.StringTools;
 
 
-using python.lib.ArrayTools;
+using hxsublime.support.ArrayTools;
 
 
-class CompletionTypes 
+class CompletionTypes
 {
     var _opt:Int;
 
@@ -35,12 +33,12 @@ class CompletionTypes
         return _opt;
     }
 
-    public function add (val:Int) 
+    public function add (val:Int)
     {
         _opt |= val;
     }
 
-    public function addHint () 
+    public function addHint ()
     {
         _opt = _opt | Constants.COMPLETION_TYPE_HINT;
     }
@@ -52,7 +50,7 @@ class CompletionTypes
     public function hasHint () {
         return (_opt & Constants.COMPLETION_TYPE_HINT) > 0;
     }
-    
+
     public function hasToplevel () {
         return (_opt & Constants.COMPLETION_TYPE_TOPLEVEL) > 0;
     }

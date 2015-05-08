@@ -6,29 +6,29 @@ import hxsublime.project.Project;
 import hxsublime.tools.HxSrcTools.HaxeType;
 import sublime.View;
 
-using python.lib.ArrayTools;
+using hxsublime.support.ArrayTools;
 
-class OpenFlBuild extends NmeBuild implements LazyFunctionSupport 
+class OpenFlBuild extends NmeBuild implements LazyFunctionSupport
 {
-	
+
 	public function new (project:Project, title:String, openfl_xml:String, target, cb:HxmlBuild = null)
 	{
 		super(project, title, openfl_xml, target, cb);
 	}
-	
+
 	override public function copy ()
 	{
 		var hxml_copy = if (this._hxmlBuild != null) this.hxmlBuild().copy() else null;
 		var r = new OpenFlBuild(this.project, this.title(), this.nmml, this.target(), hxml_copy);
-		
+
 		return r;
 	}
-	
+
 	override public function getExecutable(project:Project, view:View)
 	{
 		return project.openflExec(view);
 	}
-	
+
 	//public function filterPlatformSpecific(packs_or_classes:Array<String>)
 	//{
 	//	var res = [];
@@ -41,15 +41,15 @@ class OpenFlBuild extends NmeBuild implements LazyFunctionSupport
 	//	}
 	//	return res;
 	//}
-	
-	override public function toString() 
+
+	override public function toString()
 	{
 		// out = os.path.basename(this.hxml_build.output)
 		var out = this.title();
 		var target = this.target().name;
 		return '${out} (OpenFL - ${target})';
 	}
-	
+
 	//@lazyFunction
 	override public function isTypeAvailable (type:HaxeType)
 	{

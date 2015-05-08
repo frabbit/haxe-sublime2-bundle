@@ -4,26 +4,26 @@ import hxsublime.panel.Panels;
 import python.lib.Codecs;
 import sublime.Sublime;
 
-class Log 
+class Log
 {
 
-	public static function debug(msg:Dynamic) 
+	public static function debug(msg:Dynamic)
 	{
 		log(msg, false);
 	}
 
-	public static function log (msg:Dynamic, to_file = false) 
+	public static function log (msg:Dynamic, to_file = false)
 	{
 		var msgStr = Std.string(msg);
-		if (to_file) 
+		if (to_file)
 		{
-			var f = Codecs.open( "st3_haxe_log.txt" , "ab" , "utf-8" , "ignore" );
+			var f = cast (Codecs.open( "st3_haxe_log.txt" , "ab" , "utf-8" , "ignore" ), python.lib.io.TextIOBase);
 			f.write( msgStr + "\n" );
 			f.close();
 		}
-		else if (Settings.useDebugPanel()) 
+		else if (Settings.useDebugPanel())
 		{
-			
+
 			function f() {
 				Panels.debugPanel().writeln(msg);
 			}

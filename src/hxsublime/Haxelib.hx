@@ -6,12 +6,11 @@ import hxsublime.project.Project;
 import hxsublime.tools.HxSrcTools.HaxeType;
 import python.lib.os.Path;
 import python.lib.Re;
-import python.lib.Types.Tup2;
-import python.lib.Types.Tup3;
+import python.Tuple;
 import sublime.Sublime;
 
 
-using python.lib.StringTools;
+using hxsublime.support.StringTools;
 
 
 class HaxeLibLibrary {
@@ -23,14 +22,14 @@ class HaxeLibLibrary {
 	public var packages: Array<String>;
 	public var path:String;
 
-	public function new(manager:HaxeLibManager, name:String , dev:Bool , version:String ) 
+	public function new(manager:HaxeLibManager, name:String , dev:Bool , version:String )
 	{
 		this.name = name;
 		this.dev = dev;
 		this.version = version;
 		this.classes = null;
 		this.packages = null;
- 
+
 		if (dev) {
 			this.path = version;
 			this.version = "dev";
@@ -38,30 +37,30 @@ class HaxeLibLibrary {
 			path = Path.join( manager.basePath , name , this.version.split(".").join(","));
 		}
 	}
- 
 
-	public function as_cmd_arg () 
+
+	public function as_cmd_arg ()
 	{
 		return name + ":" + version;
 	}
 
-	public function extract_types( ) 
+	public function extract_types( )
 	{
 		if (dev || classes == null && packages == null) {
 			var t = Types.extractTypes( this.path );
 			classes = t.allTypes();
 			packages = t.packs();
 		}
-		
-		return Tup2.create(this.classes, this.packages);
+
+		return Tuple2.make(this.classes, this.packages);
 	}
 }
 
 
 
-class HaxeLibManager 
+class HaxeLibManager
 {
-	
+
 	static var libLine = Re.compile("([^:]*):[^\\[]*\\[(dev\\:)?(.*)\\]");
 
 
@@ -98,22 +97,22 @@ class HaxeLibManager
 		}
 	}
 
-	public function getCompletions():Array<Tup2<String, String>> 
+	public function getCompletions():Array<Tuple2<String, String>>
 	{
 		var comps = [];
 		for (k in available().keys())
 		{
 			var lib = available().get(k);
 			trace(lib);
-			comps.push( Tup2.create( lib.name + " [" + lib.version + "]" , lib.name ) );
+			comps.push( Tuple2.make( lib.name + " [" + lib.version + "]" , lib.name ) );
 		}
 
 		return comps;
 	}
 
-	
 
-	public function scan() 
+
+	public function scan()
 	{
 		scanned = true;
 		var env = project.haxeEnv();
@@ -128,19 +127,19 @@ class HaxeLibManager
 
 		var cmd = project.haxelibExec();
 		cmd.push("list");
-		
+
 		var r = Execute.runCmd( cmd, env );
 		var hlout = r._1;
 		var hlerr = r._2;
 		//trace("haxelib output: " + hlout);
 		//trace("haxelib error: " + hlerr);
-		for (l in hlout.split("\n")) 
+		for (l in hlout.split("\n"))
 		{
 			var found = libLine.match( l );
-			if (found != null) 
+			if (found != null)
 			{
-				var g:Tup3<String,String,String> = cast found.groups(null);
-				if (g != null) 
+				var g:Tuple3<String,String,String> = cast found.groups(null);
+				if (g != null)
 				{
 					var name = g._1, dev = g._2, version = g._3;
 					var lib = new HaxeLibLibrary( this, name , dev != null , version );
@@ -217,8 +216,8 @@ class HaxeLibManager
 	{
 		return available().exists(lib);
 	}
-	
-	public function getLib(lib:String) 
+
+	public function getLib(lib:String)
 	{
 		return available().get(lib);
 	}

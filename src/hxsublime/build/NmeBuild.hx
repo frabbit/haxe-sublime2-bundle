@@ -8,18 +8,18 @@ import hxsublime.macros.LazyFunctionSupport;
 import hxsublime.project.Project;
 import hxsublime.tools.HxSrcTools.HaxeType;
 import python.lib.os.Path;
-import python.lib.Types.Tup2;
+import python.Tuple;
 import sublime.Sublime;
 import sublime.View;
 
 
 using StringTools;
 
-using python.lib.ArrayTools;
+using hxsublime.support.ArrayTools;
 
 class NmeBuild implements Build implements LazyFunctionSupport {
 
-	
+
 	var _title : String;
 	var _target:Target;
 	var _hxmlBuild : HxmlBuild;
@@ -73,15 +73,15 @@ class NmeBuild implements Build implements LazyFunctionSupport {
 		var view = Sublime.active_window().active_view();
 		var display_cmd = this.getBuildCommand(this.project, view).copy();
 		display_cmd.push("display");
-		
+
 		return Tools.createHaxeBuildFromNmml(this.project, this._target, this.nmml, display_cmd);
 	}
 
-	
+
 	public function hxmlBuild ()
 	{
-		
-		if (this._hxmlBuild == null) 
+
+		if (this._hxmlBuild == null)
 		{
 			this._hxmlBuild = this.getHxmlBuildWithNmeDisplay();
 		}
@@ -89,12 +89,12 @@ class NmeBuild implements Build implements LazyFunctionSupport {
 		return this._hxmlBuild;
 	}
 
-	public function toString() 
+	public function toString()
 	{
 		var title = this.title();
 		var target = this.target().name;
 		return '${title} (NME - ${target})';
-		
+
 	}
 
 	public function setStdBundle(std_bundle)
@@ -144,7 +144,7 @@ class NmeBuild implements Build implements LazyFunctionSupport {
 	public function getBuildFolder()
 	{
 		var r = null;
-		if (this.nmml != null) 
+		if (this.nmml != null)
 		{
 			r = Path.dirname(this.nmml);
 		}
@@ -153,7 +153,7 @@ class NmeBuild implements Build implements LazyFunctionSupport {
 		return r;
 	}
 
-	public function setAutoCompletion(display:String, macro_completion = false, no_output = true)
+	public function setAutoCompletion(display:String, ?macro_completion = false, ?no_output = true)
 	{
 		this.hxmlBuild().setAutoCompletion(display, macro_completion, no_output);
 	}
@@ -188,7 +188,7 @@ class NmeBuild implements Build implements LazyFunctionSupport {
 		return this.getExecutable(project, view).copy();
 	}
 
-	public function escapeCmd(cmd:Array<String>) 
+	public function escapeCmd(cmd:Array<String>)
 	{
 		return this.hxmlBuild().escapeCmd(cmd);
 	}
@@ -198,7 +198,7 @@ class NmeBuild implements Build implements LazyFunctionSupport {
 		var r = this.prepareBuildCmd(project, server_mode, view);
 		var cmd = r._1, folder = r._2;
 		cmd.push("--no-output");
-		return Tup2.create(cmd, folder);
+		return Tuple2.make(cmd, folder);
 	}
 
 	public function prepareBuildCmd(project:Project, server_mode:Bool, view:View)
@@ -220,21 +220,21 @@ class NmeBuild implements Build implements LazyFunctionSupport {
 		cmd.push(this.target().plattform);
 		cmd.extend(this.target().args);
 
-		if (server_mode) 
+		if (server_mode)
 		{
 			cmd.extend(["--connect", Std.string(project.server.get_server_port())]);
 		}
 
-		return Tup2.create(cmd, this.getBuildFolder());
+		return Tuple2.make(cmd, this.getBuildFolder());
 	}
 
-	
+
 	public function classpaths ()
 	{
 		return this.hxmlBuild().classpaths();
 	}
 
-	
+
 	public function args ()
 	{
 		return this.hxmlBuild().args();
@@ -248,14 +248,14 @@ class NmeBuild implements Build implements LazyFunctionSupport {
 
 	public function isPackAvailable (pack:String)
 	{
-		if (pack == "") 
+		if (pack == "")
 		{
 			return true;
 		}
 
 		var pack = pack.split(".")[0];
 		var target = this.hxmlBuild().target;
-		
+
 		var tp = Config.target_packages.concat(["native", "browser", "nme"]);
 
 		var noTargetPack = !Lambda.has(tp, pack);

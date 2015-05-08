@@ -19,15 +19,18 @@ import sublime.Region;
 import sublime.Sublime;
 import sublime.TextCommand;
 import sublime.View;
-import python.lib.Types;
+import python.KwArgs;
+import python.Dict;
+import python.Tuple;
+
 
 import hxsublime.tools.HxSrcTools.Regex in HxRegex;
 
-using python.lib.StringTools;
+using hxsublime.support.StringTools;
 
-@:keep class HaxeFindDeclarationCommand extends TextCommand 
+@:keep class HaxeFindDeclarationCommand extends TextCommand
 {
-    override public function run( edit:Edit, ?_:KwArgs ) 
+    override public function run( edit:Edit, ?_:KwArgs<Dynamic> )
     {
         this.run1(true);
     }
@@ -49,7 +52,7 @@ using python.lib.StringTools;
         }
 
         var project = Projects.currentProject(view);
-        
+
 
         if (!project.hasBuild())
         {
@@ -65,7 +68,7 @@ using python.lib.StringTools;
 
 
         var helperMethod = this.helperMethod();
-        
+
         var src = ViewTools.getContent(view);
 
 
@@ -78,14 +81,14 @@ using python.lib.StringTools;
         var srcBeforeUsing = src.substring(0, usingPos);
         //var src_after_using = src.substr(using_pos);
 
-        
+
         var sel = view.sel()[0];
         var pos = sel.begin();
 
         var exprEnd = null;
         var exprStart = null;
 
-        if (sel.end() == pos) 
+        if (sel.end() == pos)
         {
 
             var r = Helper.getWordAt(view, src, pos);
@@ -93,7 +96,7 @@ using python.lib.StringTools;
 
             var chars = ["{", "+", "-", "(", "[", "*", "/", "=", ";", ":"];
             var res = HxSrcTools.reverse_search_next_char_on_same_nesting_level(src, chars, word_end-1);
-            
+
             res = HxSrcTools.skipWhitespaceOrComments(src, res._1+1);
 
 
@@ -101,12 +104,12 @@ using python.lib.StringTools;
             exprEnd = word_end;
             exprStart = res._1;
         }
-        else 
+        else
         {
             exprStart = pos;
             exprEnd = sel.end();
         }
-        
+
         var srcBeforeExpr = src.substring(usingPos,exprStart);
 
         var srcAfterExpr = src.substr(exprEnd);
@@ -122,9 +125,9 @@ using python.lib.StringTools;
         var orderStr = Std.string(order);
         var insertAfter = ", " + orderStr + ")" + displayStr;
 
-        
+
         var newSrc = srcBeforeUsing + usingInsert + srcBeforeExpr + insertBefore +  exprString + insertAfter + srcAfterExpr;
-        
+
         //trace(newSrc);
 
         var r = Helper.prepareBuild(view, project, useDisplay, newSrc);
@@ -137,25 +140,25 @@ using python.lib.StringTools;
             var filePos = Re.compile("\\|\\|\\|\\|\\|([^|]+)\\|\\|\\|\\|\\|", Re.I);
 
             var res = Re.search(filePos, out);
-            if (res != null) 
+            if (res != null)
             {
                 //we've got a proper response
                 var json_str = res.group(1);
                 var jsonResult = Json.loads(json_str);
 
-                if (jsonResult.hasKey("error")) 
+                if (jsonResult.hasKey("error"))
                 {
                     var error = jsonResult.get("error", null);
                     trace("nothing found (1), cannot find declaration");
                     if (order == 1 && useDisplay)
                     {
-                        this.run1(true, 2);   
+                        this.run1(true, 2);
                     }
                     else if (order == 2 && useDisplay)
                     {
                         this.run1(true, 3);
                     }
-                }    
+                }
                 else
                 {
                     this.handleSuccessfulResult(view, jsonResult, usingInsert, insertBefore, insertAfter, exprEnd, build, temp_path, tempFile);
@@ -167,7 +170,7 @@ using python.lib.StringTools;
                 {
                     this.run1(true, 2);
                 }
-                else if (order == 2 && useDisplay) 
+                else if (order == 2 && useDisplay)
                 {
                     this.run1(true, 3);
                 }
@@ -176,7 +179,7 @@ using python.lib.StringTools;
                     trace("nothing found yet (2), try again without display (workaround)");
                     this.run1(false);
                 }
-                else 
+                else
                 {
                     Panels.defaultPanel().writeln("Cannot find declaration for expression " + exprString.strip());
                     trace("nothing found (3), cannot find declaration");
@@ -207,19 +210,19 @@ using python.lib.StringTools;
             // so we don't have to adjust the real file position and the sublime
             // text position
         }
-        else 
+        else
         {
             var f = Codecs.open(absPath, "r", "utf-8");
             var realSrc = f.read();
-            f.close();
+            (cast f:Dynamic).close();
             // line endings could be \r\n, but sublime text has only \n after
             // opening a file, so we have to calculate the offset betweet the
             // returned position and the real position by counting all \r before min
             // should be moved to a utility function
             var offset = 0;
-            for (i in 0...min) 
+            for (i in 0...min)
             {
-                if (realSrc.charAt(i) == "\r") 
+                if (realSrc.charAt(i) == "\r")
                 {
                     offset += 1;
                 }
@@ -243,7 +246,7 @@ using python.lib.StringTools;
 
             targetView.show(new Region(min));
         }
-        else 
+        else
         {
             //global find_decl_pos, find_decl_file
             State.findDeclFile = absPath;
@@ -254,13 +257,13 @@ using python.lib.StringTools;
     }
 }
 //shared between FindDelaration Command and Listener
-private class State 
+private class State
 {
     public static var findDeclFile:Null<String> = null;
     public static var findDeclPos:Null<Int> = null;
 }
 
-private class Helper 
+private class Helper
 {
     static var plugin_path = Plugin.plugin_base_dir();
 
@@ -273,13 +276,13 @@ private class Helper
 
         var wordStr = src.substring(wordStart,wordEnd);
 
-        return Tup3.create(wordStr, wordStart, wordEnd);
+        return Tuple3.make(wordStr, wordStart, wordEnd);
     }
 
     public static function prepareBuild(view:View, project:Project, useDisplay:Bool, newSrc:String)
     {
         var build = project.getBuild(view).copy();
-        build.addArg(Tup2.create("-D", "no-inline"));
+        build.addArg(Tuple2.make("-D", "no-inline"));
 
         var r = Temp.createTempPathAndFile(build, view.file_name(), newSrc);
         var tempPath = r._1, tempFile = r._2;
@@ -287,26 +290,26 @@ private class Helper
         build.addClasspath(tempPath);
 
         build.addClasspath(Path.join(plugin_path, "haxetools"));
-        
+
 
         trace(build.classpaths);
 
-        build.addArg(Tup2.create("-dce", "no"));
+        build.addArg(Tuple2.make("-dce", "no"));
 
         if (useDisplay)
         {
             build.setAutoCompletion(tempFile + "@0", false);
         }
-        return Tup3.create(build, tempPath, tempFile);
+        return Tuple3.make(build, tempPath, tempFile);
     }
 }
 
 @:keep class HaxeFindDeclarationListener extends EventListener
 {
-    override public function on_activated(view:View) 
+    override public function on_activated(view:View)
     {
         //global find_decl_pos, find_decl_file
-        if (view != null && view.file_name() != null) 
+        if (view != null && view.file_name() != null)
         {
             if (view.file_name() == State.findDeclFile)
             {
@@ -317,7 +320,7 @@ private class Helper
                 view.sel().add(new Region(min));
                 // move to line is delayed, seems to work better
                 // without delay the animation to the region does not work properly sometimes
-                function show () 
+                function show ()
                 {
                     view.show_at_center(new Region(min));
                 }

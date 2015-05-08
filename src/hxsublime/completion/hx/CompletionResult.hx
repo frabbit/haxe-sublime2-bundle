@@ -8,22 +8,20 @@ import hxsublime.project.Project;
 import hxsublime.Settings;
 import hxsublime.tools.StringTools;
 import hxsublime.tools.ViewTools;
-import python.lib.Builtin;
+import python.lib.Builtins;
 import python.lib.Re;
 import python.lib.Time;
-import python.lib.Types.Tup2;
-import python.lib.Types.Tup4;
-import python.lib.Types.Tup5;
+import python.Tuple;
 import sublime.Region;
 import sublime.View;
 
-using python.lib.StringTools;
+using hxsublime.support.StringTools;
 
 
-using python.lib.ArrayTools;
+using hxsublime.support.ArrayTools;
 
 class CompletionResult implements LazyFunctionSupport {
-    
+
     public static function emptyResult (ctx:CompletionContext, retrieve_toplevel_comps = null) {
         return new CompletionResult("", [], "", [], ctx, retrieve_toplevel_comps);
     }
@@ -32,34 +30,34 @@ class CompletionResult implements LazyFunctionSupport {
     public var ctx:CompletionContext;
 
     var ret:String;
-    var comps:Array<Tup2<String, String>>;
+    var comps:Array<Tuple2<String, String>>;
     var status:String;
-    
-
-    var retrieve_toplevel_comps:Void->Array<Tup2<String, String>>;
 
 
+    var retrieve_toplevel_comps:Void->Array<Tuple2<String, String>>;
 
-    public function new (ret:String, comps:Array<Tup2<String, String>>, status:String, hints:Array<Array<String>>, ctx:CompletionContext, retrieve_toplevel_comps:Void->Array<Tup2<String, String>>) 
+
+
+    public function new (ret:String, comps:Array<Tuple2<String, String>>, status:String, hints:Array<Array<String>>, ctx:CompletionContext, retrieve_toplevel_comps:Void->Array<Tuple2<String, String>>)
     {
-        
+
         this.ret = ret;
         this.comps = comps;
         this.status = status;
         this.hints = hints;
         this.ctx = ctx;
         if (retrieve_toplevel_comps == null) {
-            
+
             retrieve_toplevel_comps = function () return [];
         }
 
         this.retrieve_toplevel_comps = retrieve_toplevel_comps;
     }
 
-        
+
     @lazyFunction
-    function _toplevel_comps():Array<Tup2<String, String>> {
-        
+    function _toplevel_comps():Array<Tuple2<String, String>> {
+
         return retrieve_toplevel_comps();
     }
 
@@ -83,17 +81,17 @@ class CompletionResult implements LazyFunctionSupport {
 
         var req = requiresToplevelComps();
 
-        
+
         var r = req && !ctx.is_new();
 
-        
+
 
         return r;
     }
 
-    
+
     @lazyFunction
-    function requiresToplevelComps() 
+    function requiresToplevelComps()
     {
         var prefix_is_whitespace = hxsublime.tools.StringTools.isWhitespaceOrEmpty(ctx.prefix);
         trace("prefix_is_whitespace:" + Std.string(prefix_is_whitespace));
@@ -106,10 +104,10 @@ class CompletionResult implements LazyFunctionSupport {
     }
 
     @lazyFunction
-    public function allComps () 
+    public function allComps ()
     {
         var res = [];
-        
+
         if (requiresToplevelComps()) {
             res.extend(_toplevel_comps());
         }

@@ -8,19 +8,18 @@ import hxsublime.project.Project;
 import hxsublime.Settings;
 import hxsublime.tools.StringTools;
 import hxsublime.tools.ViewTools;
-import python.lib.Builtin;
+import python.lib.Builtins;
 import python.lib.Re;
 import python.lib.Time;
-import python.lib.Types.Tup2;
-import python.lib.Types.Tup4;
-import python.lib.Types.Tup5;
+import python.Tuple;
+
 import sublime.Region;
 import sublime.View;
 
-using python.lib.StringTools;
+using hxsublime.support.StringTools;
 
 
-using python.lib.ArrayTools;
+using hxsublime.support.ArrayTools;
 
 
 
@@ -30,7 +29,7 @@ class TopLevelOptions {
 
     var _opt:Int;
 
-    public function new(val = 0) 
+    public function new(val = 0)
     {
         this._opt = val;
     }
@@ -50,7 +49,7 @@ class TopLevelOptions {
     public function hasLocals () {
         return (this._opt & Constants.TOPLEVEL_OPTION_LOCALS) > 0;
     }
-    
+
     public function hasKeywords () {
         return (this._opt & Constants.TOPLEVEL_OPTION_KEYWORDS) > 0;
     }

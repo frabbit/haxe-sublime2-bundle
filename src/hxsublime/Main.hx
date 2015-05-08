@@ -1,13 +1,14 @@
-
 package hxsublime;
 
-import python.lib.Types.Dict;
+
+
+import python.Dict;
 
 import hxsublime.macros.LazyFunctionSupport;
 
 import python.lib.Inspect;
 
- 
+
 import python.lib.xml.etree.ElementTree;
 import hxsublime.Temp;
 import hxsublime.Codegen;
@@ -57,11 +58,21 @@ using Lambda;
 
 using StringTools;
 
-class Main{
 
-	public static function main () {
-		
+
+
+
+
+
+class Main {
+
+
+	public static function main ()
+	{
+
+		var t = { z : 10, u : "foo", t : [1,2,3]};
+
 	}
 
-
 }
+

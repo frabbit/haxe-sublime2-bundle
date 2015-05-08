@@ -3,7 +3,7 @@ package hxsublime.commands;
 import haxe.ds.StringMap;
 import hxsublime.commands.GotoBase.HaxeGotoBaseCommand;
 import hxsublime.tools.HxSrcTools.HaxeType;
-import python.lib.Types.Tup2;
+import python.Tuple;
 
 @:keep class HaxeGotoBuildTypesCommand extends HaxeGotoBaseCommand<HaxeType>
 {
@@ -11,10 +11,10 @@ import python.lib.Types.Tup2;
     {
         return [for (k in types.keys()) [k, types.get(k).file()]];
     }
-        
-    override function getData (types:StringMap<HaxeType>):Array<Tup2<String, HaxeType>>
+
+    override function getData (types:StringMap<HaxeType>):Array<Tuple2<String, HaxeType>>
     {
-        return [for (k in types.keys()) Tup2.create(k,types.get(k))];
+        return [for (k in types.keys()) Tuple2.make(k,types.get(k))];
     }
 
     override function getFile(dataEntry:HaxeType):String

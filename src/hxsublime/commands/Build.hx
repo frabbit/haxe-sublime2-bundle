@@ -3,7 +3,7 @@ package hxsublime.commands;
 import hxsublime.project.Projects;
 import hxsublime.Settings;
 import hxsublime.tools.ViewTools;
-import python.lib.Types.KwArgs;
+import python.KwArgs;
 import sublime.Edit;
 import sublime.EventListener;
 import sublime.TextCommand;
@@ -14,9 +14,9 @@ using StringTools;
 
 @:keep class HaxeSaveAllAndRunCommand extends TextCommand
 {
-    override public function run ( edit:Edit, ?args:KwArgs ) 
+    override public function run ( edit:Edit, ?args:KwArgs<Dynamic> )
     {
-        
+
         trace("run HaxeSaveAllAndRunCommand");
         var view = this.view;
         view.window().run_command("save_all");
@@ -26,7 +26,7 @@ using StringTools;
 
 @:keep class HaxeSaveAllAndCheckCommand extends TextCommand
 {
-    override public function run ( edit:Edit, ?args:KwArgs ) 
+    override public function run ( edit:Edit, ?args:KwArgs<Dynamic> )
     {
         var edit:Edit = args.get("edit", null);
         trace("run HaxeSaveAllAndCheckCommand");
@@ -38,7 +38,7 @@ using StringTools;
 
 @:keep class HaxeSaveAllAndBuildCommand extends TextCommand
 {
-    override public function run ( edit:Edit, ?args:KwArgs ) 
+    override public function run ( edit:Edit, ?args:KwArgs<Dynamic> )
     {
         trace("run HaxeSaveAllAndBuildCommand");
         var view = this.view;
@@ -49,17 +49,17 @@ using StringTools;
 
 @:keep class HaxeRunBuildCommand extends TextCommand
 {
-    override public function run ( edit:Edit, ?args:KwArgs ) 
+    override public function run ( edit:Edit, ?args:KwArgs<Dynamic> )
     {
         var view = this.view;
         trace("run HaxeRunBuildCommand");
         var project = Projects.currentProject(this.view);
 
-        if (project.hasBuild()) 
+        if (project.hasBuild())
         {
             project.runBuild( view );
         }
-        else 
+        else
         {
             trace("no builds selected");
             project.extractBuildArgs(view, true);
@@ -69,7 +69,7 @@ using StringTools;
 
 @:keep class HaxeSelectBuildCommand extends TextCommand
 {
-    override public function run ( edit:Edit, ?args:KwArgs ) 
+    override public function run ( edit:Edit, ?args:KwArgs<Dynamic> )
     {
         trace("run HaxeSelectBuildCommand");
         var view = this.view;
@@ -78,17 +78,17 @@ using StringTools;
 }
 
 @:keep class HaxeBuildOnSaveListener extends EventListener {
-    override public function on_post_save(view:View) 
+    override public function on_post_save(view:View)
     {
         trace("on_post_save");
-        if (view != null && view.file_name() != null) 
+        if (view != null && view.file_name() != null)
         {
             if (ViewTools.isSupported(view) || view.file_name().endsWith(".erazor.html"))
             {
-                if (Settings.checkOnSave()) 
+                if (Settings.checkOnSave())
                 {
                     var project = Projects.currentProject(view);
-                
+
                     if (project.hasBuild())
                     {
                         project.checkBuild( view );

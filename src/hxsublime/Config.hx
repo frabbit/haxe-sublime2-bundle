@@ -1,14 +1,14 @@
 package hxsublime;
 
 import haxe.ds.StringMap;
-import python.lib.Types;
 
-class Config 
+
+class Config
 {
-    
+
     public static var target_packages = ["flash","flash8","neko","js","php","cpp","cs","java", "sys"];
     public static var targets = ["js","cpp","swf8","swf","neko","php","java","cs", "as3"];
-    
+
     public static var target_std_packages:StringMap<Array<String>> = [
         "js"   => ["js"],
         "cpp"  => ["cpp", "sys"],
@@ -22,7 +22,7 @@ class Config
     ];
     public static var ignored_folders_list =  [".git", ".svn"];
 
-    
+
 
     public static function mk_ignored_folders () return {
         var x = new StringMap();
@@ -35,15 +35,15 @@ class Config
 
     public static var ignored_packages_list = ["neko._std", "cpp._std", "php._std", "js._std", "flash._std"];
 
-    
-    
+
+
     public static function mk_ignored_packages () return {
         var x = new StringMap();
         for (p in ignored_folders_list) {
             x.set(p,true);
         }
         x;
-    }    
+    }
     public static var ignored_packages = mk_ignored_packages();
 
     public static var ignored_types = ["haxe.io.BytesData.Unsigned_char__"];
@@ -79,7 +79,7 @@ class Config
         new OpenFlTarget("iOs - update XCode project",        "ios",        ["-ipad -debug"]),
         new OpenFlTarget("Neko",                "neko",        ["-debug"]),
         new OpenFlTarget("Neko 64",             "neko",         ["-64 -debug"]),
-        new OpenFlTarget("Emscripten",             "emscripten",   ["-debug"]),    
+        new OpenFlTarget("Emscripten",             "emscripten",   ["-debug"]),
         new OpenFlTarget("WebOs",             "webos",     ["-debug"]),
         new OpenFlTarget("BlackBerry",             "blackberry",    ["-debug"]),
         new OpenFlTarget("Android",             "android",     ["-debug"])
@@ -98,10 +98,10 @@ class Config
 typedef Target = {
     public var name:String;
     public var plattform:String;
-    public var args:Array<String>;   
+    public var args:Array<String>;
 }
 
-class NmeTarget 
+class NmeTarget
 {
     public var name:String;
     public var plattform:String;
@@ -114,8 +114,8 @@ class NmeTarget
         this.args = args;
     }
 }
- 
-class OpenFlTarget 
+
+class OpenFlTarget
 {
     public var name:String;
     public var plattform:String;
@@ -127,10 +127,10 @@ class OpenFlTarget
         this.plattform = plattform;
         this.args = args;
     }
-}       
+}
 
-        
- 
+
+
 
 
 

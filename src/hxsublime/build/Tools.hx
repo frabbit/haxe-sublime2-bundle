@@ -12,13 +12,13 @@ import python.lib.io.StringIO;
 import python.lib.Os;
 import python.lib.os.Path;
 import python.lib.Re;
-import python.lib.Types.Tup2;
+import python.Tuple;
 import sublime.Sublime;
 
 using StringTools;
-using python.lib.ArrayTools;
+using hxsublime.support.ArrayTools;
 
-using python.lib.StringTools;
+using hxsublime.support.StringTools;
 
 private typedef Buffer = {
 	public function readline ():String;
@@ -36,13 +36,13 @@ class Tools {
 		var builds = [];
 
 		var currentBuild = new HxmlBuild(hxml, buildFile);
-		
+
 		var f = hxml_buffer;
 		while (true)
-		{ 
+		{
 			var l = f.readline();
 
-			
+
 			if (l == "") {
 				break;
 			}
@@ -53,7 +53,7 @@ class Tools {
 
 			l = l.strip();
 
-			if (l.startsWith("#build-name=")) 
+			if (l.startsWith("#build-name="))
 			{
 				currentBuild.name = l.substr(12);
 				continue;
@@ -63,9 +63,9 @@ class Tools {
 				continue;
 			}
 
-			if (l.startsWith("--next")) 
+			if (l.startsWith("--next"))
 			{
-				if (currentBuild.getClassPaths().length == 0) 
+				if (currentBuild.getClassPaths().length == 0)
 				{
 					trace("no classpaths");
 					currentBuild.addClasspath( build_path );
@@ -78,7 +78,7 @@ class Tools {
 
 			if (l.endsWith(".hxml"))
 			{
-				
+
 				trace("found ref of hxml file:" + l);
 				var path = Path.dirname(hxml);
 				var subBuilds = hxmlToBuilds(project, path + Os.sep + l, folder);
@@ -100,7 +100,7 @@ class Tools {
 					Sublime.status_message( "Invalid build.hxml : no Main class" );
 				}
 			}
-			
+
 			if (l.startsWith("-lib") )
 			{
 				var spl = l.split(" ");
@@ -114,7 +114,7 @@ class Tools {
 					}
 					else {
 
-						currentBuild.addArg( Tup2.create("-lib", spl[1] ) );
+						currentBuild.addArg( Tuple2.make("-lib", spl[1] ) );
 						//from haxe import panel
 						Panels.defaultPanel().writeln("Error: haxelib library " + Std.string(spl[1]) + " is not installed" );
 					}
@@ -127,49 +127,49 @@ class Tools {
 			if (l.startsWith("-cmd") )
 			{
 				var spl = l.split(" ");
-				currentBuild.addArg( Tup2.create( "-cmd" , spl.slice(1).join(" ") ) );
+				currentBuild.addArg( Tuple2.make( "-cmd" , spl.slice(1).join(" ") ) );
 			}
-			
+
 			if (l.startsWith("--macro"))
 			{
 				var spl = l.split(" ");
-				currentBuild.addArg( Tup2.create( "--macro" , spl.slice(1).join(" ")  ) );
+				currentBuild.addArg( Tuple2.make( "--macro" , spl.slice(1).join(" ")  ) );
 			}
 
 			if (l.startsWith("-D"))
 			{
 				var x = l.split(" ");
-				
-				var tup = Tup2.create(x[0], x[1]);
+
+				var tup = Tuple2.make(x[0], x[1]);
 				currentBuild.addArg( tup );
 				currentBuild.addDefine(tup._2);
 				continue;
 			}
 
-			for (flag in [ "swf-version" , "swf-header", 
-						"debug" , "-no-traces" , "-flash-use-stage" , "-gen-hx-classes" , 
-						"-remap" , "-no-inline" , "-no-opt" , "-php-prefix" , 
-						"-js-namespace" , "-interp" , "-dead-code-elimination" , 
+			for (flag in [ "swf-version" , "swf-header",
+						"debug" , "-no-traces" , "-flash-use-stage" , "-gen-hx-classes" ,
+						"-remap" , "-no-inline" , "-no-opt" , "-php-prefix" ,
+						"-js-namespace" , "-interp" , "-dead-code-elimination" ,
 						"-php-front" , "-php-lib", "dce" , "-js-modern", "-times" ])
 			{
 				if (l.startsWith( "-"+flag ) )
-				{	
+				{
 					var x = l.split(" ");
-					
+
 					var p2 = if (x.length == 1) "" else x[1];
-					currentBuild.addArg( Tup2.create(x[0], p2) );
-					
+					currentBuild.addArg( Tuple2.make(x[0], p2) );
+
 					break;
 				}
 			}
-			
+
 			for (flag in [ "resource" , "xml" , "x" , "swf-lib" , "java-lib" ])
 			{
 				if (l.startsWith( "-"+flag ) )
 				{
 					var spl = l.split(" ");
 					var outp = Path.join( folder , spl.slice(1).join(" ") );
-					currentBuild.addArg( Tup2.create("-"+flag, outp) );
+					currentBuild.addArg( Tuple2.make("-"+flag, outp) );
 					if (flag == "x")
 					{
 						currentBuild._target = "neko";
@@ -185,9 +185,9 @@ class Tools {
 					var spl = l.split(" ");
 					spl.shift();
 					var outp = spl.join(" ");
-					
-					currentBuild.addArg( Tup2.create("-"+flag, outp) );
-					
+
+					currentBuild.addArg( Tuple2.make("-"+flag, outp) );
+
 					currentBuild._target = flag;
 					currentBuild.output = outp;
 					break;
@@ -199,7 +199,7 @@ class Tools {
 				var cp = l.split(" ");
 				cp.shift();
 				var classpath = cp.join( " " );
-				
+
 				var abs_classpath = PathTools.joinNorm( build_path , classpath );
 				currentBuild.addClasspath( abs_classpath );
 				//currentBuild.addArg( ("-cp" , abs_classpath ) )
@@ -208,7 +208,7 @@ class Tools {
 
 		if (currentBuild.getClassPaths().length == 0)
 		{
-			
+
 			currentBuild.addClasspath( build_path );
 			//currentBuild.args.push( ("-cp" , build_path ) )
 		}
@@ -218,58 +218,58 @@ class Tools {
 
 		return builds;
 	}
-	
-	
+
+
 	static function findBuildFiles(folder:String, extension:String)
 	{
-		
+
 		if (!Path.isdir(folder) )
 		{
 			return [];
 		}
-		
-		var files = Glob.glob( Path.join( folder , "*."+extension ) ).map(function (x) return Tup2.create(x, folder));
-		
-		
-		for (dir in Os.listdir(folder)) 
+
+		var files = Glob.glob( Path.join( folder , "*."+extension ) ).map(function (x) return Tuple2.make(x, folder));
+
+
+		for (dir in Os.listdir(folder))
 		{
 			var f = Path.join(folder, dir);
-			var x = Glob.glob( Path.join( f , "*."+extension ) ).map(function (x) return Tup2.create(x, f));
+			var x = Glob.glob( Path.join( f , "*."+extension ) ).map(function (x) return Tuple2.make(x, f));
 			files.extend( x );
 		}
-		
+
 		return files;
 	}
-	
+
 	static function hxmlToBuilds (project, hxml, folder):Array<HxmlBuild>
 	{
 		var build_path = Path.dirname(hxml);
 		var hxml_buffer = Codecs.open( hxml , "r+" , "utf-8" , "ignore" );
 		return hxmlBufferToBuilds(project, { readline : function () return hxml_buffer.readline() }, folder, build_path, hxml, hxml);
 	}
-	
-	
+
+
 
 	static function _find_nme_project_title(nmml_file)
 	{
 		var f = Codecs.open( nmml_file , "r+", "utf-8" , "ignore" );
 		var title = null;
-		while (true) 
+		while (true)
 		{
 			var l = f.readline();
-			if (l == null) 
+			if (l == null)
 			{
 				break;
 			}
 			var m = _extract_tag.search(l);
-			if (m != null) 
+			if (m != null)
 			{
 				var tag = m.group(1);
-				
-				if (tag == "meta" || tag == "app") 
+
+				if (tag == "meta" || tag == "app")
 				{
 					var mFile = Re.search("\\b(file|title)=\"([ a-z0-9_-]+)\"", l, Re.I);
-					if (mFile != null) 
+					if (mFile != null)
 					{
 						title = mFile.group(2);
 						break;
@@ -277,11 +277,10 @@ class Tools {
 				}
 			}
 		}
-
-		f.close();
+		(f:Dynamic).close();
 		return title;
 	}
-	
+
 	public static function createHaxeBuildFromNmml (project:Project, target, nmml, display_cmd:Array<String>)
 	{
 		var cmd = display_cmd.copy();
@@ -296,36 +295,36 @@ class Tools {
 		var io = new StringIO(out);
 		return hxmlBufferToBuilds(project, { readline : function () return io.readline() }, nmml_dir, nmml_dir, nmml, null)[0];
 	}
-	
-	public static function findHxmlProjects( project, folder ) 
+
+	public static function findHxmlProjects( project, folder )
 	{
-		
+
 		var builds = [];
 		var found = findBuildFiles(folder, "hxml");
 		for (build in found) {
-			
+
 			var hxml_file = build._1;
 			var hxml_folder = build._2;
-			
+
 			var b = hxmlToBuilds(project, hxml_file, hxml_folder);
-			
+
 			builds.extend(b);
 		}
 
 		return builds;
 	}
-	
-	public static function findNmeProjects( project:Project, folder:String ) 
+
+	public static function findNmeProjects( project:Project, folder:String )
 	{
 		var found = findBuildFiles(folder, "nmml");
 		var builds = [];
-		for (build in found) 
+		for (build in found)
 		{
 			var nmml_file = build._1;
 			var title = _find_nme_project_title(nmml_file);
-			if (title != null) 
+			if (title != null)
 			{
-				for (t in Config.nme_targets) 
+				for (t in Config.nme_targets)
 				{
 					builds.push(new NmeBuild(project, title, nmml_file, t));
 				}
@@ -333,17 +332,17 @@ class Tools {
 		}
 		return builds;
 	}
-	
-	public static function findOpenflProjects( project:Project, folder:String ) 
+
+	public static function findOpenflProjects( project:Project, folder:String )
 	{
 
 		var found = findBuildFiles(folder, "xml");
 		var builds = [];
-		for (build in found) 
+		for (build in found)
 		{
 			var openfl_xml = build._1;
 			var title = _find_nme_project_title(openfl_xml);
-			if (title != null) 
+			if (title != null)
 			{
 				for (t in Config.openfl_targets)
 				{

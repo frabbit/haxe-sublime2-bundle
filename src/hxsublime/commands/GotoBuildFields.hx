@@ -5,7 +5,7 @@ package hxsublime.commands;
 import haxe.ds.StringMap;
 import hxsublime.commands.GotoBase.HaxeGotoBaseCommand;
 import hxsublime.tools.HxSrcTools;
-import python.lib.Types.Tup2;
+import python.Tuple;
 
 @:keep class HaxeGotoBuildFieldsCommand extends HaxeGotoBaseCommand<HaxeField>
 {
@@ -14,10 +14,10 @@ import python.lib.Types.Tup2;
     {
         return [for (k in types.keys()) for (p in types.get(k).allFieldsList() ) [p.toString() + " - " + p.kind, p.type.file()]];
     }
-        
-    override public function getData (types:StringMap<HaxeType>):Array<Tup2<String, HaxeField>>
+
+    override public function getData (types:StringMap<HaxeType>):Array<Tuple2<String, HaxeField>>
     {
-        return [for (k in types.keys()) for (p in types.get(k).allFieldsList() ) Tup2.create(k + "." + p.name, p )];
+        return [for (k in types.keys()) for (p in types.get(k).allFieldsList() ) Tuple2.make(k + "." + p.name, p )];
     }
 
     override public function getFile(data_entry:HaxeField):String

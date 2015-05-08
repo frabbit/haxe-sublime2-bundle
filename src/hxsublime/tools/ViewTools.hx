@@ -10,13 +10,14 @@ import sublime.TextCommand;
 
 import python.lib.Os;
 
-import python.lib.Types;
-
+import python.KwArgs;
 
 import sublime.View;
 import sublime.Edit;
 
-class AsyncEdit 
+import python.Dict;
+
+class AsyncEdit
 {
 	public static var dict : Dict<Int, View->Edit->Void> = new Dict();
 	public static var id:Int = 0;
@@ -24,19 +25,19 @@ class AsyncEdit
 
 //from haxe import config as hxconfig
 
-@:keep class HaxeTextEditCommand extends TextCommand 
+@:keep class HaxeTextEditCommand extends TextCommand
 {
 	static var _async_edit_dict;
-	
-	override public function run (edit:Edit, ?args:KwArgs) 
+
+	override public function run (edit:Edit, ?args:KwArgs<Dynamic>)
 	{
 		var d:Dict<String, Dynamic> = args;
-        
+
         var id:Int = d.get("id", null);
 
         trace(id);
-        
-        if (AsyncEdit.dict.hasKey(id)) 
+
+        if (AsyncEdit.dict.hasKey(id))
         {
         	var fun = AsyncEdit.dict.get(id, null);
             AsyncEdit.dict.remove(id);
@@ -47,16 +48,16 @@ class AsyncEdit
 
 
 class ViewTools {
-	
-	
-	public static function insertSnippet (view:View, snippet:String) 
+
+
+	public static function insertSnippet (view:View, snippet:String)
 	{
-		view.run_command("insert_snippet", Dict.fromObject({ 'contents' : snippet }) );
+		view.run_command("insert_snippet", python.Lib.anonToDict({ 'contents' : snippet }) );
 	}
 
-	public static function insertAtCursor(view:View, txt:String) 
+	public static function insertAtCursor(view:View, txt:String)
 	{
-		function doEdit(v:View, e:Edit) 
+		function doEdit(v:View, e:Edit)
 		{
 			v.insert(e, getFirstCursorPos(v), txt);
 		}
@@ -64,38 +65,38 @@ class ViewTools {
 	}
 
 
-	public static function getFirstCursorPos (view:View) 
+	public static function getFirstCursorPos (view:View)
 	{
 		return view.sel()[0].begin();
 	}
 
 
-	public static function asyncEdit(view:View, doEdit:View->Edit->Void) 
-	{	
-	    function start() 
+	public static function asyncEdit(view:View, doEdit:View->Edit->Void)
+	{
+	    function start()
 	    {
 	        var id = AsyncEdit.id;
 	        if (AsyncEdit.id > 1000000)
 	        	AsyncEdit.id = 0
 	        else
 	        	AsyncEdit.id += 1;
-	        
+
 	        AsyncEdit.dict.set(id, doEdit);
-	        view.run_command("hxsublime_tools__haxe_text_edit", Dict.fromObject({ "id" : id }));
+	        view.run_command("hxsublime_tools__haxe_text_edit", python.Lib.anonToDict({ "id" : id }));
 	    }
-	        
+
 	    Sublime.set_timeout(start, 10);
 	}
 
 
-	public static function findViewByName (name:String):Null<View> 
+	public static function findViewByName (name:String):Null<View>
 	{
 		var windows = Sublime.windows();
-		for (w in windows) 
+		for (w in windows)
 		{
 			var views = w.views();
 
-			for (v in views) 
+			for (v in views)
 			{
 				if (v.name() == name) return v;
 			}
@@ -104,7 +105,7 @@ class ViewTools {
 	}
 
 
-	public static function createMissingFolders(view:View) 
+	public static function createMissingFolders(view:View)
 	{
 		var fn = view.file_name();
 		var path = Path.dirname( fn );
@@ -112,68 +113,68 @@ class ViewTools {
 			Os.makedirs( path );
 		}
 	}
-		
 
-	public static function getContentUntilFirstCursor (view:View) 
+
+	public static function getContentUntilFirstCursor (view:View)
 	{
 		var end = getFirstCursorPos(view);
 		return getContentUntil(view, end);
 	}
-	
-	public static function getContentUntil (view:View, endPos:Int) 
+
+	public static function getContentUntil (view:View, endPos:Int)
 	{
 		return view.substr(new Region(0, endPos));
 	}
 
-	public static function getContent (view:View) 
+	public static function getContent (view:View)
 	{
 		return view.substr(new Region(0, view.size()));
 	}
 
-	public static function isHxsl (view:View) 
+	public static function isHxsl (view:View)
 	{
 		return ST.endsWith(view.file_name(), Config.HXSL_SUFFIX);
 	}
 
-	public static function isSupported (view:View) 
+	public static function isSupported (view:View)
 	{
 		return view.score_selector(0,Config.SOURCE_HAXE+','+Config.SOURCE_HXML+','+Config.SOURCE_ERAZOR+','+Config.SOURCE_NMML) > 0;
 	}
 
-	public static function isUnsupported (view:View) 
+	public static function isUnsupported (view:View)
 	{
 		return !isSupported(view);
 	}
 
-	public static function getScopesAt (view:View, pos:Int) 
+	public static function getScopesAt (view:View, pos:Int)
 	{
 		return view.scope_name(pos).split(" ");
 	}
 
 
-	public static function isHaxe(view:View) 
+	public static function isHaxe(view:View)
 	{
 		return view.score_selector(0,Config.SOURCE_HAXE) > 0;
 	}
-	public static function isHxml(view:View) 
+	public static function isHxml(view:View)
 	{
 		return view.score_selector(0,Config.SOURCE_HXML) > 0;
 	}
 
-	public static function isErazor(view:View) 
+	public static function isErazor(view:View)
 	{
 		return view.score_selector(0,Config.SOURCE_ERAZOR) > 0;
 	}
 
-	public static function isNmml(view:View) 
+	public static function isNmml(view:View)
 	{
 		return view.score_selector(0,Config.SOURCE_NMML) > 0;
 	}
 
 
-	public static function replaceContent (view:View, newContent:String) 
+	public static function replaceContent (view:View, newContent:String)
 	{
-		function doEdit(view:View, edit:Edit) 
+		function doEdit(view:View, edit:Edit)
 		{
 			view.replace(edit, new Region(0, view.size()), newContent);
 			//view.end_edit(edit);
@@ -182,18 +183,18 @@ class ViewTools {
 		view.set_read_only(false);
 		asyncEdit(view, doEdit);
 	}
-		
-	public static function inHaxeCode (view:View, caret:Int) 
+
+	public static function inHaxeCode (view:View, caret:Int)
 	{
 		return view.score_selector(caret,"source.haxe") > 0 && view.score_selector(caret,"string") == 0 && view.score_selector(caret,"comment") == 0;
 	}
 
-	public static function inHaxeString (view:View, caret:Int) 
+	public static function inHaxeString (view:View, caret:Int)
 	{
 		return view.score_selector(caret,"source.haxe") > 0 && view.score_selector(caret,"string") > 0;
 	}
 
-	public static function inHaxeComments (view:View, caret:Int) 
+	public static function inHaxeComments (view:View, caret:Int)
 	{
 		return view.score_selector(caret,"source.haxe") > 0 && view.score_selector(caret,"comment") > 0;
 	}

@@ -4,7 +4,7 @@ import haxe.ds.StringMap;
 import hxsublime.project.Project;
 import hxsublime.tools.Cache;
 import hxsublime.tools.SublimeTools;
-import python.lib.Builtin;
+import python.lib.Builtins;
 import python.lib.os.Path;
 import sublime.Sublime;
 import sublime.View;
@@ -13,26 +13,26 @@ import sublime.Window;
 
 
 
-class Projects 
+class Projects
 {
     static var projects = new Cache<String, Project>(new StringMap());
     static var userHome = Path.expanduser("~");
 
-    
+
     static var logFile = Path.join(userHome, "st3_haxe_log.txt");
 
     static var nextServerPort = 6000;
 
-    function fileLog (msg:Dynamic) 
+    function fileLog (msg:Dynamic)
     {
-        var f = Builtin.open(logFile , "a+" );
+        var f = cast( Builtins.open(logFile , "a+" ), python.lib.io.TextIOBase);
         f.write( Std.string(msg) + "\n");
         f.close();
     }
 
 
 
-    static function cleanupProjects() 
+    static function cleanupProjects()
     {
         var win_ids = [for (w in Sublime.windows()) w.id()];
         var remove = [];
@@ -42,7 +42,7 @@ class Projects
                 remove.push(p);
             }
         }
-        
+
         trace(remove);
         for (pid in remove) {
             trace(pid);
@@ -54,7 +54,7 @@ class Projects
     }
 
 
-    static function getProjectId(file:String, win:Window) 
+    static function getProjectId(file:String, win:Window)
     {
         var id = if (file == null) "global" + Std.string(win.id()) else file;
         return id;
@@ -74,25 +74,25 @@ class Projects
         return win;
     }
 
-    public static function currentProject(?view:View):Project 
+    public static function currentProject(?view:View):Project
     {
         cleanupProjects();
 
         var file = SublimeTools.getProjectFile();
-        
+
         var win = getWindow(view);
-        
+
         var id = getProjectId(file, win);
 
         trace("project id:" + id);
         trace("win.id:" + Std.string(win.id()));
 
         var res = projects.getOrInsert(id, createProject.bind(id, file, win));
-        
+
         return res;
     }
 
-    static function createProject (id:String, file:String, win:Window):Project 
+    static function createProject (id:String, file:String, win:Window):Project
     {
         var p = new Project(id, file, win.id(), nextServerPort);
         nextServerPort = nextServerPort + 20;

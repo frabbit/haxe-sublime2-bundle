@@ -3,12 +3,12 @@ package hxsublime.commands;
 import haxe.ds.StringMap;
 import hxsublime.commands.GotoBase.HaxeGotoBaseCommand;
 import hxsublime.tools.HxSrcTools.HaxeType;
-import python.lib.Types.Tup2;
+import python.Tuple;
 
 
-using python.lib.ArrayTools;
+using hxsublime.support.ArrayTools;
 
-private typedef Entry = { 
+private typedef Entry = {
     function file() : String;
     function srcPos():Int;
 }
@@ -30,8 +30,8 @@ private typedef Entry = {
 
     override function getData (types:StringMap<HaxeType>)
     {
-        var fields:Array<Tup2<String, Entry>> = [for (k in types.keys()) for (p in types.get(k).allFieldsList()) Tup2.create(k + "." + p.name, toEntry(p) )];
-        var types = [for (k in types.keys()) Tup2.create(k,toEntry(types.get(k)))];
+        var fields:Array<Tuple2<String, Entry>> = [for (k in types.keys()) for (p in types.get(k).allFieldsList()) Tuple2.make(k + "." + p.name, toEntry(p) )];
+        var types = [for (k in types.keys()) Tuple2.make(k,toEntry(types.get(k)))];
         fields.extend(types);
         return fields;
     }

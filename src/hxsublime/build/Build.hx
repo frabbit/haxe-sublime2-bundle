@@ -6,7 +6,7 @@ import hxsublime.Config.Target;
 import hxsublime.project.Project;
 import hxsublime.tools.HxSrcTools.HaxeType;
 import hxsublime.tools.HxSrcTools.HaxeTypeBundle;
-import python.lib.Types.Tup2;
+import python.Tuple;
 import sublime.View;
 
 interface Build {
@@ -20,9 +20,9 @@ interface Build {
 	public function addClasspath(cp:String):Void;
 	//public function hxml():String;
 	public function makeHxml():String;
-	public function prepareCheckCmd(project:Project, server_mode:Bool, view:View):Tup2<Array<String>, String>; 
-	public function prepareBuildCmd(project:Project, server_mode:Bool, view:View):Tup2<Array<String>, String>;
-	public function prepareRunCmd(project:Project, server_mode:Bool, view:View):Tup2<Array<String>, String>; 
+	public function prepareCheckCmd(project:Project, server_mode:Bool, view:View):Tuple2<Array<String>, String>;
+	public function prepareBuildCmd(project:Project, server_mode:Bool, view:View):Tuple2<Array<String>, String>;
+	public function prepareRunCmd(project:Project, server_mode:Bool, view:View):Tuple2<Array<String>, String>;
 	public function escapeCmd (cmd:Array<String>):Array<String>;
 	public function isTypeAvailable(t:HaxeType):Bool;
 	public function isPackAvailable(p:String):Bool;
@@ -34,7 +34,7 @@ interface Build {
 	public function stdBundle():HaxeTypeBundle;
 	public function target():Target;
 	public function classpaths():Array<String>;
-	public function args():Array<Tup2<String, String>>;
-	public function addArg(a:Tup2<String, String>):Void;
+	public function args():Array<Tuple2<String, String>>;
+	public function addArg(a:Tuple2<String, String>):Void;
 	//public var ctx:CompletionContext;
 }

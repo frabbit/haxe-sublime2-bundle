@@ -2,20 +2,20 @@ package hxsublime;
 
 import python.lib.os.Path;
 import python.lib.Subprocess;
-import python.lib.Types.AttributeError;
+import python.Exceptions.AttributeError;
 
-class Plugin 
+class Plugin
 {
 	static var _startupInfo = null;
 
-	public static function plugin_base_dir() 
+	public static function plugin_base_dir()
 	{
 		return Path.abspath(Path.join(Path.dirname(untyped __python__("__file__")), "."));
 	}
 
-	
 
-	public static function startupInfo () 
+
+	public static function startupInfo ()
 	{
 		if (_startupInfo != null) return _startupInfo;
 		try {

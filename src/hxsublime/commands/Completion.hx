@@ -9,15 +9,17 @@ import python.lib.Re;
 import sublime.Edit;
 import sublime.TextCommand;
 import sublime.View;
-import python.lib.Types;
+
+import python.KwArgs;
+
 
 @:keep class HaxeAsyncTriggeredCompletionCommand extends TextCommand
 {
-    override public function run( edit:Edit, ?kwArgs:KwArgs) 
+    override public function run( edit:Edit, ?kwArgs:KwArgs<Dynamic>)
     {
         var options = new CompletionOptions(
-            Constants.COMPLETION_TRIGGER_ASYNC, 
-            Constants.COMPILER_CONTEXT_REGULAR, 
+            Constants.COMPLETION_TRIGGER_ASYNC,
+            Constants.COMPILER_CONTEXT_REGULAR,
             Constants.COMPLETION_TYPE_REGULAR);
         HxCompletion.triggerCompletion(this.view, options);
     }
@@ -26,27 +28,27 @@ import python.lib.Types;
 }
 @:keep class HaxeDisplayCompletionCommand extends TextCommand
 {
-    override public function run( edit:Edit, ?kwArgs:KwArgs) 
+    override public function run( edit:Edit, ?kwArgs:KwArgs<Dynamic>)
     {
         var input_char:String = kwArgs == null ? null : kwArgs.get("input_char", null);
-        
-        if (input_char != null) 
+
+        if (input_char != null)
         {
-            this.view.run_command("insert" , Dict.fromObject({
+            this.view.run_command("insert" , python.Lib.anonToDict({
                 "characters" : input_char
             }));
         }
 
         trace("RUN - HaxeDisplayCompletionCommand");
-        if (input_char == ":") 
+        if (input_char == ":")
         {
             return;
         }
-        if (Helper.isValidCompletion(this.view, edit, input_char)) 
+        if (Helper.isValidCompletion(this.view, edit, input_char))
         {
             var options = new CompletionOptions(
-                Constants.COMPLETION_TRIGGER_MANUAL, 
-                Constants.COMPILER_CONTEXT_REGULAR, 
+                Constants.COMPLETION_TRIGGER_MANUAL,
+                Constants.COMPILER_CONTEXT_REGULAR,
                 Constants.COMPLETION_TYPE_REGULAR);
             HxCompletion.triggerCompletion(this.view, options);
         }
@@ -55,13 +57,13 @@ import python.lib.Types;
 
 @:keep class HaxeDisplayMacroCompletionCommand extends TextCommand
 {
-    override public function run( edit:Edit, ?kwArgs:KwArgs) 
+    override public function run( edit:Edit, ?kwArgs:KwArgs<Dynamic>)
     {
         trace("RUN - HaxeDisplayMacroCompletionCommand");
-        
+
         var options = new CompletionOptions(
-            Constants.COMPLETION_TRIGGER_MANUAL, 
-            Constants.COMPILER_CONTEXT_REGULAR, 
+            Constants.COMPLETION_TRIGGER_MANUAL,
+            Constants.COMPILER_CONTEXT_REGULAR,
             Constants.COMPLETION_TYPE_REGULAR);
         HxCompletion.triggerCompletion(this.view, options);
     }
@@ -69,13 +71,13 @@ import python.lib.Types;
 
 @:keep class HaxeHintDisplayCompletionCommand extends TextCommand
 {
-    override public function run( edit:Edit, ?kwArgs:KwArgs) 
+    override public function run( edit:Edit, ?kwArgs:KwArgs<Dynamic>)
     {
         trace("RUN - HaxeHintDisplayCompletionCommand");
-        
+
         var options = new CompletionOptions(
-            Constants.COMPLETION_TRIGGER_MANUAL, 
-            Constants.COMPILER_CONTEXT_REGULAR, 
+            Constants.COMPLETION_TRIGGER_MANUAL,
+            Constants.COMPILER_CONTEXT_REGULAR,
             Constants.COMPLETION_TYPE_HINT);
         HxCompletion.triggerCompletion(this.view, options);
     }
@@ -83,14 +85,14 @@ import python.lib.Types;
 }
 @:keep class HaxeMacroHintDisplayCompletionCommand extends TextCommand
 {
-    override public function run( edit:Edit, ?kwArgs:KwArgs) 
+    override public function run( edit:Edit, ?kwArgs:KwArgs<Dynamic>)
     {
-        
+
         trace("RUN - HaxeMacroHintDisplayCompletionCommand");
-        
+
         var options = new CompletionOptions(
-            Constants.COMPLETION_TRIGGER_MANUAL, 
-            Constants.COMPILER_CONTEXT_MACRO, 
+            Constants.COMPLETION_TRIGGER_MANUAL,
+            Constants.COMPILER_CONTEXT_MACRO,
             Constants.COMPLETION_TYPE_HINT);
 
         HxCompletion.triggerCompletion(this.view, options);
@@ -99,25 +101,25 @@ import python.lib.Types;
 
 class Helper {
 
-    
-    public static function isValidCompletion (view:View, edit:Edit, inputChar:String) 
+
+    public static function isValidCompletion (view:View, edit:Edit, inputChar:String)
     {
         var valid = true;
-        if (inputChar == "(") 
+        if (inputChar == "(")
         {
             var src = ViewTools.getContentUntilFirstCursor(view);
-            
+
             if (isOpenParensAfterFunctionDefinition(src))
             {
                 trace("Invalid Completion is open par after function");
                 valid = false;
             }
         }
-        
-        if (inputChar == ",") 
+
+        if (inputChar == ",")
         {
             var src = ViewTools.getContentUntilFirstCursor(view);
-            if (isCommaAfterOpenParensInFunctionDefinition(src)) 
+            if (isCommaAfterOpenParensInFunctionDefinition(src))
             {
                 trace("Invalid Completion is open par after function");
                 valid = false;
@@ -129,8 +131,8 @@ class Helper {
 
     static var anonFunc = Re.compile("^function(\\s+[a-zA-Z0-9$_]*\\s+)?\\s*\\($");
 
-    
-    static function isOpenParensAfterFunctionDefinition (src:String) 
+
+    static function isOpenParensAfterFunctionDefinition (src:String)
     {
         var lastFunction = src.lastIndexOf("function");
         var srcPart = src.substr(lastFunction);
@@ -139,12 +141,12 @@ class Helper {
 
     }
 
-    static function isCommaAfterOpenParensInFunctionDefinition (src:String) 
+    static function isCommaAfterOpenParensInFunctionDefinition (src:String)
     {
         var found = HxSrcTools.reverse_search_next_char_on_same_nesting_level(src, ["("], src.length-1);
 
         var res = false;
-        if (found != null) 
+        if (found != null)
         {
             var srcUntilComma = src.substring(0,found._1+1);
             res = isOpenParensAfterFunctionDefinition(srcUntilComma);
@@ -158,7 +160,7 @@ class Helper {
 import haxe.completion.hx.constants as Constants
 
 import sublime_plugin
-import re 
+import re
 from haxe.trace import trace
 
 from haxe.tools import viewtools

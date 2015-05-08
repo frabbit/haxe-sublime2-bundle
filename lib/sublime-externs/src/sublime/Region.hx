@@ -1,11 +1,13 @@
 
 package sublime;
 
+
+@:pythonImport("sublime", "Region")
 extern class Region {
 	//	Creates a Region with initial values a and b.
 	public function new (a:Int, ?b:Int):Void;
 
-	
+
 	// 	int	The first end of the region.
 	public var a(default, null):Int;
 	// 	int	The second end of the region. May be less that a, in which case the region is a reversed one.
@@ -31,10 +33,8 @@ extern class Region {
 	// bool	Returns True iff begin() <= point <= end().
 	@:overload(function (point:Int):Bool {})
 	public function contains(region:Region):Bool;
-	
 
-	static function __init__ ():Void {
-		python.Macros.importFromAs("sublime", "Region", "sublime.Region");
-	}
+
+
 
 }

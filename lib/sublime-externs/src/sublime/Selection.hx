@@ -1,11 +1,11 @@
 
 package sublime;
 
-import python.lib.Builtin;
+import python.lib.Builtins;
 import sublime.Region;
+import python.Set;
 
-import python.lib.Types;
-
+@:pythonImport("sublime", "Selection")
 extern class Selection implements ArrayAccess<Region> {
 
 	// None	Removes all regions.
@@ -23,11 +23,9 @@ extern class Selection implements ArrayAccess<Region> {
 	public var length(get_length, null):Int;
 
 	private inline function get_length():Int {
-		return Builtin.len( (this:Dynamic) );
+		return Builtins.len( (this:Dynamic) );
 	}
 
-	static function __init__ ():Void {
-		python.Macros.importFromAs("sublime", "Selection", "sublime.Selection");
-	}
+
 
 }

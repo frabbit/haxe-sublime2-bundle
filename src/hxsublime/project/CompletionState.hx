@@ -6,7 +6,7 @@ import hxsublime.completion.hx.CompletionContext;
 import hxsublime.completion.hx.CompletionOptions;
 import hxsublime.completion.hx.CompletionResult;
 import hxsublime.tools.Cache;
-import python.lib.Types.Tup2;
+import python.Tuple;
 import sublime.View;
 
 //from haxe.log import log
@@ -18,22 +18,22 @@ typedef CompletionCache = {
 }
 
 
-class ProjectCompletionState 
+class ProjectCompletionState
 {
 
 
-    public var running:Cache<Int, Tup2<Int,Int>>;
+    public var running:Cache<Int, Tuple2<Int,Int>>;
     public var trigger:Cache<Int, CompletionOptions>;
     public var currentId:Int;
     public var errors:Array<CompilerError>;
     public var async:Cache<Int, CompletionResult>;
     public var current:CompletionCache;
 
-    public function new() 
+    public function new()
     {
         this.running = new Cache(new IntMap());
         this.trigger = new Cache(new IntMap(), 1000);
-        this.currentId = null;   
+        this.currentId = null;
         this.errors = [];
         this.async = new Cache(new IntMap(), 1000);
         this.current = {
@@ -42,12 +42,12 @@ class ProjectCompletionState
         }
     }
 
-    public function addCompletionResult (compResult:CompletionResult) 
+    public function addCompletionResult (compResult:CompletionResult)
     {
         async.insert(compResult.ctx.view_id, compResult);
     }
 
-    public function isEquivalentCompletionAlreadyRunning(ctx:CompletionContext) 
+    public function isEquivalentCompletionAlreadyRunning(ctx:CompletionContext)
     {
         // check if another completion with the same properties is already running
         // in this case we don't need to start a new completion
@@ -59,7 +59,7 @@ class ProjectCompletionState
         return running_completion != null && running_completion._1 == complete_offset() && running_completion._2 == view_id;
     }
 
-    public function runIfStillUpToDate (comp_id:Int, run:Void->Void) 
+    public function runIfStillUpToDate (comp_id:Int, run:Void->Void)
     {
         running.delete(comp_id);
         if (currentId == comp_id) {
@@ -67,22 +67,22 @@ class ProjectCompletionState
         }
     }
 
-    public function setNewCompletion (ctx:CompletionContext) 
+    public function setNewCompletion (ctx:CompletionContext)
     {
         // store current completion id and properties
-        running.insert(ctx.id, Tup2.create(ctx.complete_offset(), ctx.view_id));
+        running.insert(ctx.id, Tuple2.make(ctx.complete_offset(), ctx.view_id));
         currentId = ctx.id;
 
         setErrors([]);
     }
 
-    public function setTrigger(view:View, options) 
+    public function setTrigger(view:View, options)
     {
         trace("SET TRIGGER");
         trigger.insert(view.id(), options);
     }
 
-    public function clearCompletion () 
+    public function clearCompletion ()
     {
         current = {
             input : null,
@@ -90,27 +90,27 @@ class ProjectCompletionState
         }
     }
 
-    public function setErrors (errors) 
+    public function setErrors (errors)
     {
         this.errors = errors;
     }
 
-    public function getAndDeleteTrigger( view:View) 
+    public function getAndDeleteTrigger( view:View)
     {
         return trigger.getAndDelete(view.id(), null);
     }
 
-    public function getAndDeleteAsync(view:View) 
+    public function getAndDeleteAsync(view:View)
     {
         return this.async.getAndDelete(view.id(), null);
     }
 
-    public function getAsync( view:View) 
+    public function getAsync( view:View)
     {
         return async.getOrDefault(view.id(), null);
     }
 
-    public function deleteAsync( view:View) 
+    public function deleteAsync( view:View)
     {
         return async.delete(view.id());
     }
