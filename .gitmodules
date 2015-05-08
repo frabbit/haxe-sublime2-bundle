@@ -1,3 +1,0 @@
-[submodule "lib/hx2python"]
-	path = lib/hx2python
-	url = git@github.com:frabbit/hx2python.git
