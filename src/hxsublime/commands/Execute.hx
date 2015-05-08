@@ -183,7 +183,7 @@ private class Helper
             if (d.hasKey("cmd")) d.remove("cmd");
             //d.remove("line_regex");
 
-            this.proc = new AsyncProcess(cmd, null, merged_env, this, untyped __python_kwargs__(kwArgs));
+            this.proc = new AsyncProcess(cmd, null, merged_env, this, "", false);
 
             this.append_data(this.proc, ("Running Command: " + Helper.escape_cmd(cmd).join(" ") + "\n").encode("utf-8"));
         }

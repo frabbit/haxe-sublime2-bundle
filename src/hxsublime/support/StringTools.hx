@@ -15,17 +15,17 @@ class StringTools {
 	}
 
 	public static inline function contains(s:String, e:String):Bool {
-		return untyped __python_in__(e,s);
+		return python.Syntax.isIn(e,s);
 	}
 
 	public static inline function strip(s:String, ?chars:String):String
 	{
-		return untyped __field__(s, "strip")(chars);
+		return python.Syntax.callField(s, "strip", chars);
 	}
 
 	public static inline function rpartition (s:String, sep:String):Tuple3<String, String, String>
 	{
-		return untyped __field__(s, "rpartition")(sep);
+		return python.Syntax.callField(s, "rpartition", sep);
 	}
 
 }

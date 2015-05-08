@@ -10,7 +10,7 @@ class Plugin
 
 	public static function plugin_base_dir()
 	{
-		return Path.abspath(Path.join(Path.dirname(untyped __python__("__file__")), "."));
+		return Path.abspath(Path.join(Path.dirname(python.Syntax.pythonCode("__file__")), "."));
 	}
 
 

@@ -6,6 +6,7 @@ import python.Dict;
 
 import hxsublime.macros.LazyFunctionSupport;
 
+import python.lib.Builtins;
 import python.lib.Inspect;
 
 
@@ -69,7 +70,10 @@ class Main {
 
 	public static function main ()
 	{
-
+		haxe.Log.trace = function (msg, ?pos) {
+			var prefix = pos.fileName + ":" + pos.lineNumber;
+			Builtins.print(prefix + ":" + Std.string(msg));
+		}
 		var t = { z : 10, u : "foo", t : [1,2,3]};
 
 	}

@@ -1,12 +1,14 @@
 
 package sublime.def.exec;
 
+
+import python.KwArgs;
 import python.Dict;
 
 
-@:pythonImport("Default.exec","AsyncProcess")
+//@:pythonImport("Default.exec","AsyncProcess")
 extern class AsyncProcess {
-	public function new (cmd:Array<String>, shell_cmd:Array<String>, env:Dict<String,String>, listener:ProcessListener, path:String = "", shell:Bool = false):Void;
+	public function new (cmd:Array<String>, shell_cmd:Array<String>, env:Dict<String,String>, listener:ProcessListener, path:String = "", shell:Bool = false, ?kwArgs:KwArgs<Dynamic>):Void;
 
 	public function kill ():Void;
 	public function poll ():Bool;
@@ -15,6 +17,12 @@ extern class AsyncProcess {
 	public function read_stderr():Void;
 
 	public var start_time(default, null):Int;
+
+	public static function __init__ ():Void {
+		python.Syntax.pythonCode("import Default");
+		python.Syntax.pythonCode("stexec = getattr(Default, 'exec')");
+		python.Syntax.pythonCode("sublime_def_exec_AsyncProcess = stexec.AsyncProcess");
+	}
 
 
 }
