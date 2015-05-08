@@ -16,11 +16,7 @@ import sublime.Region;
 import sublime.View;
 
 using hxsublime.support.StringTools;
-
-
 using hxsublime.support.ArrayTools;
-
-
 
 typedef SettingsInterface = {
     //public function smarts_hints_only_next(?view:View):Bool;

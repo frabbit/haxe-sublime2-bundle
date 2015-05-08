@@ -17,13 +17,7 @@ import sublime.Region;
 import sublime.View;
 
 using hxsublime.support.StringTools;
-
-
 using hxsublime.support.ArrayTools;
-
-
-
-
 
 class TopLevelOptions {
 

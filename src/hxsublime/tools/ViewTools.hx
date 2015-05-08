@@ -23,8 +23,6 @@ class AsyncEdit
 	public static var id:Int = 0;
 }
 
-//from haxe import config as hxconfig
-
 @:keep class HaxeTextEditCommand extends TextCommand
 {
 	static var _async_edit_dict;
@@ -45,7 +43,6 @@ class AsyncEdit
         }
     }
 }
-
 
 class ViewTools {
 

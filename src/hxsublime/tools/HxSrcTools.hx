@@ -1,17 +1,7 @@
-//import re
-//import os
-//
-//from haxe.tools.decorator import lazyprop
-//from haxe.trace import trace
-//import pprint
-//
-//pp = pprint.PrettyPrinter(indent=4, depth=3)
-
 package hxsublime.tools;
 
 import haxe.ds.StringMap;
 import hxsublime.macros.LazyFunctionSupport;
-//import python.lib.ArrayTools;
 import python.lib.Os;
 import python.lib.os.Path;
 import python.lib.Re;
@@ -1373,33 +1363,3 @@ class HaxeType implements LazyFunctionSupport
 	}
 
 }
-
-/*
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-*/

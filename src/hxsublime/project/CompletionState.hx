@@ -20,8 +20,6 @@ typedef CompletionCache = {
 
 class ProjectCompletionState
 {
-
-
     public var running:Cache<Int, Tuple2<Int,Int>>;
     public var trigger:Cache<Int, CompletionOptions>;
     public var currentId:Int;
@@ -114,5 +112,4 @@ class ProjectCompletionState
     {
         return async.delete(view.id());
     }
-
 }

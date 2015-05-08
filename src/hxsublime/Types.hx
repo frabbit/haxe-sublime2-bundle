@@ -55,23 +55,15 @@ class Types
 
 	public static function extractTypes( path:String , filtered_classes = null, filtered_packages = null, depth = 0, pack:Array<String> = null, include_private_types = true)
 	{
-
 		if (pack == null) pack = [];
-		if (filtered_classes == null)
-		{
-			filtered_classes = [];
-		}
-		if (filtered_packages == null)
-		{
-			filtered_packages = [];
-		}
+		if (filtered_classes == null) filtered_classes = [];
+		if (filtered_packages == null) filtered_packages = [];
 
 		var bundle = HxSrcTools.emptyTypeBundle();
 
 		var bundles = [];
 		for (fullpath in Glob.glob( Path.join(path,"*.hx") ))
 		{
-
 			var f = Path.basename(fullpath);
 
 			var r = Path.splitext( f );
@@ -80,26 +72,18 @@ class Types
 
 			if (!Lambda.has(filtered_classes, cl))
 			{
-
 				var file = Path.join( path , f );
 				if (Path.exists(file))
 				{
-
 					var module_bundle = extractTypesFromFile(file, cl, include_private_types);
 
 					bundles.push(module_bundle);
-
-
-
-
 				}
 			}
 		}
 
-
 		for (f in Os.listdir( path ))
 		{
-
 			if (isValidPackage(f))
 			{
 				var r = Path.splitext( f );
@@ -112,13 +96,11 @@ class Types
 
 				if (Path.isdir( Path.join( path , f ) ) && !Lambda.has(filtered_packages, cur_pack) && !Config.ignored_packages.exists(cur_pack))
 				{
-
 					var next_pack = pack.copy();
 					next_pack.push(f);
 
 					var sub_bundle = extractTypes( Path.join( path , f ) , filtered_classes, filtered_packages, depth + 1, next_pack, include_private_types );
 					bundles.push(sub_bundle);
-					//bundle = bundle.merge(sub_bundle);
 				}
 			}
 		}
@@ -129,11 +111,8 @@ class Types
 
 	static var fileTypeCache = new StringMap<Tuple2<Float, HaxeTypeBundle>>();
 
-
-
 	static function extractTypesFromFile (file:String, module_name:String = null, include_private_types = true)
 	{
-
 		var mtime = Path.getmtime(file);
 		if (fileTypeCache.exists(file) && fileTypeCache.get(file)._1 == mtime)
 		{
@@ -152,13 +131,9 @@ class Types
 
 		var src = HxSrcTools.stripComments(src_with_comments);
 
-
-
 		var bundle = HxSrcTools.getTypesFromSrc(src, module_name, file, src_with_comments);
 
 		fileTypeCache.set(file, Tuple2.make(mtime, bundle));
-
-
 
 		return bundle;
 	}

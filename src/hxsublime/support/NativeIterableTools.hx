@@ -1,4 +1,3 @@
-
 package hxsublime.support;
 
 import python.NativeIterable;

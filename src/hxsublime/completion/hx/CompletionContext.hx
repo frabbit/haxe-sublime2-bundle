@@ -19,7 +19,6 @@ import sublime.View;
 
 using hxsublime.support.StringTools;
 
-
 using hxsublime.support.ArrayTools;
 
 class CompletionContext implements LazyFunctionSupport

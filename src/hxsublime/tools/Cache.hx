@@ -1,4 +1,3 @@
-
 package hxsublime.tools;
 
 import haxe.ds.StringMap;

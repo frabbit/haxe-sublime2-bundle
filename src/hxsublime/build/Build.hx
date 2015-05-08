@@ -1,4 +1,3 @@
-
 package hxsublime.build;
 
 import hxsublime.completion.hx.CompletionContext;

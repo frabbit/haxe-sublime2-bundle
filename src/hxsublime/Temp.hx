@@ -81,7 +81,5 @@ class Temp {
 		{
 			PathTools.removeDir(temp_path);
 		}
-
 	}
-
 }

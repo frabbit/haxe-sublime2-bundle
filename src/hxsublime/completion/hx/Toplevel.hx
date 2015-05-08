@@ -4,11 +4,9 @@ import hxsublime.completion.hx.CompletionContext;
 import hxsublime.tools.HxSrcTools;
 import python.lib.Re;
 import python.lib.Time;
-
 import python.Tuple;
 
 using hxsublime.support.StringTools;
-
 using StringTools;
 using hxsublime.support.ArrayTools;
 
@@ -20,7 +18,6 @@ class TopLevel
     {
         return if (ctx.is_new()) [] else TOP_LEVEL_KEYWORDS;
     }
-
 
     public static function getBuildTarget(ctx:CompletionContext)
     {
@@ -127,7 +124,6 @@ class TopLevel
         return res;
     }
 
-
     public static function haxeTypeAsCompletion (type)
     {
         var insert = type.full_pack_with_optional_module_type_and_enum_value;
@@ -135,9 +131,6 @@ class TopLevel
         display += "\t" + type.get_type_hint;
         return Tuple2.make(display, insert);
     }
-
-
-
 
     public static function getTypeComps (ctx:CompletionContext, bundle:HaxeTypeBundle, imported)
     {
@@ -186,7 +179,6 @@ class TopLevel
             comps.extend(getLocalVarsAndFunctions(ctx));
         }
 
-
         var imported = getImportsAndUsings(ctx);
 
         var runTime1 = Time.time() - startTime;
@@ -197,17 +189,12 @@ class TopLevel
 
         var std_bundle = ctx.build().stdBundle();
 
-
-
         function filterPrivates(t:HaxeType)
         {
             return !t.is_private || t.file() == ctx.orig_file();
         }
 
-
-
         var merged_bundle = std_bundle.merge(build_bundle).filter(filterPrivates);
-
 
         var runTime3 = Time.time() - startTime;
 
@@ -251,7 +238,6 @@ class TopLevel
             var test = [];
             for (i in 0...prefix.length) {
 
-
                 var c = prefix.charAt(i);
 
                 var isLower = "abcdefghijklmnopqrstuvwxyz".indexOf(c) > -1;
@@ -265,8 +251,6 @@ class TopLevel
 
                     test.push(offsetLower);
                 }
-
-
             }
             for (c in all_comps)
             {
@@ -289,16 +273,12 @@ class TopLevel
                             found = false;
                             break;
                         }
-
                     }
                 }
-
                 if (found)
                 {
                     comps.push(c);
                 }
-
-
             }
         }
         trace("number of top level completions (all: " + Std.string(all_comps.length) + ", filtered: " + Std.string(comps.length) + ")");

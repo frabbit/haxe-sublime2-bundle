@@ -21,7 +21,6 @@ class Tools {
 	    return win;
 	}
 
-
 	// allow windows drives
 	static var winStart = "(?:(?:[A-Za-z][:])";
 	static var unixStart = "(?:[/]?)";

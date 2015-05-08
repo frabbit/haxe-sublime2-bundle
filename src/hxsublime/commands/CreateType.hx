@@ -247,21 +247,3 @@ private class State {
         ViewTools.asyncEdit(view, run_edit);
     }
 }
-
-/*
-import sublime, sublime_plugin
-import os
-import sublime_plugin
-
-from haxe.tools import viewtools
-
-from haxe import project as hxproject
-from haxe.tools import hxsrctools
-
-from haxe.trace import trace
-
-# TODO Cleanup this module
-
-
-
-*/

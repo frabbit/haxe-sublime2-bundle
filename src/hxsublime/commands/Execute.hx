@@ -334,35 +334,3 @@ private class Helper
 
 
 }
-
-/*
-import sublime, sublime_plugin
-import os,sys
-
-import functools
-import time
-
-from haxe.plugin import is_st3
-from haxe.tools import viewtools
-from haxe.trace import trace
-
-from haxe.tools.stringtools import encode_utf8, to_unicode
-
-if is_st3:
-    import _thread as thread
-else:
-    import thread
-
-try :
-    stexec = __import__("exec")
-    ExecCommand = stexec.ExecCommand
-    AsyncProcess = stexec.AsyncProcess
-except ImportError as e :
-    import Default
-    stexec = getattr( Default , "exec" )
-    ExecCommand = stexec.ExecCommand
-    AsyncProcess = stexec.AsyncProcess
-
-
-
-*/

@@ -6,15 +6,12 @@ import sublime.Settings;
 import sublime.Sublime;
 import sublime.View;
 
-
-
 class Settings
 {
 	public static function pluginSettings():sublime.Settings
 	{
 		return Sublime.load_settings('Haxe.sublime-settings');
 	}
-
 
 	public static function getFromSettings(id:String, settings:sublime.Settings, plugin:Bool)
 	{

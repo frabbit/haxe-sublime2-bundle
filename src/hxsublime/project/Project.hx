@@ -247,8 +247,6 @@ class Project
     }
 
 
-
-
     // TODO rewrite this function and make it understandable
 
     function findBuildsInFolders(folders:Array<String>):Array<Build>

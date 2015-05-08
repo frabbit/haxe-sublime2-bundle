@@ -5,9 +5,9 @@ import python.lib.Re;
 import sublime.Region;
 import sublime.View;
 
-class HxmlCompletion {
+class HxmlCompletion 
+{
 	static var libFlag = Re.compile("-lib\\s+(.*?)");
-
 
 	public static function autoComplete( project:Project, view:View , offset:Int, prefix:String ) 
 	{

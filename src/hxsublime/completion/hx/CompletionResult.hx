@@ -77,14 +77,11 @@ class CompletionResult implements LazyFunctionSupport {
     }
 
     @lazyFunction
-    public function showTopLevelSnippets () {
-
+    public function showTopLevelSnippets () 
+    {
         var req = requiresToplevelComps();
 
-
         var r = req && !ctx.is_new();
-
-
 
         return r;
     }
@@ -115,7 +112,6 @@ class CompletionResult implements LazyFunctionSupport {
         res.sort(function (s1, s2) return (s1._1 < s2._1) ? -1 : (s1._1 > s2._1) ? 1 : 0);
         return res;
     }
-
 }
 
 

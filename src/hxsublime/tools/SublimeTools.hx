@@ -4,7 +4,6 @@ import sublime.Sublime;
 
 class SublimeTools 
 {
-
     public static function getProjectFile (?winId:Int = null) 
     {
         if (winId == null) 

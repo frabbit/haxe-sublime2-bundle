@@ -12,7 +12,6 @@ import python.Tuple;
 import sublime.EventListener;
 import sublime.View;
 
-
 class CompletionListener extends EventListener {
 
     public function on_query_completions(view:View, prefix:String, locations:Array<Int>)
@@ -20,7 +19,6 @@ class CompletionListener extends EventListener {
         var project = Projects.currentProject(view);
         return Completion.dispatchAutoComplete(project, view, prefix, locations[0]);
     }
-
 }
 
 class Completion
@@ -55,20 +53,16 @@ class Completion
 
     public static function getAutoCompleteHandler (view:View, scopes:Array<String>)
     {
-        var handler = if (Lambda.has(scopes, Config.SOURCE_HXML)) // hxml completion
-            HxmlCompletion.autoComplete;
-        else if (Lambda.has(scopes, Config.SOURCE_HAXE)) // hx can be hxsl or haxe
-            if (ViewTools.isHxsl(view))
+        var handler = 
+            if (Lambda.has(scopes, Config.SOURCE_HXML)) HxmlCompletion.autoComplete;
+                
+            else if (Lambda.has(scopes, Config.SOURCE_HAXE)) 
             {
-                HxslCompletion.autoComplete; // hxsl completion
-            }
-            else
-            {
-                hxsublime.completion.hx.HxCompletion.autoComplete; // hx completion
-            }
-        else { // empy handler
-            emptyHandler;
-        }
+                if (ViewTools.isHxsl(view)) 
+                    HxslCompletion.autoComplete;
+                else 
+                    hxsublime.completion.hx.HxCompletion.autoComplete; // hx completion
+            } else emptyHandler;
         return handler;
     }
 
@@ -81,7 +75,6 @@ class Completion
         var scopes = getCompletionScopes(view, location);
 
         var comps = null;
-
 
         trace("pre handler");
         if (canRunCompletion(offset, scopes)) {

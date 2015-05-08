@@ -13,8 +13,6 @@ class Plugin
 		return Path.abspath(Path.join(Path.dirname(python.Syntax.pythonCode("__file__")), "."));
 	}
 
-
-
 	public static function startupInfo ()
 	{
 		if (_startupInfo != null) return _startupInfo;

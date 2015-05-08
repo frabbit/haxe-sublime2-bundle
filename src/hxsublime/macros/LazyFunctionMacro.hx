@@ -1,7 +1,4 @@
-
 package hxsublime.macros;
-
-
 
 import haxe.macro.Context;
 import haxe.macro.Expr.Access.AStatic;
@@ -9,8 +6,6 @@ import haxe.macro.Expr.Field;
 import haxe.macro.Expr.FieldType.FFun;
 
 using Lambda;
-
-
 
 class LazyFunctionMacro {
 
@@ -57,8 +52,6 @@ class LazyFunctionMacro {
 								return $i{name};
 							};
 						case _:
-
-
 					}
 				}
 				newFields.push(f);
@@ -67,7 +60,5 @@ class LazyFunctionMacro {
 		} else {
 			return fields;
 		}
-
 	}
-
 }

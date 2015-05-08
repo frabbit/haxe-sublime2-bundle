@@ -335,7 +335,6 @@ class Tools {
 
 	public static function findOpenflProjects( project:Project, folder:String )
 	{
-
 		var found = findBuildFiles(folder, "xml");
 		var builds = [];
 		for (build in found)
