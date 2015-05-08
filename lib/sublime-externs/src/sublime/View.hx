@@ -1,7 +1,5 @@
-
 package sublime;
 
-#if !macro
 import python.lib.Re.Pattern;
 import python.Set;
 import python.Dict;
@@ -9,16 +7,11 @@ import python.Tuple;
 
 private typedef TODO = Dynamic;
 
-
-
 private typedef Vector = Tuple2<Int,Int>;
-#end
-
 
 @:pythonImport("sublime", "View")
-extern class View {
-
-	#if !macro
+extern class View 
+{
 
 	// 	int	Returns a number that uniquely identifies this view.
 	public function id():Int;
@@ -67,9 +60,6 @@ extern class View {
 	@:overload(function (point:Int):String {})
 	public function substr(region:Region):String;
 
-
-
-
 	// int	Inserts the given string in the buffer at the specified point. Returns the number of characters inserted: this may be different if tabs are being translated into spaces in the current buffer.
 	public function insert(edit:Edit, point:Int, string:String):Int;
 
@@ -87,25 +77,16 @@ extern class View {
 	@:overload(function (region:Region):Region {})
 	public function line(point:Int):Region;
 
-
-
 	// Region	As line(), but the region includes the trailing newline character, if any.
 	// Region	As line(), but the region includes the trailing newline character, if any.
 	@:overload(function (region:Region):Region {})
 	public function full_line(point:Int):Region;
-
-
-
 
 	// [Region]	Returns a list of lines (in sorted order) intersecting the region.
 	public function lines(region:Region):Array<Region>;
 
 	// [Region]	Splits the region up such that each region returned exists on exactly one line.
 	public function split_by_newlines(region:Region):Array<Region>;
-
-
-
-
 
 	// Region	Returns the word that contains the point.
 
@@ -293,19 +274,12 @@ extern class View {
 
 	/*
 		Shows a pop up menu at the caret, to select an item in a list. on_done will be called once, with the index of the selected item. If the pop up menu was cancelled, on_done will be called with an argument of -1. Items is an array of strings.
-
 		Flags currently only has no option.
-
-
 	*/
 	public function show_popup_menu(items:Array<String>, on_done:Int->Void, ?flags:Int):Void;
-	#end
-
 
 	// Runs the named TextCommand with the (optional) given arguments.
 	//public static function run_command(string:String, args:NamedArgs):Void;
 
 	public function run_command(string:String, ?args:Dict<String,Dynamic>):Void;
-
-
 }

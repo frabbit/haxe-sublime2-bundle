@@ -1,12 +1,10 @@
-
 package sublime;
 
-
 @:pythonImport("sublime", "Region")
-extern class Region {
+extern class Region 
+{
 	//	Creates a Region with initial values a and b.
 	public function new (a:Int, ?b:Int):Void;
-
 
 	// 	int	The first end of the region.
 	public var a(default, null):Int;
@@ -33,8 +31,4 @@ extern class Region {
 	// bool	Returns True iff begin() <= point <= end().
 	@:overload(function (point:Int):Bool {})
 	public function contains(region:Region):Bool;
-
-
-
-
 }

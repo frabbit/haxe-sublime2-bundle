@@ -1,10 +1,7 @@
-
 package sublime.def.exec;
-
 
 import python.KwArgs;
 import python.Dict;
-
 
 @:pythonImport("Default.exec","AsyncProcess")
 extern class AsyncProcess {
@@ -17,6 +14,5 @@ extern class AsyncProcess {
 	public function read_stderr():Void;
 
 	public var start_time(default, null):Int;
-
 
 }

@@ -1,4 +1,3 @@
-
 package sublime;
 
 import sublime.Command;

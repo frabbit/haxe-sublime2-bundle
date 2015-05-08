@@ -1,4 +1,3 @@
-
 package sublime;
 
 import python.Tuple;
@@ -75,6 +74,5 @@ extern class Window {
 	public function create_output_panel(name:String):View; //	View	Returns the view associated with the named output panel, created it if required. The output panel can be shown by running the show_panel window command, with the panel argument set to the name with an "output." prefix.
 	//public function lookup_symbol_in_index(symbol)	[Location]	Returns all locations where the symbol is defined across files in the current project.
 	//public function lookup_symbol_in_open_files(symbol)	[Location]	Returns all locations where the symbol is defined across open files.
-
 
 }

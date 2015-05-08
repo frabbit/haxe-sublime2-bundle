@@ -1,18 +1,11 @@
 package sublime;
 
 import python.lib.Re.Pattern;
-
 import python.Tuple;
-
 import python.KwArgs;
-
-private typedef TODO = Dynamic;
-
 
 @:pythonImport("sublime_plugin","EventListener")
 extern class EventListener {
-
-
 
 	// Called when a new buffer is created.
 	public function on_new(view:View):Void;

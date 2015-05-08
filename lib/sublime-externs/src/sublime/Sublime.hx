@@ -1,15 +1,12 @@
-
 package sublime;
 
 import python.KwArgs;
 
 private typedef TODO = Dynamic;
 
-
 @:pythonImport("sublime")
-extern
-class Sublime {
-
+extern class Sublime 
+{
 	public static var ENCODED_POSITION:Int; // Indicates the file_name should be searched for a :row or :row:col suffix
 	public static var TRANSIENT:Int; // Open the file as a preview only: it wont have a tab assigned it until modified
 
@@ -127,5 +124,4 @@ class Sublime {
 
 	// String	Returns the CPU architecture, which may be "x32" or "x64"
 	public static function arch():String;
-
 }
