@@ -1,14 +1,11 @@
 package hxsublime;
 
-
-
 import python.Dict;
 
 import hxsublime.macros.LazyFunctionSupport;
 
 import python.lib.Builtins;
 import python.lib.Inspect;
-
 
 import python.lib.xml.etree.ElementTree;
 import hxsublime.Temp;
@@ -52,30 +49,20 @@ import hxsublime.completion.hxml.HxmlCompletion;
 import hxsublime.compiler.Server;
 import hxsublime.compiler.Output;
 
-
 using Lambda;
 
-
-
 using StringTools;
-
-
-
-
-
-
 
 class Main {
 
 
 	public static function main ()
 	{
+		// sublime doesn't like the regular stdout print method
 		haxe.Log.trace = function (msg, ?pos) {
 			var prefix = pos.fileName + ":" + pos.lineNumber;
 			Builtins.print(prefix + ":" + Std.string(msg));
 		}
-		var t = { z : 10, u : "foo", t : [1,2,3]};
-
 	}
 
 }

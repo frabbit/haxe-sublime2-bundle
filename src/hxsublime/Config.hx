@@ -6,14 +6,15 @@ import haxe.ds.StringMap;
 class Config
 {
 
-    public static var target_packages = ["flash","flash8","neko","js","php","cpp","cs","java", "sys"];
-    public static var targets = ["js","cpp","swf8","swf","neko","php","java","cs", "as3"];
+    public static var target_packages = ["python", "flash","flash8","neko","js","php","cpp","cs","java", "sys"];
+    public static var targets = ["js","cpp","swf8","swf","neko","php","java","cs", "as3", "python"];
 
     public static var target_std_packages:StringMap<Array<String>> = [
         "js"   => ["js"],
         "cpp"  => ["cpp", "sys"],
         "neko" => ["neko", "sys"],
         "php"  => ["php", "sys"],
+        "python"  => ["python", "sys"],
         "java" => ["java", "sys"],
         "cs"   => ["cs", "sys"],
         "swf"  => ["flash"],
@@ -33,7 +34,7 @@ class Config
     }
     public static var ignored_folders = mk_ignored_folders();
 
-    public static var ignored_packages_list = ["neko._std", "cpp._std", "php._std", "js._std", "flash._std"];
+    public static var ignored_packages_list = ["neko._std", "cpp._std", "php._std", "js._std", "flash._std", "python._std"];
 
 
 

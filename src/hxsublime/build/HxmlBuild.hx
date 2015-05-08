@@ -374,7 +374,8 @@ class HxmlBuild implements hxsublime.build.Build
 
 		function filterTargets (x:Tuple2<String,String>)
 		{
-			return x._1 != "-cs" && x._1 != "-x" && x._1 != "-js" && x._1 != "-php" && x._1 != "-cpp" && x._1 != "-swf" && x._1 != "-java";
+
+			return x._1 != "-python" && x._1 != "-cs" && x._1 != "-x" && x._1 != "-js" && x._1 != "-php" && x._1 != "-cpp" && x._1 != "-swf" && x._1 != "-java";
 		}
 
 		if (macroCompletion)
@@ -502,6 +503,10 @@ class HxmlBuild implements hxsublime.build.Build
 		else if (this._target == "js" && Lambda.has(this.defines, "nodejs"))
 		{
 			cmd.extend(["-cmd", "nodejs " + this.absoluteOutput()]);
+		}
+		else if (this._target == "python")
+		{
+			cmd.extend(["-cmd", "python " + this.absoluteOutput()]);
 		}
 		else if (this._target == "java")
 		{

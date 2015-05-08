@@ -58,8 +58,10 @@ private class Helper
     }
     override public function run(kwArgs:KwArgs<Dynamic>)
     {
-
         var cmd:Array<String> = kwArgs.get("cmd", []);
+
+        cmd = cmd.filter(function (x) return x != "");
+
         var file_regex:String = kwArgs.get("file_regex", "");
         var line_regex:String = kwArgs.get("line_regex", "");
         var working_dir:String = kwArgs.get("working_dir", "");
