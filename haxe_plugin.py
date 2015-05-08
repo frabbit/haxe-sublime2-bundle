@@ -6,7 +6,6 @@ from sublime_plugin import Command as sublime_Command
 from sublime_plugin import TextCommand as sublime_TextCommand
 from sublime_plugin import EventListener as sublime_EventListener
 from sublime_plugin import WindowCommand as sublime_WindowCommand
-from Default.exec import ProcessListener as sublime_def_exec_ProcessListener
 from os import path as python_lib_os_Path
 import builtins as python_lib_Builtins
 import codecs as python_lib_Codecs
@@ -992,6 +991,253 @@ class Class:
 	_hx_class_name = "Class"
 Class._hx_class = Class
 _hx_classes["Class"] = Class
+
+
+class EReg:
+	_hx_class_name = "EReg"
+	_hx_fields = ["pattern", "matchObj", "global"]
+	_hx_methods = ["match", "matched", "matchedLeft", "matchedRight", "matchedPos", "matchSub", "split", "replace", "map"]
+
+	def __init__(self,r,opt):
+		# /opt/haxe-git/std/python/_std/EReg.hx:38
+		self.pattern = None
+		# /opt/haxe-git/std/python/_std/EReg.hx:39
+		self.matchObj = None
+		# /opt/haxe-git/std/python/_std/EReg.hx:40
+		self._hx_global = None
+		# /opt/haxe-git/std/python/_std/EReg.hx:43
+		self._hx_global = False
+		# /opt/haxe-git/std/python/_std/EReg.hx:44
+		options = 0
+		# /opt/haxe-git/std/python/_std/EReg.hx:45
+		# /opt/haxe-git/std/python/_std/EReg.hx:45
+		_g1 = 0
+		_g = len(opt)
+		while (_g1 < _g):
+			i = _g1
+			_g1 = (_g1 + 1)
+			# /opt/haxe-git/std/python/_std/EReg.hx:46
+			c = None
+			if (i >= len(opt)):
+				c = -1
+			else:
+				c = ord(opt[i])
+			# /opt/haxe-git/std/python/_std/EReg.hx:47
+			if (c == 109):
+				options = (options | python_lib_Re.M)
+			# /opt/haxe-git/std/python/_std/EReg.hx:48
+			if (c == 105):
+				options = (options | python_lib_Re.I)
+			# /opt/haxe-git/std/python/_std/EReg.hx:49
+			if (c == 115):
+				options = (options | python_lib_Re.S)
+			# /opt/haxe-git/std/python/_std/EReg.hx:50
+			if (c == 117):
+				options = (options | python_lib_Re.U)
+			# /opt/haxe-git/std/python/_std/EReg.hx:51
+			if (c == 103):
+				self._hx_global = True
+		# /opt/haxe-git/std/python/_std/EReg.hx:53
+		self.pattern = python_lib_Re.compile(r,options)
+
+	def match(self,s):
+		# /opt/haxe-git/std/python/_std/EReg.hx:64
+		self.matchObj = python_lib_Re.search(self.pattern,s)
+		# /opt/haxe-git/std/python/_std/EReg.hx:65
+		return (self.matchObj is not None)
+
+	def matched(self,n):
+		# /opt/haxe-git/std/python/_std/EReg.hx:80
+		return self.matchObj.group(n)
+
+	def matchedLeft(self):
+		# /opt/haxe-git/std/python/_std/EReg.hx:95
+		_hx_len = self.matchObj.start()
+		return HxString.substr(self.matchObj.string,0,_hx_len)
+
+	def matchedRight(self):
+		# /opt/haxe-git/std/python/_std/EReg.hx:110
+		pos = self.matchObj.end()
+		return HxString.substr(self.matchObj.string,pos,None)
+
+	def matchedPos(self):
+		# /opt/haxe-git/std/python/_std/EReg.hx:125
+		return _hx_AnonObject({'pos': self.matchObj.start(), 'len': (self.matchObj.end() - self.matchObj.start())})
+
+	def matchSub(self,s,pos,_hx_len = -1):
+		# /opt/haxe-git/std/python/_std/EReg.hx:139
+		if (_hx_len is None):
+			_hx_len = -1
+		# /opt/haxe-git/std/python/_std/EReg.hx:140
+		if (_hx_len != -1):
+			self.matchObj = self.pattern.search(s,pos,(pos + _hx_len))
+		else:
+			self.matchObj = self.pattern.search(s,pos)
+		# /opt/haxe-git/std/python/_std/EReg.hx:146
+		return (self.matchObj is not None)
+
+	def split(self,s):
+		# /opt/haxe-git/std/python/_std/EReg.hx:169
+		if self._hx_global:
+			# /opt/haxe-git/std/python/_std/EReg.hx:170
+			ret = []
+			# /opt/haxe-git/std/python/_std/EReg.hx:171
+			lastEnd = 0
+			# /opt/haxe-git/std/python/_std/EReg.hx:173
+			def _hx_local_0():
+				# /opt/haxe-git/std/python/_std/EReg.hx:173
+				this1 = python_lib_Re.finditer(self.pattern,s)
+				return python_HaxeIterator(this1)
+			_hx_local_1 = _hx_local_0()
+			while _hx_local_1.hasNext():
+				x = _hx_local_1.next()
+				# /opt/haxe-git/std/python/_std/EReg.hx:175
+				# /opt/haxe-git/std/python/_std/EReg.hx:175
+				x1 = None
+				endIndex = x.start()
+				x1 = HxString.substring(s,lastEnd,endIndex)
+				ret.append(x1)
+				# /opt/haxe-git/std/python/_std/EReg.hx:176
+				lastEnd = x.end()
+			# /opt/haxe-git/std/python/_std/EReg.hx:178
+			# /opt/haxe-git/std/python/_std/EReg.hx:178
+			x2 = HxString.substr(s,lastEnd,None)
+			ret.append(x2)
+			# /opt/haxe-git/std/python/_std/EReg.hx:169
+			return ret
+		else:
+			# /opt/haxe-git/std/python/_std/EReg.hx:181
+			# /opt/haxe-git/std/python/_std/EReg.hx:181
+			self.matchObj = python_lib_Re.search(self.pattern,s)
+			(self.matchObj is not None)
+			# /opt/haxe-git/std/python/_std/EReg.hx:182
+			if (self.matchObj is None):
+				return [s]
+			else:
+				# /opt/haxe-git/std/python/_std/EReg.hx:169
+				def _hx_local_4():
+					# /opt/haxe-git/std/python/_std/EReg.hx:185
+					def _hx_local_2():
+						# /opt/haxe-git/std/python/_std/EReg.hx:185
+						endIndex1 = self.matchObj.start()
+						return HxString.substring(s,0,endIndex1)
+					def _hx_local_3():
+						pos = self.matchObj.end()
+						return HxString.substr(s,pos,None)
+					return [_hx_local_2(), _hx_local_3()]
+				return _hx_local_4()
+
+	def replace(self,s,by):
+		# /opt/haxe-git/std/python/_std/EReg.hx:207
+		by1 = None
+		_this = by.split("$$")
+		by1 = "_hx_#repl#__".join([python_Boot.toString1(x1,'') for x1 in _this])
+		# /opt/haxe-git/std/python/_std/EReg.hx:208
+		def _hx_local_0(x):
+			# /opt/haxe-git/std/python/_std/EReg.hx:209
+			res = by1
+			# /opt/haxe-git/std/python/_std/EReg.hx:210
+			g = x.groups()
+			# /opt/haxe-git/std/python/_std/EReg.hx:211
+			# /opt/haxe-git/std/python/_std/EReg.hx:211
+			_g1 = 0
+			_g = len(g)
+			while (_g1 < _g):
+				i = _g1
+				_g1 = (_g1 + 1)
+				# /opt/haxe-git/std/python/_std/EReg.hx:213
+				# /opt/haxe-git/std/python/_std/EReg.hx:213
+				_this1 = None
+				delimiter = ("$" + HxOverrides.stringOrNull(str((i + 1))))
+				if (delimiter == ""):
+					_this1 = list(res)
+				else:
+					_this1 = res.split(delimiter)
+				res = g[i].join([python_Boot.toString1(x1,'') for x1 in _this1])
+			# /opt/haxe-git/std/python/_std/EReg.hx:215
+			# /opt/haxe-git/std/python/_std/EReg.hx:215
+			_this2 = res.split("_hx_#repl#__")
+			res = "$".join([python_Boot.toString1(x1,'') for x1 in _this2])
+			# /opt/haxe-git/std/python/_std/EReg.hx:216
+			return res
+		replace = _hx_local_0
+		# /opt/haxe-git/std/python/_std/EReg.hx:218
+		return python_lib_Re.sub(self.pattern,replace,s,(0 if (self._hx_global) else 1))
+
+	def map(self,s,f):
+		# /opt/haxe-git/std/python/_std/EReg.hx:228
+		buf_b = python_lib_io_StringIO()
+		# /opt/haxe-git/std/python/_std/EReg.hx:229
+		pos = 0
+		# /opt/haxe-git/std/python/_std/EReg.hx:230
+		right = s
+		# /opt/haxe-git/std/python/_std/EReg.hx:232
+		cur = self
+		# /opt/haxe-git/std/python/_std/EReg.hx:233
+		while (pos < len(s)):
+			# /opt/haxe-git/std/python/_std/EReg.hx:235
+			if (self.matchObj is None):
+				self.matchObj = python_lib_Re.search(self.pattern,s)
+			else:
+				self.matchObj = self.matchObj.re.search(s,pos)
+			# /opt/haxe-git/std/python/_std/EReg.hx:241
+			if (self.matchObj is None):
+				break
+			# /opt/haxe-git/std/python/_std/EReg.hx:246
+			pos1 = self.matchObj.end()
+			# /opt/haxe-git/std/python/_std/EReg.hx:248
+			curPos_pos = cur.matchObj.start()
+			curPos_len = (cur.matchObj.end() - cur.matchObj.start())
+			# /opt/haxe-git/std/python/_std/EReg.hx:251
+			# /opt/haxe-git/std/python/_std/EReg.hx:251
+			x = None
+			_this = None
+			_hx_len = cur.matchObj.start()
+			_this = HxString.substr(cur.matchObj.string,0,_hx_len)
+			x = HxString.substr(_this,pos,None)
+			buf_b.write(Std.string(x))
+			# /opt/haxe-git/std/python/_std/EReg.hx:252
+			# /opt/haxe-git/std/python/_std/EReg.hx:252
+			x1 = f(cur)
+			buf_b.write(Std.string(x1))
+			# /opt/haxe-git/std/python/_std/EReg.hx:254
+			# /opt/haxe-git/std/python/_std/EReg.hx:254
+			pos2 = cur.matchObj.end()
+			right = HxString.substr(cur.matchObj.string,pos2,None)
+			# /opt/haxe-git/std/python/_std/EReg.hx:258
+			if (not self._hx_global):
+				# /opt/haxe-git/std/python/_std/EReg.hx:259
+				buf_b.write(Std.string(right))
+				# /opt/haxe-git/std/python/_std/EReg.hx:260
+				return buf_b.getvalue()
+			# /opt/haxe-git/std/python/_std/EReg.hx:263
+			if (curPos_len == 0):
+				# /opt/haxe-git/std/python/_std/EReg.hx:264
+				# /opt/haxe-git/std/python/_std/EReg.hx:264
+				x2 = None
+				if ((pos1 < 0) or ((pos1 >= len(s)))):
+					x2 = ""
+				else:
+					x2 = s[pos1]
+				buf_b.write(Std.string(x2))
+				# /opt/haxe-git/std/python/_std/EReg.hx:265
+				right = HxString.substr(right,1,None)
+				# /opt/haxe-git/std/python/_std/EReg.hx:266
+				pos = (pos1 + 1)
+			else:
+				pos = pos1
+		# /opt/haxe-git/std/python/_std/EReg.hx:273
+		buf_b.write(Std.string(right))
+		# /opt/haxe-git/std/python/_std/EReg.hx:274
+		return buf_b.getvalue()
+
+	@staticmethod
+	def _hx_empty_init(_hx_o):
+		_hx_o.pattern = None
+		_hx_o.matchObj = None
+		_hx_o._hx_global = None
+EReg._hx_class = EReg
+_hx_classes["EReg"] = EReg
 
 
 class EnumValue:
@@ -11012,65 +11258,90 @@ class hxsublime_commands_HaxeGotoBaseCommand(sublime_TextCommand):
 		win = view.window()
 		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:103
 		sel = view.sel()
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:105
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:106
 		if ((python_lib_Builtins.len(sel) == 1) and ((sel[0].begin() != sel[0].end()))):
-			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:107
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:108
+			init = None
 			_this = hxsublime_tools_ViewTools.getContent(view)
 			startIndex = sel[0].begin()
 			endIndex = sel[0].end()
-			hxsublime_commands__GotoBase_State._init_text = HxString.substring(_this,startIndex,endIndex)
+			init = HxString.substring(_this,startIndex,endIndex)
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:109
+			init1 = None
+			def _hx_local_1():
+				_this1 = EReg("^[A-Za-z_0-9]*$", "")
+				_this1.matchObj = python_lib_Re.search(_this1.pattern,init)
+				return (_this1.matchObj is not None)
+			if _hx_local_1():
+				init1 = init
+			else:
+				init1 = ""
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:110
+			hxsublime_commands__GotoBase_State._init_text = init1
 		elif (python_lib_Builtins.len(sel) == 1):
-			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:111
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:114
 			reg = view.word(sel[0].begin())
-			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:112
-			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:112
-			_this1 = hxsublime_tools_ViewTools.getContent(view)
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:115
+			init2 = None
+			_this2 = hxsublime_tools_ViewTools.getContent(view)
 			startIndex1 = reg.begin()
 			endIndex1 = reg.end()
-			hxsublime_commands__GotoBase_State._init_text = HxString.substring(_this1,startIndex1,endIndex1)
+			init2 = HxString.substring(_this2,startIndex1,endIndex1)
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:116
+			init3 = None
+			def _hx_local_2():
+				_this3 = EReg("^[A-Za-z_0-9]*$", "")
+				_this3.matchObj = python_lib_Re.search(_this3.pattern,init2)
+				return (_this3.matchObj is not None)
+			if _hx_local_2():
+				init3 = init2
+			else:
+				init3 = ""
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:117
+			hxsublime_commands__GotoBase_State._init_text = init3
 		else:
 			hxsublime_commands__GotoBase_State._init_text = ""
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:120
-		def _hx_local_2(i):
-			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:122
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:125
+		def _hx_local_4(i):
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:127
 			hxsublime_commands__GotoBase_State._is_open = False
-			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:123
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:128
 			hxsublime_commands__GotoBase_State._init_text = ""
-			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:124
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:129
 			if (i >= 0):
-				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:126
-				selected_type = (function_list_data[i] if i >= 0 and i < len(function_list_data) else None)
-				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:127
-				haxe_Log.trace(("selected field: " + Std.string(selected_type[0])),_hx_AnonObject({'fileName': "GotoBase.hx", 'lineNumber': 127, 'className': "hxsublime.commands.HaxeGotoBaseCommand", 'methodName': "run"}))
-				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:129
-				src_pos = _g.getSrcPos(selected_type[1])
 				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:131
-				goto_file = _g.getFile(selected_type[1])
-				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:133
-				hxsublime_commands__GotoBase_State._find_decl_file = goto_file
-				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:135
-				haxe_Log.trace(("find_decl_file: " + Std.string(hxsublime_commands__GotoBase_State._find_decl_file)),_hx_AnonObject({'fileName': "GotoBase.hx", 'lineNumber': 135, 'className': "hxsublime.commands.HaxeGotoBaseCommand", 'methodName': "run"}))
+				selected_type = (function_list_data[i] if i >= 0 and i < len(function_list_data) else None)
+				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:132
+				haxe_Log.trace(("selected field: " + Std.string(selected_type[0])),_hx_AnonObject({'fileName': "GotoBase.hx", 'lineNumber': 132, 'className': "hxsublime.commands.HaxeGotoBaseCommand", 'methodName': "run"}))
+				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:134
+				src_pos = _g.getSrcPos(selected_type[1])
 				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:136
+				goto_file = _g.getFile(selected_type[1])
+				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:138
+				hxsublime_commands__GotoBase_State._find_decl_file = goto_file
+				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:140
+				haxe_Log.trace(("find_decl_file: " + Std.string(hxsublime_commands__GotoBase_State._find_decl_file)),_hx_AnonObject({'fileName': "GotoBase.hx", 'lineNumber': 140, 'className': "hxsublime.commands.HaxeGotoBaseCommand", 'methodName': "run"}))
+				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:141
 				if (src_pos is not None):
-					# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:138
+					# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:143
 					hxsublime_commands__GotoBase_State._find_decl_pos = src_pos
-					# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:139
-					haxe_Log.trace(("src_pos" + Std.string(src_pos)),_hx_AnonObject({'fileName': "GotoBase.hx", 'lineNumber': 139, 'className': "hxsublime.commands.HaxeGotoBaseCommand", 'methodName': "run"}))
+					# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:144
+					haxe_Log.trace(("src_pos" + Std.string(src_pos)),_hx_AnonObject({'fileName': "GotoBase.hx", 'lineNumber': 144, 'className': "hxsublime.commands.HaxeGotoBaseCommand", 'methodName': "run"}))
 				else:
 					hxsublime_commands__GotoBase_State._find_decl_pos = 0
-				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:149
-				def _hx_local_1():
-					# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:149
+				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:154
+				def _hx_local_3():
+					# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:154
 					win.open_file(goto_file)
-				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:147
-				show = _hx_local_1
 				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:152
+				show = _hx_local_3
+				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:157
 				sublime_Sublime.set_timeout(show,130)
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:119
-		onSelected = _hx_local_2
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:155
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:124
+		onSelected = _hx_local_4
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:160
 		hxsublime_commands__GotoBase_State._is_open = True
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:156
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:161
 		win.show_quick_panel(function_list,onSelected,sublime_Sublime.MONOSPACE_FONT)
 
 	@staticmethod
@@ -11193,46 +11464,46 @@ class hxsublime_commands_HaxeGotoBaseListener(sublime_EventListener):
 
 
 	def on_activated(self,view):
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:171
-		find_pos = hxsublime_commands__GotoBase_State._find_decl_pos
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:172
-		find_file = hxsublime_commands__GotoBase_State._find_decl_file
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:173
-		haxe_Log.trace("HaxeGotoBaseListener::on_activated",_hx_AnonObject({'fileName': "GotoBase.hx", 'lineNumber': 173, 'className': "hxsublime.commands.HaxeGotoBaseListener", 'methodName': "on_activated"}))
 		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:176
-		haxe_Log.trace(Std.string(view),_hx_AnonObject({'fileName': "GotoBase.hx", 'lineNumber': 176, 'className': "hxsublime.commands.HaxeGotoBaseListener", 'methodName': "on_activated"}))
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:179
+		find_pos = hxsublime_commands__GotoBase_State._find_decl_pos
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:177
+		find_file = hxsublime_commands__GotoBase_State._find_decl_file
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:178
+		haxe_Log.trace("HaxeGotoBaseListener::on_activated",_hx_AnonObject({'fileName': "GotoBase.hx", 'lineNumber': 178, 'className': "hxsublime.commands.HaxeGotoBaseListener", 'methodName': "on_activated"}))
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:181
+		haxe_Log.trace(Std.string(view),_hx_AnonObject({'fileName': "GotoBase.hx", 'lineNumber': 181, 'className': "hxsublime.commands.HaxeGotoBaseListener", 'methodName': "on_activated"}))
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:184
 		if ((view is not None) and hxsublime_commands__GotoBase_State._is_open):
-			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:181
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:186
 			hxsublime_commands__GotoBase_State._is_open = False
-			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:183
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:188
 			hxsublime_tools_ViewTools.insertAtCursor(view,hxsublime_commands__GotoBase_State._init_text)
-			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:184
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:189
 			hxsublime_commands__GotoBase_State._init_text = ""
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:188
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:193
 		if ((view is not None) and ((view.file_name() is not None))):
 			if (view.file_name() == find_file):
-				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:194
+				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:199
 				view.sel().clear()
-				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:196
+				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:201
 				_hx_min = find_pos
-				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:198
-				view.sel().add(sublime_Region(_hx_min))
-				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:200
-				haxe_Log.trace(("show at:" + Std.string(_hx_min)),_hx_AnonObject({'fileName': "GotoBase.hx", 'lineNumber': 200, 'className': "hxsublime.commands.HaxeGotoBaseListener", 'methodName': "on_activated"}))
-				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:204
-				def _hx_local_0():
-					# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:205
-					haxe_Log.trace(("show at:" + Std.string(_hx_min)),_hx_AnonObject({'fileName': "GotoBase.hx", 'lineNumber': 205, 'className': "hxsublime.commands.HaxeGotoBaseListener", 'methodName': "on_activated"}))
-					# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:206
-					view.show_at_center(sublime_Region(_hx_min))
 				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:203
-				show = _hx_local_0
-				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:208
-				sublime_Sublime.set_timeout(show,100)
+				view.sel().add(sublime_Region(_hx_min))
+				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:205
+				haxe_Log.trace(("show at:" + Std.string(_hx_min)),_hx_AnonObject({'fileName': "GotoBase.hx", 'lineNumber': 205, 'className': "hxsublime.commands.HaxeGotoBaseListener", 'methodName': "on_activated"}))
 				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:209
+				def _hx_local_0():
+					# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:210
+					haxe_Log.trace(("show at:" + Std.string(_hx_min)),_hx_AnonObject({'fileName': "GotoBase.hx", 'lineNumber': 210, 'className': "hxsublime.commands.HaxeGotoBaseListener", 'methodName': "on_activated"}))
+					# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:211
+					view.show_at_center(sublime_Region(_hx_min))
+				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:208
+				show = _hx_local_0
+				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:213
+				sublime_Sublime.set_timeout(show,100)
+				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:214
 				hxsublime_commands__GotoBase_State._find_decl_file = None
-				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:210
+				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:215
 				hxsublime_commands__GotoBase_State._find_decl_pos = None
 
 	@staticmethod
@@ -20301,6 +20572,12 @@ Math.POSITIVE_INFINITY = float("inf")
 Math.NaN = float("nan")
 # /opt/haxe-git/std/python/_std/Math.hx:138
 Math.PI = python_lib_Math.pi
+# /home/frabbit/github/haxe-sublime-plugin-hx/lib/sublime-externs/src/sublime/def/exec/ProcessListener.hx:16
+import Default
+# /home/frabbit/github/haxe-sublime-plugin-hx/lib/sublime-externs/src/sublime/def/exec/ProcessListener.hx:17
+stexec = getattr(Default, 'exec')
+# /home/frabbit/github/haxe-sublime-plugin-hx/lib/sublime-externs/src/sublime/def/exec/ProcessListener.hx:18
+sublime_def_exec_ProcessListener = stexec.ProcessListener
 # /home/frabbit/github/haxe-sublime-plugin-hx/lib/sublime-externs/src/sublime/def/exec/AsyncProcess.hx:22
 import Default
 # /home/frabbit/github/haxe-sublime-plugin-hx/lib/sublime-externs/src/sublime/def/exec/AsyncProcess.hx:23
@@ -20438,10 +20715,10 @@ hxsublime_tools_Regex.named_functions = python_lib_Re.compile("function\\s+([a-z
 hxsublime_tools_Regex.function_params = python_lib_Re.compile("function\\s+[a-zA-Z0-9_]+\\s*\\(([^\\)]*)",python_lib_Re.M)
 hxsublime_tools_Regex.param_default = python_lib_Re.compile("(=\\s*\"*[^\"]*\")",python_lib_Re.M)
 hxsublime_tools_Regex.isType = python_lib_Re.compile("^[A-Z][a-zA-Z0-9_]*$")
-hxsublime_tools_Regex.typeDeclWithScope = python_lib_Re.compile("(private\\s+)?(?:extern\\s+)?(class|typedef|enum|interface|abstract)\\s+([A-Z][a-zA-Z0-9_]*)\\s*(<[a-zA-Z0-9_,]+>)?",python_lib_Re.M)
+hxsublime_tools_Regex.typeDeclWithScope = python_lib_Re.compile("(private\\s+)?(?:extern\\s+)?(class|typedef|enum|interface|abstract)\\s+([A-Z][a-zA-Z0-9_]*)\\s*",python_lib_Re.M)
 hxsublime_tools_Regex.comments = python_lib_Re.compile("(//[^\n\r]*?[\n\r]|/\\*(.*?)\\*/)",(python_lib_Re.MULTILINE | python_lib_Re.DOTALL))
 hxsublime_tools_Regex.fieldRegex = python_lib_Re.compile("((?:(?:public|static|inline|private)\\s+)*)(var|function)\\s+([a-zA-Z_][a-zA-Z0-9_]*)",python_lib_Re.MULTILINE)
-hxsublime_tools_Regex.typeDeclWithScopeRegex = python_lib_Re.compile("(private\\s+)?(extern\\s+)?(class|typedef|enum|interface|abstract)\\s+([A-Z][a-zA-Z0-9_]*)\\s*(<[a-zA-Z0-9,_]+>)?(:?\\{|\\s+)",python_lib_Re.M)
+hxsublime_tools_Regex.typeDeclWithScopeRegex = python_lib_Re.compile("(private\\s+)?(extern\\s+)?(class|typedef|enum|interface|abstract)\\s+(:?[A-Z][a-zA-Z0-9_]*)\\s*",python_lib_Re.M)
 hxsublime_tools_Regex.enumConstructorStartDecl = python_lib_Re.compile("\\s+([a-zA-Z_]+)",python_lib_Re.M)
 hxsublime_tools_StringTools._whitespace = python_lib_Re.compile("^\\s*$")
 hxsublime_tools_AsyncEdit.dict = dict()
