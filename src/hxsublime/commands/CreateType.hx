@@ -192,7 +192,7 @@ private class State {
 
         fn += ".hx";
 
-        var src = "\npackage " + pack.join(".") + ";\n\n"+cur_type+" "+cl+" ";
+        var src = "package " + pack.join(".") + ";\n\n"+cur_type+" "+cl+" ";
         if (cur_type == "typedef")
         {
             src += "= ";

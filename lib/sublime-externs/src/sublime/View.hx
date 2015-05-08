@@ -209,7 +209,7 @@ extern class View {
 	// real	Returns the typical character width used in the layout
 	public function em_width():Float;
 
-
+	public function show_popup (msg:String):Void;
 
 
 	/*

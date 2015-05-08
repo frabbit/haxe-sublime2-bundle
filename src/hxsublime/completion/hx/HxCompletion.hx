@@ -45,7 +45,6 @@ class HxCompletion
             if (project.hasBuild()) {
                 project.completionContext.setTrigger(view, options);
 
-
                 view.run_command( "auto_complete" , python.Lib.anonToDict({
                     "api_completions_only" : !show_top_level_snippets,
                     "disable_auto_insert" : true,
