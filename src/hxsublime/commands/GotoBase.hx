@@ -89,7 +89,7 @@ private class State
         var function_list = this.getEntries(filtered_types);
         var function_list_data = this.getData(filtered_types);
 
-
+        
         trace(Std.string(function_list));
 
         trace(Std.string(function_list.length));
@@ -102,20 +102,24 @@ private class State
 
         var sel = view.sel();
 
+
         if (sel.length == 1 && sel[0].begin() != sel[0].end())
         {
-            State._init_text = ViewTools.getContent(view).substring(sel[0].begin(), sel[0].end());
+            var init = ViewTools.getContent(view).substring(sel[0].begin(), sel[0].end());
+            var init = ~/^[A-Za-z_0-9]*$/.match(init) ? init : "";
+            State._init_text = init;
         }
         else if (sel.length == 1)
         {
             var reg = view.word(sel[0].begin());
-            State._init_text = ViewTools.getContent(view).substring(reg.begin(), reg.end());
+            var init = ViewTools.getContent(view).substring(reg.begin(), reg.end());
+            var init = ~/^[A-Za-z_0-9]*$/.match(init) ? init : "";
+            State._init_text = init;
         }
         else
         {
             State._init_text = "";
         }
-
         function onSelected (i:Int)
         {
 

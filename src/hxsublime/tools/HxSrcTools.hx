@@ -43,7 +43,7 @@ class Regex
 	//static var compactFuncRegex = Re.compile("\\(.*\\)");
 	//static var compactPropRegex = Re.compile(":.*\\.([a-z_0-9]+)", Re.I);
 
-	static var typeDeclWithScope = Re.compile("(private\\s+)?(?:extern\\s+)?(class|typedef|enum|interface|abstract)\\s+([A-Z][a-zA-Z0-9_]*)\\s*(<[a-zA-Z0-9_,]+>)?" , Re.M );
+	static var typeDeclWithScope = Re.compile("(private\\s+)?(?:extern\\s+)?(class|typedef|enum|interface|abstract)\\s+([A-Z][a-zA-Z0-9_]*)\\s*" , Re.M );
 	//static var type_decl = Re.compile("(class|typedef|enum|interface|abstract)\\s+([A-Z][a-zA-Z0-9_]*)\\s*(<[a-zA-Z0-9_,]+>)?" , Re.M );
 	//static var enum_start_decl = Re.compile("enum\\s+([A-Z][a-zA-Z0-9_]*)\\s*(<[a-zA-Z0-9_,]+>)?" , Re.M );
 	//static var skippable = Re.compile("^[a-zA-Z0-9_\\s]*$");
@@ -53,7 +53,7 @@ class Regex
 
 	static var comments = Re.compile("(//[^\n\r]*?[\n\r]|/\\*(.*?)\\*/)", Re.MULTILINE | Re.DOTALL );
 	static var fieldRegex = Re.compile("((?:(?:public|static|inline|private)\\s+)*)(var|function)\\s+([a-zA-Z_][a-zA-Z0-9_]*)", Re.MULTILINE);
-	static var typeDeclWithScopeRegex = Re.compile("(private\\s+)?(extern\\s+)?(class|typedef|enum|interface|abstract)\\s+([A-Z][a-zA-Z0-9_]*)\\s*(<[a-zA-Z0-9,_]+>)?(:?\\{|\\s+)" , Re.M );
+	static var typeDeclWithScopeRegex = Re.compile("(private\\s+)?(extern\\s+)?(class|typedef|enum|interface|abstract)\\s+(:?[A-Z][a-zA-Z0-9_]*)\\s*" , Re.M );
 	static var enumConstructorStartDecl = Re.compile("\\s+([a-zA-Z_]+)" , Re.M );
 }
 

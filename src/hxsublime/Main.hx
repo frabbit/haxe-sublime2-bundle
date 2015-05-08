@@ -55,7 +55,7 @@ using StringTools;
 
 class Main {
 
-
+	
 	public static function main ()
 	{
 		// sublime doesn't like the regular stdout print method
