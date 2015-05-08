@@ -2,4 +2,5 @@
 -cp lib/sublime-externs/src
 -main hxsublime.Main
 -python haxe_plugin.py
+#-D analyzer
 -dce no
