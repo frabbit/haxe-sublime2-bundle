@@ -7,7 +7,7 @@ class StringTools {
 
 	public static function format (s:String, args:Array<Dynamic>):String
 	{
-		return python.Syntax.callField(s, "format", (args:python.VarArgs<Dynamic>));
+		return python.Syntax.field(s, "format")((args:python.VarArgs<Dynamic>));
 	}
 
 	public static function encode(s:String, encoding:String="utf-8", errors:String="strict"):Bytes {
