@@ -4,7 +4,6 @@ import hxsublime.build.Build;
 import hxsublime.macros.LazyFunctionSupport;
 import hxsublime.project.CompletionState.CompletionCache;
 import hxsublime.project.Project;
-import hxsublime.Settings;
 import hxsublime.tools.StringTools;
 import hxsublime.tools.ViewTools;
 import python.lib.Builtins;
@@ -17,17 +16,16 @@ import sublime.View;
 using hxsublime.support.StringTools;
 using hxsublime.support.ArrayTools;
 
-typedef SettingsInterface = {
+private typedef Settings = {
     
     public function showCompletionTimes(?view:View):Bool;
 }
 
 class CompletionSettings implements LazyFunctionSupport
 {
-    var settings:SettingsInterface;
+    var settings:Settings;
     public function new(settings)
     {
-
         this.settings = settings;
     }
 
@@ -35,5 +33,4 @@ class CompletionSettings implements LazyFunctionSupport
     public function showCompletionTimes(view:View) {
         return settings.showCompletionTimes(view);
     }
-
 }

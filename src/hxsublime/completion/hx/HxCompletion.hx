@@ -24,6 +24,7 @@ import python.Tuple;
 import sublime.Region;
 import sublime.Sublime;
 import sublime.View;
+import sys.io.File;
 
 using hxsublime.support.ArrayTools;
 
@@ -123,12 +124,17 @@ class HxCompletion
 
 	static function runCompilerCompletion(compBuild:CompletionBuild, callback:String->String->Void)
 	{
+
 		var startTime = Time.time();
 		var ctx = compBuild.ctx;
 		var project = ctx.project;
 		var build = compBuild.build;
 		var view = ctx.view;
-
+		trace("__________COMPLETION INFO________________");
+		trace(compBuild.display());
+		trace(compBuild.tempFile);
+		trace(File.getContent(compBuild.tempFile));
+		trace("_________________________________________");
 		function inMainThread (out, err)
 		{
 			function run ()

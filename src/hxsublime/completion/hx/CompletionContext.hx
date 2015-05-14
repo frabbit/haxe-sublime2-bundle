@@ -40,6 +40,7 @@ class CompletionContext implements LazyFunctionSupport
 
     public function new(view:View, project:Project, offset:Int, options:CompletionOptions, settings:CompletionSettings, prefix:String)
     {
+        
         this.view = view;
 
         this.prefix = prefix;
@@ -61,11 +62,13 @@ class CompletionContext implements LazyFunctionSupport
         this.id = getCompletionId();
 
         this.view_pos = ViewTools.getFirstCursorPos(view);
+
     }
 
     @lazyFunction
     public function isHint()
     {
+        
         var whitespace_re = Re.compile("^\\s*$");
         return "(,".indexOf(completeChar()) > -1 && Re.match(whitespace_re, prefix) != null;
     }
@@ -158,13 +161,16 @@ class CompletionContext implements LazyFunctionSupport
 
     @lazyFunction
     function srcUntilOffset () {
+
         return this.src().substring(0,offset-1);
     }
 
     @lazyFunction
     public function tempCompletionSrc()
     {
-        return src().substr(0,complete_offset()) + "|" + src().substr(complete_offset());
+
+        return src().substr(0,complete_offset()) + "" + src().substr(complete_offset());
+        //return src().substr(0,complete_offset()) + "|" + src().substr(complete_offset());
     }
 
 

@@ -46,7 +46,7 @@ class CompletionBuild implements LazyFunctionSupport {
     @lazyFunction
     public function display()
     {
-        var pos = if (!Settings.useOffsetCompletion()) "0" else Std.string(ctx.complete_offset_in_bytes);
+        var pos = Std.string(ctx.complete_offset_in_bytes());
         return tempFile + "@" + pos;
     }
 }

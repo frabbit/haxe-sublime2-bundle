@@ -28,7 +28,6 @@ class Types
 				cp.push( lib.path );
 			}
 		}
-
 		for (path in cp)
 		{
 			var p = Path.join( base_path, path );

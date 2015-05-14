@@ -89,6 +89,7 @@ private class Helper
 
     static function isCommaAfterOpenParensInFunctionDefinition (src:String)
     {
+
         var found = HxSrcTools.reverse_search_next_char_on_same_nesting_level(src, ["("], src.length-1);
 
         return 

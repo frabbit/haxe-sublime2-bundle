@@ -199,6 +199,7 @@ class HxmlBuild implements hxsublime.build.Build
 
 	function alignDriveLetter(path:String)
 	{
+
 		var is_win = Sublime.platform() == "windows";
 
 		if (is_win) {
