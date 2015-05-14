@@ -196,9 +196,9 @@ class NmeBuild implements Build implements LazyFunctionSupport {
 	public function prepareCheckCmd(project:Project, server_mode:Bool, view:View)
 	{
 		var r = this.prepareBuildCmd(project, server_mode, view);
-		var cmd = r._1, folder = r._2;
-		cmd.push("--no-output");
-		return Tuple2.make(cmd, folder);
+		
+		r.cmd.push("--no-output");
+		return r;
 	}
 
 	public function prepareBuildCmd(project:Project, server_mode:Bool, view:View)
@@ -224,8 +224,8 @@ class NmeBuild implements Build implements LazyFunctionSupport {
 		{
 			cmd.extend(["--connect", Std.string(project.server.get_server_port())]);
 		}
-
-		return Tuple2.make(cmd, this.getBuildFolder());
+		return { cmd : cmd, folder : this.getBuildFolder() };
+		
 	}
 
 

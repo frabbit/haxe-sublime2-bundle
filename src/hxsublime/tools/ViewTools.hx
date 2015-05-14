@@ -33,7 +33,6 @@ class AsyncEdit
 
         var id:Int = d.get("id", null);
 
-        trace(id);
 
         if (AsyncEdit.dict.hasKey(id))
         {

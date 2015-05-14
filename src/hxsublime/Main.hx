@@ -41,7 +41,6 @@ import hxsublime.commands.Haxelib;
 import hxsublime.commands.GetExprType;
 import hxsublime.commands.GotoBuildTypes;
 import hxsublime.commands.ShowDoc;
-import hxsublime.panel.TabPanel;
 import hxsublime.panel.SlidePanel;
 import hxsublime.panel.Tools;
 import hxsublime.completion.hxsl.HxslCompletion;

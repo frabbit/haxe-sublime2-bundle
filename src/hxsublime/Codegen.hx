@@ -135,6 +135,7 @@ class HaxeImportGenerator
 		{
 			if (clow < imp.group(2).toLowerCase())
 			{
+				
 				var ins = "{0}{1} {2};\n".format([imp.group(1), statement, cname]);
 				view.insert(edit, this.getIndent(src, imp.start(0)), ins);
 				return;
@@ -144,6 +145,7 @@ class HaxeImportGenerator
 
 		if (last != null)
 		{
+			trace(last);
 			var ins = ";\n{0}{1} {2}".format([last.group(1), statement, cname]);
 			view.insert(edit, last.end(2), ins);
 		}

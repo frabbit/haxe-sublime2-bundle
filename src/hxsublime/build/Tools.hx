@@ -15,6 +15,8 @@ import python.lib.Re;
 import python.Tuple;
 import sublime.Sublime;
 
+import haxe.Timer;
+
 using StringTools;
 using hxsublime.support.ArrayTools;
 
@@ -222,23 +224,33 @@ class Tools {
 
 	static function findBuildFiles(folder:String, extension:String)
 	{
-
-		if (!Path.isdir(folder) )
+		function loop(folder:String, maxDepth:Int, startTime:Float) 
 		{
-			return [];
+			if (maxDepth == 0 || !Path.isdir(folder) )
+			{
+				return [];
+			}
+
+			var files = Glob.glob( Path.join( folder , "*."+extension ) ).map(function (x) return Tuple2.make(x, folder));
+
+
+			for (dir in Os.listdir(folder))
+			{
+				var f = Path.join(folder, dir);
+				//var x = Glob.glob( Path.join( f , "*."+extension ) ).map(function (x) return Tuple2.make(x, f));
+				//files.extend( x );
+				var recurse = switch dir {
+					case ".git" | "node_modules" | "bower_components" | ".svn" | ".vagrant": false;
+					case x if (x.length > 0 && x.charAt(0) == ".") : false;
+					case _ : Path.isdir(f);
+				}
+				//trace(dir + "-" + recurse);
+				if (recurse) files.extend(loop(f, maxDepth-1, startTime));
+			}
+
+			return files;
 		}
-
-		var files = Glob.glob( Path.join( folder , "*."+extension ) ).map(function (x) return Tuple2.make(x, folder));
-
-
-		for (dir in Os.listdir(folder))
-		{
-			var f = Path.join(folder, dir);
-			var x = Glob.glob( Path.join( f , "*."+extension ) ).map(function (x) return Tuple2.make(x, f));
-			files.extend( x );
-		}
-
-		return files;
+		return loop(folder, 2, Timer.stamp());
 	}
 
 	static function hxmlToBuilds (project, hxml, folder):Array<HxmlBuild>

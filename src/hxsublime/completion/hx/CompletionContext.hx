@@ -63,7 +63,6 @@ class CompletionContext implements LazyFunctionSupport
         this.id = getCompletionId();
 
         this.view_pos = ViewTools.getFirstCursorPos(view);
-
     }
 
 

@@ -28,24 +28,19 @@ class CompletionOptions implements LazyFunctionSupport
     var _types:CompletionTypes;
     var _toplevel:TopLevelOptions;
     var _context:Int;
-    var _trigger:Int;
+    
+    public var userActivated:Bool;
 
-    public function new(trigger:Int, context = Constants.COMPILER_CONTEXT_REGULAR, types = Constants.COMPLETION_TYPE_REGULAR, toplevel = Constants.COMPLETION_TYPE_TOPLEVEL)
+    public function new(types = Constants.COMPLETION_TYPE_REGULAR, userActivated = false, toplevel = Constants.COMPLETION_TYPE_TOPLEVEL)
     {
+        this.userActivated = userActivated;
         this._types = new CompletionTypes(types);
         this._toplevel = new TopLevelOptions(toplevel);
-        this._context = context;
-        this._trigger = trigger;
     }
 
-    public function copyAsManual()
+    public function copy()
     {
-        return new CompletionOptions(Constants.COMPLETION_TRIGGER_MANUAL, this._context, this.types().val(), this._toplevel.val());
-    }
-
-    public function copyAsAsync()
-    {
-        return new CompletionOptions(Constants.COMPLETION_TRIGGER_ASYNC, this._context, this.types().val(), this._toplevel.val());
+        return new CompletionOptions(this.types().val(), this.userActivated, this._toplevel.val());
     }
 
     @property
@@ -54,34 +49,9 @@ class CompletionOptions implements LazyFunctionSupport
         return this._types;
     }
 
-
-    @lazyFunction
-    public function asyncTrigger()
-    {
-        return this._trigger == Constants.COMPLETION_TRIGGER_ASYNC;
-    }
-
-    @lazyFunction
-    public function manualCompletion()
-    {
-        return this._trigger == Constants.COMPLETION_TRIGGER_MANUAL;
-    }
-
-    @lazyFunction
-    public function macroCompletion()
-    {
-        return this._context == Constants.COMPILER_CONTEXT_MACRO;
-    }
-
-    @lazyFunction
-    public function regularCompletion()
-    {
-        return this._context == Constants.COMPILER_CONTEXT_REGULAR;
-    }
-
     public function eq (other:CompletionOptions)
     {
-        return this._trigger == other._trigger && this._types.eq(other._types) && this._toplevel.eq(other._toplevel) && this._context == other._context;
+        return this._types.eq(other._types) && this._toplevel.eq(other._toplevel) && this.userActivated == other.userActivated;
     }
 }
 

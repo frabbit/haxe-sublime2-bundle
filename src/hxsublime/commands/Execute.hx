@@ -72,8 +72,6 @@ private class Helper
         var kill:Bool = kwArgs.get("kill", false);
         var is_check_run:Bool = kwArgs.get("is_check_run", false);
 
-        trace("ENV1: " + Std.string(env));
-
 
         this.is_check_run = is_check_run;
 
@@ -82,7 +80,6 @@ private class Helper
             encoding = Sys.getfilesystemencoding();
         }
 
-        trace("run haxe exec");
         if (this.output_view == null)
         {
             // Try not to call get_output_panel until the regexes are assigned
@@ -113,7 +110,6 @@ private class Helper
         this.output_view.settings().set("result_line_regex", line_regex);
         this.output_view.settings().set("result_base_dir", working_dir);
 
-        trace("WORKING DIR:" + working_dir);
         // Call get_output_panel a second time after assigning the above
         // settings, so that it'll be picked up as a result buffer
         this.window.create_output_panel("exec");
@@ -134,7 +130,7 @@ private class Helper
                 return a;
             }
 
-            trace("Running Command : " + cmd.map(escape_arg ).join(" "));
+            trace("Running Command: " + cmd.map(escape_arg ).join(" "));
 
             Sublime.status_message("Building");
         }
@@ -173,8 +169,8 @@ private class Helper
         {
             // Forward kwargs to AsyncProcess
 
-            trace("CMD:" + Std.string(cmd));
-            trace("ENV:" + Std.string(merged_env));
+            //trace("CMD:" + Std.string(cmd));
+            //trace("ENV:" + Std.string(merged_env));
             var d:Dict<String, Dynamic> = kwArgs;
             if (d.hasKey("working_dir")) d.remove("working_dir");
             if (d.hasKey("file_regex")) d.remove("file_regex");

@@ -21,14 +21,6 @@ class Log
 			f.write( msgStr + "\n" );
 			f.close();
 		}
-		else if (Settings.useDebugPanel())
-		{
-
-			function f() {
-				Panels.debugPanel().writeln(msg);
-			}
-			Sublime.set_timeout(f, 100);
-		}
 		else {
 			try {
 				trace(msgStr);

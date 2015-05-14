@@ -35,7 +35,7 @@ class PanelCloseListener extends EventListener
 		var panel_win_id = view.settings().get("haxe_panel_win_id");
 		if (panel_win_id != null) 
 		{
-			for (p in [Panels._tabPanels, Panels._debugPanels]) 
+			for (p in [Panels._debugPanels]) 
 			{
 				var panel = p.getOrDefault(panel_win_id, null);
 				if (panel != null && panel.outputView != null && view_id == panel.outputViewId) 
@@ -53,41 +53,15 @@ class PanelCloseListener extends EventListener
 class Panels 
 {
 
-	static var _tabPanels = new Cache<Int, Panel>(new IntMap());
 	static var _debugPanels = new Cache<Int, Panel>(new IntMap());
 	static var _slidePanels = new IntMap<Panel>();
 
-	public static function tabPanel(win:Window = null)
-	{
-		if (win == null) 
-		{
-			win = Sublime.active_window();
-		}
-		
-		return _tabPanels.getOrInsert(win.id(), function ():Panel return new TabPanel(win, "Haxe Output"));
-	}
-
-	public static function debugPanel(win:Window = null)
-	{
-		if (win == null) 
-		{
-			win = Sublime.active_window();
-		}
-		return _debugPanels.getOrInsert(win.id(), function ():Panel return new TabPanel(win, "Haxe Plugin Debug Panel"));
-	}
 
 	
 
 	public static function defaultPanel(win:Window = null):Panel
 	{
-		if (Settings.useSlidePanel()) 
-		{
-			return slidePanel(win);
-		}
-		else 
-		{
-			return tabPanel(win);
-		}
+		return slidePanel(win);
 	}
 
 	public static function slidePanel(win:Window = null)

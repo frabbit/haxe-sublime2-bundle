@@ -21,7 +21,7 @@ class TopLevel
 
     public static function getBuildTarget(ctx:CompletionContext)
     {
-        return if (ctx.options.macroCompletion()) "neko" else ctx.build().target().plattform;
+        return ctx.build().target().plattform;
     }
 
 
@@ -107,7 +107,6 @@ class TopLevel
         var used = [];
         for (i in usings)
         {
-
             var imp = i[1];
             used.push(imp);
         }
@@ -137,11 +136,7 @@ class TopLevel
         var build_target = getBuildTarget(ctx);
         var comps = [];
 
-        var startTime = Time.time();
-
         var allTypes = bundle.allTypes();
-
-        var runTime0 = Time.time() - startTime;
 
         for (t in allTypes) {
             if (ctx.build().isTypeAvailable(t)) {
@@ -150,8 +145,6 @@ class TopLevel
             }
         }
 
-        var runTime1 = Time.time() - startTime;
-
         for (p in bundle.packs()) {
             if (ctx.build().isPackAvailable(p)) {
                 var cm = Tuple2.make(p + "\tpackage",p);
@@ -159,19 +152,12 @@ class TopLevel
             }
         }
 
-        var runTime2 = Time.time() - startTime;
-
-        trace("get_type_comps time0" + Std.string(runTime0));
-        trace("get_type_comps time1" + Std.string(runTime1));
-        trace("get_type_comps time2" + Std.string(runTime2));
-
         return comps;
     }
 
 
     public static function getToplevelCompletion( ctx :CompletionContext )
     {
-        var startTime = Time.time();
         var comps = [];
 
         if (!ctx.is_new()) {
@@ -181,11 +167,7 @@ class TopLevel
 
         var imported = getImportsAndUsings(ctx);
 
-        var runTime1 = Time.time() - startTime;
-
         var build_bundle = ctx.build().getTypes();
-
-        var runTime2 = Time.time() - startTime;
 
         var std_bundle = ctx.build().stdBundle();
 
@@ -196,21 +178,9 @@ class TopLevel
 
         var merged_bundle = std_bundle.merge(build_bundle).filter(filterPrivates);
 
-        var runTime3 = Time.time() - startTime;
-
         var comps1 = getTypeComps(ctx, merged_bundle, imported);
 
-        var runTime4 = Time.time() - startTime;
-
         comps.extend(comps1);
-
-        var runTime = Time.time() - startTime;
-
-        trace("TOP LEVEL COMPLETION TIME1:" + Std.string(runTime1));
-        trace("TOP LEVEL COMPLETION TIME2:" + Std.string(runTime2));
-        trace("TOP LEVEL COMPLETION TIME3:" + Std.string(runTime3));
-        trace("TOP LEVEL COMPLETION TIME4:" + Std.string(runTime4));
-        trace("TOP LEVEL COMPLETION TIME END:" + Std.string(runTime));
 
         return comps;
     }
@@ -219,15 +189,12 @@ class TopLevel
     {
         var comps = getToplevelCompletion(ctx);
 
-        trace(ctx.prefix);
         return filterTopLevelCompletions(ctx.prefix, comps);
     }
 
     public static function filterTopLevelCompletions (prefix:String, all_comps:Array<Tuple2<String, String>>)
     {
         var comps = [];
-
-        trace("c : " + prefix);
 
         if (prefix.length == 0)
         {
@@ -256,7 +223,6 @@ class TopLevel
             {
                 var found = true;
                 var id = c._2.toLowerCase();
-                var oldId = id;
 
                 for (cur in test)
                 {

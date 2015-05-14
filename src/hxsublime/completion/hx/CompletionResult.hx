@@ -91,12 +91,8 @@ class CompletionResult implements LazyFunctionSupport {
     function requiresToplevelComps()
     {
         var prefix_is_whitespace = hxsublime.tools.StringTools.isWhitespaceOrEmpty(ctx.prefix);
-        trace("prefix_is_whitespace:" + Std.string(prefix_is_whitespace));
-        trace("has_hints:" + Std.string(this.hasHints()));
-        trace("has_hint:" + Std.string(this.ctx.options.types().hasHint()));
-        trace("has_compiler_results:" + Std.string(this.hasCompilerResults()));
+        
         var r = !((prefix_is_whitespace && hasHints() && ctx.options.types().hasHint()) || hasCompilerResults());
-        trace("requires_toplevel_comps:" + r);
         return r;
     }
 

@@ -58,55 +58,29 @@ class Settings
 	public static function getBool (id:String, defaultVal:Bool, view:View = null):Bool
 	{
 		var r = get(id, view);
-		if (r == null)
-		{
-			return defaultVal;
-		}
-		else
-		{
-			if (Std.is(r, Bool))
-			{
-				return r;
-			}
-			else
-			{
-				return defaultVal;
-			}
-		}
+		return 
+			if (r == null) defaultVal
+			else if (Std.is(r, Bool)) r
+			else defaultVal;
 	}
 
 
 	public static function getInt (id:String, defaultVal:Int, view = null):Int
 	{
 		var r = get(id, view);
-		if (r == null) {
-			return defaultVal;
-		}
-		else {
-			if (Std.is(r, Int))
-			{
-				return r;
-			}
-			else {
-				return defaultVal;
-			}
-		}
+		return 
+			if (r == null) defaultVal
+			else if (Std.is(r, Int)) r
+			else defaultVal;
 	}
 
 	public static function getString (id:String, defaultVal:String, view = null):String
 	{
 		var r = get(id, view);
-		if (r == null) {
-			return defaultVal;
-		}
-		else {
-			if (Std.is(r, String)) {
-				return r;
-			}
-			else {
-				return defaultVal;
-			}
-		}
+		return 
+			if (r == null) defaultVal
+			else if (Std.is(r, String)) r
+			else defaultVal;
 	}
 
 	public static function noFuzzyCompletion (view:View = null)
@@ -126,9 +100,7 @@ class Settings
 
 	public static function isAsyncCompletion (view:View = null)
 	{
-
-		var r = getBool("haxe_completion_async", true, view);
-		return r;
+		return getBool("haxe_completion_async", true, view);
 	}
 
 	public static function getCompletionDelays (view:View = null)
@@ -138,7 +110,6 @@ class Settings
 			getInt("haxe_completion_async_timing_show", 150, view)
 		);
 	}
-
 
 	public static function showCompletionTimes (view:View = null)
 	{
@@ -214,11 +185,6 @@ class Settings
 	public static function smartSnippetsJustCurrent (view:View = null)
 	{
 		return getBool("haxe_completion_smart_snippets_just_current", false, view);
-	}
-
-	public static function useDebugPanel (view:View = null)
-	{
-		return getBool("haxe_use_debug_panel", false, view);
 	}
 
 	public static function checkOnSave (view:View = null)

@@ -159,8 +159,6 @@ private class State
         State._is_open = true;
         win.show_quick_panel( function_list , onSelected  , Sublime.MONOSPACE_FONT );
     }
-
-
 }
 
 
@@ -170,15 +168,9 @@ private class State
     override public function on_activated(view:View)
     {
 
-
         // global _find_decl_pos, _find_decl_file, _is_open, _init_text
         var find_pos = State._find_decl_pos;
         var find_file = State._find_decl_file;
-        trace("HaxeGotoBaseListener::on_activated");
-
-
-        trace(Std.string(view));
-
 
         if (view != null && State._is_open)
         {

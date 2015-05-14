@@ -1,11 +1,6 @@
 package hxsublime.completion.hx;
 class Constants 
 {
-	public static inline var COMPLETION_TRIGGER_MANUAL = 1;
-	public static inline var COMPLETION_TRIGGER_AUTO = 2;
-	public static inline var COMPLETION_TRIGGER_ASYNC = 3;
-	public static inline var COMPILER_CONTEXT_MACRO = 1;
-	public static inline var COMPILER_CONTEXT_REGULAR = 2;
 	public static inline var COMPLETION_TYPE_REGULAR = 1; // regular compiler completion without hints
 	public static inline var COMPLETION_TYPE_HINT = 2; // compiler hints
 	public static inline var COMPLETION_TYPE_TOPLEVEL = 4; // include top level if useful

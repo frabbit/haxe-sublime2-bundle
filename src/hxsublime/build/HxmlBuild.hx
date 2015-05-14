@@ -71,38 +71,37 @@ class HxmlBuild implements hxsublime.build.Build
 
 
 
-	public function stdBundle () return _stdBundle;
+	public inline function stdBundle () return _stdBundle;
 
-	public function target () return { name : _target, plattform : _target, args : []};
+	public inline function target () return { name : _target, plattform : _target, args : []};
 
-	public function classpaths ():Array<String> return _classpaths;
+	public inline function classpaths ():Array<String> return _classpaths;
 
-	public function hxml () return _hxml;
+	public inline function hxml () return _hxml;
 
 
-	public function title()
+	public inline function title()
 	{
 		return this.output;
 	}
 
-	public function setHxml (hxml:String) {
+	public inline function setHxml (hxml:String) 
+	{
 		this._hxml = hxml;
 	}
 
-
-
-	public function buildFile()
+	public inline function buildFile()
 	{
 		return this._buildFile;
 	}
 
-	public function addDefine (define:String)
+	public inline function addDefine (define:String)
 	{
 		this.defines.push(define);
 	}
 
 
-	function setMain(main:String)
+	inline function setMain(main:String)
 	{
 		this.main = main;
 	}
@@ -111,22 +110,19 @@ class HxmlBuild implements hxsublime.build.Build
 
 	function getName ()
 	{
-		var n = null;
-		if (this.name != null) {
-			n = this.name;
-		}
-		else {
-			n = if (this.main == null) "[No Main]" else this.main;
-		}
+		var n = 
+			if (this.name != null) this.name;
+			else if (this.main == null) "[No Main]" 
+			else this.main;
 		return n;
 	}
 
-	public function setStdBundle(stdBundle)
+	public inline function setStdBundle(stdBundle)
 	{
 		this._stdBundle = stdBundle;
 	}
 
-	public function args () return _args;
+	public inline function args () return _args;
 
 	public function equals (other)
 	{
@@ -186,7 +182,7 @@ class HxmlBuild implements hxsublime.build.Build
 		hb.modeCompletion = this.modeCompletion;
 		return hb;
 	}
-	public function addArg(arg:Tuple2<String,String>)
+	public inline function addArg(arg:Tuple2<String,String>)
 	{
 		this._args.push(arg);
 	}
@@ -196,14 +192,14 @@ class HxmlBuild implements hxsublime.build.Build
 		return if (this.buildFile() != null) Path.dirname(this.buildFile()) else null;
 	}
 
-	public function setBuildCwd ()
+	public inline function setBuildCwd ()
 	{
 		this.setCwd(this.getBuildFolder());
 	}
 
 	function alignDriveLetter(path:String)
 	{
-		var is_win =  Sublime.platform() == "windows";
+		var is_win = Sublime.platform() == "windows";
 
 		if (is_win) {
 			var reg = Re.compile("^([a-z]):(.*)$");
@@ -233,7 +229,6 @@ class HxmlBuild implements hxsublime.build.Build
 
 	function getClasspathOfFile (file)
 	{
-
 		var file = this.alignDriveLetter(file);
 
 		var cps = this._classpaths.copy();
@@ -255,21 +250,11 @@ class HxmlBuild implements hxsublime.build.Build
 		return null;
 	}
 
-	//function isFileInClasspath (file:String)
-	//{
-	//	file = this.alignDriveLetter(file);
-	//	return this.getClasspathOfFile(file) != null;
-	//}
-
 	public function getRelativePath (file:String)
 	{
 		file = this.alignDriveLetter(file);
 
 		var cp = this.getClasspathOfFile(file);
-
-		trace(file);
-		trace(file.replace(cp, ""));
-		trace(file.replace(cp, "").substr(1));
 
 		return if (cp != null) file.replace(cp, "").substr(1) else null;
 	}
@@ -365,7 +350,6 @@ class HxmlBuild implements hxsublime.build.Build
 
 	public function setAutoCompletion (display, ?macroCompletion = false, ?noOutput = true)
 	{
-
 		this.modeCompletion = true;
 
 		var args = this._args;
@@ -374,8 +358,11 @@ class HxmlBuild implements hxsublime.build.Build
 
 		function filterTargets (x:Tuple2<String,String>)
 		{
-
-			return x._1 != "-python" && x._1 != "-cs" && x._1 != "-x" && x._1 != "-js" && x._1 != "-php" && x._1 != "-cpp" && x._1 != "-swf" && x._1 != "-java";
+			return switch x._1 
+			{
+				case "-python" | "-cs" | "-x" | "-js" | "-php" | "-cpp" | "-swf" | "-java" : false;
+				case _ : true;
+			}
 		}
 
 		if (macroCompletion)
@@ -389,7 +376,10 @@ class HxmlBuild implements hxsublime.build.Build
 
 		function filterCommandsAndDce (x:Tuple2<String,String>)
 		{
-			return x._1 != "-cmd" && x._1 != "-dce";
+			return switch x._1 {
+				case "-cmd" | "-dce": false;
+				case _ : true;
+			}
 		}
 
 
@@ -455,9 +445,8 @@ class HxmlBuild implements hxsublime.build.Build
 	public function prepareCheckCmd(project, server_mode, view)
 	{
 		var r = this.prepareBuildCmd(project, server_mode, view);
-		var cmd = r._1, build_folder = r._2;
-		cmd.push("--no-output");
-		return Tuple2.make(cmd, build_folder);
+		r.cmd.push("--no-output");
+		return r;
 	}
 
 	function absoluteOutput()
@@ -470,7 +459,7 @@ class HxmlBuild implements hxsublime.build.Build
 		}
 	}
 
-	public function prepareRunCmd (project:Project, server_mode:Bool, view:View):Tuple2<Array<String>, String>
+	public function prepareRunCmd (project:Project, server_mode:Bool, view:View):{ cmd :Array<String>, folder:String}
 	{
 		var r = this.prepareRun(project, view, server_mode);
 		var cmd = r._1, build_folder = r._2, nekox_file = r._3;
@@ -520,15 +509,15 @@ class HxmlBuild implements hxsublime.build.Build
 			cmd.extend(["-cmd", "gmcs -recurse:*.cs -main:" + this.main + " -out:" + this.main + ".exe-debug"]);
 			cmd.extend(["-cmd", Path.join(".", this.main + ".exe-debug")]);
 		}
-
-		return Tuple2.make(cmd, build_folder);
+		
+		return { cmd : cmd, folder : build_folder };
 	}
 
 	public function prepareBuildCmd (project:Project, server_mode:Bool, view:View)
 	{
 		var r = this.prepareRun(project, view, server_mode);
 		var cmd = r._1, build_folder = r._2;
-		return Tuple2.make(cmd, build_folder);
+		return { cmd : r._1, folder : build_folder };
 	}
 
 	public function prepareRun (project:Project, view:View, server_mode:Null<Bool> = null):Tuple3<Array<String>, String, String>
@@ -606,8 +595,6 @@ class HxmlBuild implements hxsublime.build.Build
 		Execute.runCmdAsync( cmd, cb, "", build_folder, env );
 	}
 
-
-
 	function runSync (project:Project, view:View, server_mode:Null<Bool> = null)
 	{
 		var env = project.haxeEnv(view);
@@ -665,7 +652,6 @@ class HxmlBuild implements hxsublime.build.Build
 			callback(out, err);
 		}
 	}
-
 
 	public function isTypeAvailable (type:HaxeType)
 	{

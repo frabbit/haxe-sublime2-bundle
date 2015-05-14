@@ -29,17 +29,7 @@ class Regex
 	public static var param_default = Re.compile("(=\\s*\"*[^\"]*\")", Re.M);
 	public static var isType = Re.compile("^[A-Z][a-zA-Z0-9_]*$");
 
-
-	//static var compactFuncRegex = Re.compile("\\(.*\\)");
-	//static var compactPropRegex = Re.compile(":.*\\.([a-z_0-9]+)", Re.I);
-
 	static var typeDeclWithScope = Re.compile("(private\\s+)?(?:extern\\s+)?(class|typedef|enum|interface|abstract)\\s+([A-Z][a-zA-Z0-9_]*)\\s*" , Re.M );
-	//static var type_decl = Re.compile("(class|typedef|enum|interface|abstract)\\s+([A-Z][a-zA-Z0-9_]*)\\s*(<[a-zA-Z0-9_,]+>)?" , Re.M );
-	//static var enum_start_decl = Re.compile("enum\\s+([A-Z][a-zA-Z0-9_]*)\\s*(<[a-zA-Z0-9_,]+>)?" , Re.M );
-	//static var skippable = Re.compile("^[a-zA-Z0-9_\\s]*$");
-	//static var in_anonymous = Re.compile("[{,]\\s*([a-zA-Z0-9_\"\']+)\\s*:\\s*$" , Re.M | Re.U );
-
-	//static var functions = Re.compile("function\\s+([^;\\.\\(\\)\\s]*)", Re.I);
 
 	static var comments = Re.compile("(//[^\n\r]*?[\n\r]|/\\*(.*?)\\*/)", Re.MULTILINE | Re.DOTALL );
 	static var fieldRegex = Re.compile("((?:(?:public|static|inline|private)\\s+)*)(var|function)\\s+([a-zA-Z_][a-zA-Z0-9_]*)", Re.MULTILINE);
@@ -85,26 +75,16 @@ class HxSrcTools {
 				fullType._enumConstructors = extractEnumConstructorsFromSrc(src, decl.end(4));
 			}
 
-
-
 			if (!res.exists(fullType.fullQualifiedName())) {
 
 				res.set(fullType.fullQualifiedName(), fullType);
 			}
-
-
-
 		}
-
-
 		return new HaxeTypeBundle(res);
 	}
 
-
-
 	static function extractEnumConstructorsFromSrc (src:String, start_pos:Int)
 	{
-
 		var constructors = null;
 
 		var start = searchNextCharOnSameNestingLevel(src, ["{"], start_pos);
@@ -114,11 +94,8 @@ class HxSrcTools {
 				constructors = extractEnumConstructorsFromEnum(src.substring(start._1 + 1, end._1-1));
 			}
 		}
-
 		return constructors;
 	}
-
-
 
 	static function extractEnumConstructorsFromEnum (enumStr:String)
 	{
@@ -155,7 +132,6 @@ class HxSrcTools {
 
 		while (true)
 		{
-
 			if (pos > count-1)
 				break;
 			var c = hxSrcSection.charAt(pos);
@@ -343,7 +319,6 @@ class HxSrcTools {
 		}
 		return false;
 	}
-
 
 	// searches the next occurrence of `char` in `hxSrcSection` on the same nesting level as the char at position `start_pos`
 	// the search starts at position `start_pos` in `hxSrcSection`.

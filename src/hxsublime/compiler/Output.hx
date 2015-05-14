@@ -105,7 +105,6 @@ class Output {
 		var keys = [for (k in type_params.keys()) k];
 		keys.reverse();
 		var type_param_list = keys;
-
 		return Tuple2.make(new_args, type_param_list);
 	}
 
@@ -135,18 +134,6 @@ class Output {
 			if (type_params.length > 0) {
 				params_sig = "<" + type_params.join(", ") + ">";
 			}
-
-
-
-
-
-
-
-
-
-
-
-
 
 			var ret = types.pop();
 
@@ -268,8 +255,8 @@ class Output {
 		if (errors.length > 0)
 		{
 
-			Panels.slidePanel().writeln(errors[0].message);
-			Sublime.status_message(errors[0].message);
+			//Panels.slidePanel().writeln(errors[0].message);
+			//Sublime.status_message(errors[0].message);
 		}
 
 		return errors;
@@ -313,6 +300,7 @@ class Output {
 		}
 		catch (e:Exception) {
 			trace("invalid xml - error: " + Std.string(e));
+
 		}
 
 		var hints = null;
@@ -320,10 +308,6 @@ class Output {
 
 
 		if (tree != null) {
-
-
-
-
 
 			hints = get_type_hint(tree.iter("type"));
 			comps = collect_completion_fields(tree.find("list"));
@@ -359,15 +343,14 @@ class Output {
 		var errors = [];
 
 		var res = null;
-
-		if (hints.length == 0 && comps.length == 0)
+		
+		return if (hints.length == 0 && comps.length == 0)
 		{
-			res = parse_completion_errors(output, temp_file, orig_file, status);
+			parse_completion_errors(output, temp_file, orig_file, status);
+			
 		} else {
-			res = Tuple2.make("", []);
+			Tuple2.make("", []);
 		}
-
-		return res;
 	}
 
 	public static function parse_completion_errors(output:String, temp_file:String, orig_file:String, status:String)

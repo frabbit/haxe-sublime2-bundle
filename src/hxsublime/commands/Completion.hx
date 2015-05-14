@@ -1,8 +1,12 @@
 package hxsublime.commands;
 
+import haxe.Unserializer;
+import hxsublime.completion.Completion.CompletionInput;
+import hxsublime.completion.Completion.CompletionListener;
 import hxsublime.completion.hx.HxCompletion;
 import hxsublime.completion.hx.Constants;
 import hxsublime.completion.hx.CompletionOptions;
+import hxsublime.Settings;
 import hxsublime.tools.HxSrcTools;
 import hxsublime.tools.ViewTools;
 import python.lib.Re;
@@ -13,19 +17,6 @@ import sublime.View;
 import python.KwArgs;
 
 
-@:keep class HaxeAsyncTriggeredCompletionCommand extends TextCommand
-{
-    override public function run( edit:Edit, ?kwArgs:KwArgs<Dynamic>)
-    {
-        var options = new CompletionOptions(
-            Constants.COMPLETION_TRIGGER_ASYNC,
-            Constants.COMPILER_CONTEXT_REGULAR,
-            Constants.COMPLETION_TYPE_REGULAR);
-        HxCompletion.triggerCompletion(this.view, options);
-    }
-
-
-}
 @:keep class HaxeDisplayCompletionCommand extends TextCommand
 {
     override public function run( edit:Edit, ?kwArgs:KwArgs<Dynamic>)
@@ -38,66 +29,40 @@ import python.KwArgs;
                 "characters" : input_char
             }));
         }
-
-        trace("RUN - HaxeDisplayCompletionCommand");
+        
         if (input_char == ":")
         {
             return;
         }
+
+
+        
         if (Helper.isValidCompletion(this.view, edit, input_char))
         {
+                
             var options = new CompletionOptions(
-                Constants.COMPLETION_TRIGGER_MANUAL,
-                Constants.COMPILER_CONTEXT_REGULAR,
-                Constants.COMPLETION_TYPE_REGULAR);
-            HxCompletion.triggerCompletion(this.view, options);
+                Constants.COMPLETION_TYPE_REGULAR, input_char == null);
+            options.userActivated = input_char == null;
+            if (input_char == null || input_char == "." || !Settings.topLevelCompletionsOnDemand()) 
+            {
+                trace("RUN - HaxeDisplayCompletionCommand");
+                trace(input_char);
+                
+        
+                trace("options.userActivated:" + options.userActivated);
+
+                function f (ctx:CompletionInput) {
+                	return HxCompletion.createNewCompletions(ctx.project, ctx.view, ctx.offset, options, ctx.prefix);
+                }
+
+                CompletionListener.trigger(view, false, f);
+                //HxCompletion.triggerCompletion(this.view, options);
+            }
         }
     }
 }
 
-@:keep class HaxeDisplayMacroCompletionCommand extends TextCommand
-{
-    override public function run( edit:Edit, ?kwArgs:KwArgs<Dynamic>)
-    {
-        trace("RUN - HaxeDisplayMacroCompletionCommand");
 
-        var options = new CompletionOptions(
-            Constants.COMPLETION_TRIGGER_MANUAL,
-            Constants.COMPILER_CONTEXT_REGULAR,
-            Constants.COMPLETION_TYPE_REGULAR);
-        HxCompletion.triggerCompletion(this.view, options);
-    }
-}
-
-@:keep class HaxeHintDisplayCompletionCommand extends TextCommand
-{
-    override public function run( edit:Edit, ?kwArgs:KwArgs<Dynamic>)
-    {
-        trace("RUN - HaxeHintDisplayCompletionCommand");
-
-        var options = new CompletionOptions(
-            Constants.COMPLETION_TRIGGER_MANUAL,
-            Constants.COMPILER_CONTEXT_REGULAR,
-            Constants.COMPLETION_TYPE_HINT);
-        HxCompletion.triggerCompletion(this.view, options);
-    }
-
-}
-@:keep class HaxeMacroHintDisplayCompletionCommand extends TextCommand
-{
-    override public function run( edit:Edit, ?kwArgs:KwArgs<Dynamic>)
-    {
-
-        trace("RUN - HaxeMacroHintDisplayCompletionCommand");
-
-        var options = new CompletionOptions(
-            Constants.COMPLETION_TRIGGER_MANUAL,
-            Constants.COMPILER_CONTEXT_MACRO,
-            Constants.COMPLETION_TYPE_HINT);
-
-        HxCompletion.triggerCompletion(this.view, options);
-    }
-}
 
 class Helper {
 
@@ -155,21 +120,3 @@ class Helper {
         return res;
     }
 }
-/*
-
-import haxe.completion.hx.constants as Constants
-
-import sublime_plugin
-import re
-from haxe.trace import trace
-
-from haxe.tools import viewtools
-from haxe.tools import stringtools
-from haxe.tools import hxsrctools
-
-from haxe.completion.hx.types import CompletionOptions
-from haxe.completion.hx.base import trigger_completion
-
-
-
-*/

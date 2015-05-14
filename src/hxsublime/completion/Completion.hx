@@ -10,14 +10,66 @@ import hxsublime.tools.ViewTools;
 import python.lib.Time;
 import python.Tuple;
 import sublime.EventListener;
+import sublime.Sublime;
 import sublime.View;
+
+typedef CompletionList = Array<Tuple2<String,String>>;
+typedef CompletionInput = {
+    offset : Int, 
+    prefix:String,
+    view : View,
+    project : Project
+}
+
 
 class CompletionListener extends EventListener {
 
+    static var triggerCb : CompletionInput->CompletionList;
+    static var triggerId : Int = -1;
+
+    static var id = 0;
+
+    public static function trigger (view:View, showTopLevelSnippets:Bool, cb:CompletionInput->CompletionList) 
+    {
+        triggerId = ++id;
+        triggerCb = cb;
+
+        function run()
+        {
+            view.run_command( "auto_complete" , python.Lib.anonToDict({
+                "api_completions_only" : !showTopLevelSnippets,
+                "disable_auto_insert" : true,
+                "next_completion_if_showing" : true,
+                'auto_complete_commit_on_tab': true
+            }));
+        }
+        
+        view.run_command('hide_auto_complete');
+
+        Sublime.set_timeout(run, 0);
+        return [];
+    }
+
+    function clear () {
+
+        triggerCb = null;
+        triggerId = -1;
+    }
+
     public function on_query_completions(view:View, prefix:String, locations:Array<Int>)
     {
-        var project = Projects.currentProject(view);
-        return Completion.dispatchAutoComplete(project, view, prefix, locations[0]);
+        var f = triggerCb;
+        return if (f != null && triggerId == id) {
+            var offset = Completion.getCompletionOffset(locations[0], prefix);
+            var project = Projects.currentProject(view);
+            clear();
+            f({ offset : offset, prefix : prefix, view : view, project : project});
+        } else {
+            clear();
+            trace("------------ ON QUERY COMPLETION ---------------");
+            var project = Projects.currentProject(view);
+            Completion.dispatchAutoComplete(project, view, prefix, locations[0]);
+        }
     }
 }
 
@@ -61,7 +113,7 @@ class Completion
                 if (ViewTools.isHxsl(view)) 
                     HxslCompletion.autoComplete;
                 else 
-                    hxsublime.completion.hx.HxCompletion.autoComplete; // hx completion
+                    hxsublime.completion.hx.HxCompletion.sublimeTriggeredAutoComplete; // hx completion
             } else emptyHandler;
         return handler;
     }

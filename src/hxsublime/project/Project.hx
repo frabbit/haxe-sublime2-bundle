@@ -375,8 +375,8 @@ class Project
         }
 
 
-        var cmd = r._1;
-        var build_folder = r._2;
+        var cmd = r.cmd;
+        var build_folder = r.folder;
 
 
         var escaped_cmd = build.escapeCmd(cmd);

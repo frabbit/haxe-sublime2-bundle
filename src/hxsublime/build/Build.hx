@@ -19,9 +19,9 @@ interface Build {
 	public function addClasspath(cp:String):Void;
 	//public function hxml():String;
 	public function makeHxml():String;
-	public function prepareCheckCmd(project:Project, server_mode:Bool, view:View):Tuple2<Array<String>, String>;
-	public function prepareBuildCmd(project:Project, server_mode:Bool, view:View):Tuple2<Array<String>, String>;
-	public function prepareRunCmd(project:Project, server_mode:Bool, view:View):Tuple2<Array<String>, String>;
+	public function prepareCheckCmd(project:Project, server_mode:Bool, view:View):{ cmd : Array<String>, folder : String};
+	public function prepareBuildCmd(project:Project, server_mode:Bool, view:View):{ cmd : Array<String>, folder : String};
+	public function prepareRunCmd(project:Project, server_mode:Bool, view:View):{ cmd : Array<String>, folder : String};
 	public function escapeCmd (cmd:Array<String>):Array<String>;
 	public function isTypeAvailable(t:HaxeType):Bool;
 	public function isPackAvailable(p:String):Bool;

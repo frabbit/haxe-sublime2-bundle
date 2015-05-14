@@ -2,6 +2,7 @@ package hxsublime.completion.hx;
 
 import hxsublime.build.Build;
 import hxsublime.compiler.Output;
+import hxsublime.completion.Completion.CompletionListener;
 import hxsublime.completion.hx.Constants;
 import hxsublime.completion.hx.Toplevel.TopLevel;
 import hxsublime.completion.hx.CompletionBuild;
@@ -30,90 +31,12 @@ using hxsublime.support.StringTools;
 
 class HxCompletion
 {
-    public static function triggerCompletion (view:View, options:CompletionOptions, show_top_level_snippets = false)
-    {
-        function run()
-        {
-            var project = Projects.currentProject(view);
 
+    
 
-            if (!project.hasBuild()) {
-                project.extractBuildArgs(view, false);
-            }
+    
 
-
-            if (project.hasBuild()) {
-                project.completionContext.setTrigger(view, options);
-
-                view.run_command( "auto_complete" , python.Lib.anonToDict({
-                    "api_completions_only" : !show_top_level_snippets,
-                    "disable_auto_insert" : true,
-                    "next_completion_if_showing" : true,
-                    'auto_complete_commit_on_tab': true
-                }));
-            }
-            else {
-
-                project.extractBuildArgs(view, true);
-            }
-        }
-
-        view.run_command('hide_auto_complete');
-
-        Sublime.set_timeout(run, 0);
-    }
-
-    public static function autoComplete(project:Project, view:View, offset:Int, prefix:String)
-    {
-
-        trace("run auto_complete");
-        // if completion is triggered by a background completion process
-        // completion return the result
-
-        var options = project.completionContext.getAndDeleteTrigger(view);
-        var res = null;
-        if (options != null && options.asyncTrigger())
-        {
-            trace("run auto_complete 1");
-            var async_result = project.completionContext.getAndDeleteAsync(view);
-
-            var use_async_results = async_result != null && async_result.hasResults();
-            if (use_async_results)
-            {
-                trace("run auto_complete 2");
-                res = getAvailableAsyncCompletions(async_result, view);
-                res = completionResultWithSmartSnippets(view, res, async_result, options);
-                trace(res);
-            }
-            else
-            {
-                trace("run auto_complete 3");
-                res = cancelCompletion(view);
-            }
-        }
-        else
-        {
-            trace("create comps");
-            res = createNewCompletions(project, view, offset, options, prefix);
-            //trace("res:" + res);
-            trace("after create comps");
-        }
-
-
-        return res;
-    }
-
-    static function getAvailableAsyncCompletions(compResult:CompletionResult, view:View)
-    {
-
-        var ctx = compResult.ctx;
-
-        var has_results = compResult.hasResults();
-
-        var discard_results = !has_results && ctx.options.types().hasHint();
-
-        return if (discard_results) cancelCompletion(view)  else combineHintsAndComps(compResult);
-    }
+    
 
 
     static function completionResultWithSmartSnippets (view:View, comps:Array<Tuple2<String, String>>, result:CompletionResult, options:CompletionOptions)
@@ -140,19 +63,21 @@ class HxCompletion
     }
 
 
+    public static function sublimeTriggeredAutoComplete(project:Project, view:View, offset:Int, prefix:String)
+    {
+        var options = new CompletionOptions();
+        return createNewCompletions(project, view, offset, options, prefix);
+    }
 
-
-    static function createNewCompletions(project:Project, view:View, offset:Int, options:CompletionOptions, prefix:String)
+    public static function createNewCompletions(project:Project, view:View, offset:Int, options:CompletionOptions, prefix:String)
     {
         var cache = project.completionContext.current;
 
         trace("------- COMPLETION START -----------");
 
         var ctx = createCompletionContext(project, view, offset, options, prefix);
-
+        
         var res = null;
-
-        trace("MANUAL COMPLETION: " + Std.string(ctx.options.manualCompletion()));
 
         // autocompletion is triggered, but its already
         // running as a background process, starting it
@@ -163,19 +88,9 @@ class HxCompletion
             trace("cancel completion, same is running");
             res = cancelCompletion(ctx.view);
         }
-        else if (!ctx.options.manualCompletion())
-        {
-            triggerManualCompletion(ctx.view, ctx.options.copyAsManual() );
-            res = cancelCompletion(ctx.view);
-        }
         else if (isAfterIntIterator(ctx.src(), ctx.offset))
         {
             res = cancelCompletion(ctx.view);
-        }
-        else if (isIntIteratorCompletion(ctx.src(), ctx.offset))
-        {
-            trace("iterator completion");
-            res = [Tuple2.make(".\tint iterator", "..")];
         }
         else
         {
@@ -199,21 +114,21 @@ class HxCompletion
             }
             else
             {
-
                 var last_ctx = cache.input;
 
                 if (useCompletionCache(ctx,last_ctx))
                 {
                     trace("USE COMPLETION CACHE");
                     var out = cache.output;
+
                     updateCompletionCache(cache, out);
                     project.completionContext.addCompletionResult(out);
-                    res = cancelCompletion(view);
-                    triggerAsyncCompletion(view, ctx.options, out.showTopLevelSnippets());
+                    res = triggerAsyncCompletion(project, view, ctx.options, out, out.showTopLevelSnippets());
                 }
                 else if (supportedCompilerCompletionChar(ctx.completeChar()))
                 {
                     trace("supported char");
+
                     var compBuild = createCompletionBuild(ctx);
                     if (compBuild != null) {
                         runCompilerCompletion(compBuild, function (out, err) completionFinished(ctx, compBuild,  out, err));
@@ -227,11 +142,11 @@ class HxCompletion
                 }
                 else
                 {
+                    
                     var compResult = CompletionResult.emptyResult(ctx, function () return getToplevelCompletions(ctx));
                     updateCompletionCache(cache, compResult);
                     project.completionContext.addCompletionResult(compResult);
-                    res = cancelCompletion(view);
-                    triggerAsyncCompletion(view, ctx.options, compResult.showTopLevelSnippets());
+                    res = triggerAsyncCompletion(project, view, ctx.options, compResult, compResult.showTopLevelSnippets());
                 }
             }
         }
@@ -250,11 +165,11 @@ class HxCompletion
        function mkBuild()
        {
             var compBuild = new CompletionBuild(ctx, tempPath, tempFile);
-            var build =compBuild.build;
+            var build = compBuild.build;
             var display = compBuild.display();
-            var macroCompletion = ctx.options.macroCompletion();
+            
             // prepare build options
-            build.setAutoCompletion(display, macroCompletion);
+            build.setAutoCompletion(display, false);
             if (ctx.settings.showCompletionTimes(compBuild.ctx.view))
             {
                 build.setTimes();
@@ -325,7 +240,7 @@ class HxCompletion
             updateCompletionCache(cache, compResult);
             project.completionContext.addCompletionResult(compResult);
             var showTopLevelSnippets = compResult.showTopLevelSnippets();
-            triggerAsyncCompletion(view, ctx.options, showTopLevelSnippets);
+            triggerAsyncCompletion(project, view, ctx.options, compResult, showTopLevelSnippets);
         }
         else
         {
@@ -360,7 +275,6 @@ class HxCompletion
                     function escapeParam(p:String) {
                         return p.split("}").join("\\}");
                     }
-
                     var last_index = h.length-1;
                     var params = h.slice(0, last_index);
 
@@ -412,8 +326,6 @@ class HxCompletion
     {
         var all_comps = hintsToSublimeCompletions(compResult.hints);
 
-
-
         if (!compResult.ctx.options.types().hasHint() || compResult.hints.length == 0)
         {
             trace("TAKE TOP LEVEL COMPS");
@@ -426,21 +338,8 @@ class HxCompletion
                 Sublime.status_message("signature: " + compResult.hints[0].join("->"));
             }
         }
-            // insert hint directly
 
-
-        //if len(compResult.hints) == 1:
-        //    hxpanel.default_panel().writeln(compResult.doc);
         return all_comps;
-    }
-
-
-
-    static function isIntIteratorCompletion(src:String, offset:Int)
-    {
-        var o = offset;
-        var s = src;
-        return o > 3 && s.charAt(o) == "\n" && s.charAt(o-1) == "." && s.charAt(o-2) == "." && s.charAt(o-3) != ".";
     }
 
     static function isAfterIntIterator(src:String, offset:Int)
@@ -464,12 +363,8 @@ class HxCompletion
 
     static function shouldIncludeTopLevelCompletion(ctx:CompletionContext)
     {
-
         trace("complete Char: '" + ctx.completeChar() + "'");
         var toplevel_complete = ":(,{;})".indexOf(ctx.completeChar()) > -1 || ctx.inControlStruct() || ctx.is_new();
-
-        trace("should include: " + toplevel_complete);
-
 
         return toplevel_complete;
     }
@@ -477,9 +372,16 @@ class HxCompletion
 
     static function getToplevelCompletions(ctx:CompletionContext)
     {
-        trace("get top level completions");
+        
+        var include = ctx.options.userActivated || !Settings.topLevelCompletionsOnDemand();
 
-        var comps = if (shouldIncludeTopLevelCompletion( ctx ))
+        trace("PREFIX: " + ctx.prefix);
+        trace("USER ACTIVATED: " + ctx.options.userActivated);
+        
+        var prefixValid = ctx.options.userActivated || ctx.prefix != "";
+
+
+        var comps = if (prefixValid && include && shouldIncludeTopLevelCompletion( ctx ))
         {
             TopLevel.getToplevelCompletionFiltered( ctx );
         }
@@ -494,19 +396,6 @@ class HxCompletion
 
     static function createCompletionContext(project:Project, view:View, offset:Int, options:CompletionOptions, prefix:String)
     {
-
-        // if options are null, it's a completion progress initialized by sublime,
-        // !by the user or by key trigger
-
-        trace("OPTIONS:" + Std.string(options));
-
-        if (options == null) {
-            options = new CompletionOptions(Constants.COMPLETION_TRIGGER_AUTO);
-        }
-
-        trace(options);
-
-
         var settings = new CompletionSettings(Settings);
         var ctx = new CompletionContext(view, project, offset, options, settings, prefix);
         return ctx;
@@ -518,28 +407,18 @@ class HxCompletion
         cache.input = compResult.ctx;
     }
 
-
-    static function log_completion_status(status, comps, hints)
-    {
-        if (status != "") {
-            if (comps.length > 0 || hints.length > 0) {
-                trace(status);
-            }
-            else {
-                Panels.defaultPanel().writeln( status );
-            }
-        }
-    }
-
-
     static function outputToResult (ctx:CompletionContext, temp_file, err, ret, retrieve_tl_comps)
     {
         var r = Output.getCompletionOutput(temp_file, ctx.orig_file(), err, ctx.commas());
         var hints = r._1, comps1 = r._2, status = r._3, errors = r._4;
+        
         // we don't need doc here
         var comps2 = [for (t in comps1) Tuple2.make(t.hint, t.insert)];
         ctx.project.completionContext.setErrors(errors);
-        highlightErrors( errors, ctx.view );
+        if (ctx.options.userActivated) {
+            trace("do highlight");
+            highlightErrors( errors, ctx.view );
+        }
         // top level completions are empty until they are really required
         return new CompletionResult(ret, comps2, status, hints, ctx, retrieve_tl_comps );
     }
@@ -554,8 +433,6 @@ class HxCompletion
         return "(.,".indexOf(char) > -1;
     }
 
-
-
     static function highlightErrors( errors:Array<CompilerError> , view:View ):Void
     {
         var regions = [];
@@ -568,7 +445,7 @@ class HxCompletion
             var a = view.text_point(l,left);
             var b = view.text_point(l,right);
             regions.append( new Region(a,b));
-
+            
             Panels.defaultPanel().status( "Error" , e.file + ":" + Std.string(l) + ": characters " + Std.string(left) + "-" + Std.string(right) + ": " + e.message);
         }
 
@@ -587,45 +464,40 @@ class HxCompletion
         return [Tuple2.make("  ...  ", "")];
     }
 
-
-    static function triggerAsyncCompletion(view:View, options:CompletionOptions, showTopLevelSnippets = false)
+    static function getAvailableAsyncCompletions(compResult:CompletionResult, view:View)
     {
-        var asyncOptions = options.copyAsAsync();
+        var ctx = compResult.ctx;
 
-        function runComplete()
-        {
-            triggerCompletion(view, asyncOptions, showTopLevelSnippets);
-        }
+        var has_results = compResult.hasResults();
 
-        Sublime.set_timeout(runComplete, 2);
+        var discard_results = !has_results && ctx.options.types().hasHint();
+
+        return if (discard_results) cancelCompletion(view) else combineHintsAndComps(compResult);
     }
 
-    static function triggerManualCompletion(view:View, options:CompletionOptions)
+    static function autoCompleteAsync (view:View, options:CompletionOptions, res:CompletionResult ) 
     {
 
-        var hint = options.types().hasHint();
-        var macroComp = options.macroCompletion();
-
-        function runComplete()
+        var use_async_results = res != null && res.hasResults();
+        return if (use_async_results)
         {
-            if (hint && macroComp)
-            {
-                view.run_command("hxsublime_commands__haxe_hint_display_macro_completion");
-            }
-            else if (hint)
-            {
-                view.run_command("hxsublime_commands__haxe_hint_display_completion");
-            }
-            else if (macroComp)
-            {
-                view.run_command("hxsublime_commands__haxe_display_macro_completion");
-            }
-            else
-            {
-                view.run_command("hxsublime_commands__haxe_display_completion");
-            }
+            var asyncs = getAvailableAsyncCompletions(res, view);
+            completionResultWithSmartSnippets(view, asyncs, res, options);
         }
-
-        Sublime.set_timeout(runComplete, 2);
+        else
+        {
+            cancelCompletion(view);
+        }
     }
+
+    static function triggerAsyncCompletion(project:Project, view:View, options:CompletionOptions, res:CompletionResult, showTopLevelSnippets = false)
+    {
+        var asyncOptions = options.copy();
+
+        var cb = function (_) return autoCompleteAsync(view, asyncOptions, res);
+
+        return CompletionListener.trigger(view, showTopLevelSnippets, cb);
+    }
+
+    
 }

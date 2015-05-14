@@ -19,7 +19,6 @@ using hxsublime.support.StringTools;
 using hxsublime.support.ArrayTools;
 
 typedef SettingsInterface = {
-    //public function smarts_hints_only_next(?view:View):Bool;
     public function noFuzzyCompletion(?view:View):Bool;
     public function topLevelCompletionsOnDemand(?view:View):Bool;
     public function isAsyncCompletion(?view:View):Bool;
@@ -36,11 +35,6 @@ class CompletionSettings implements LazyFunctionSupport
 
         this.settings = settings;
     }
-
-    //@lazyprop
-    //public function smarts_hints_only_next() {
-    //    return settings.smarts_hints_only_next();
-    //}
 
     @lazyFunction
     public function noFuzzyCompletion() {
