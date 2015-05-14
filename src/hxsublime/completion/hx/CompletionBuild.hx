@@ -1,7 +1,6 @@
 package hxsublime.completion.hx;
 
 import hxsublime.build.Build;
-import hxsublime.completion.hx.Constants;
 import hxsublime.macros.LazyFunctionSupport;
 import hxsublime.project.CompletionState.CompletionCache;
 import hxsublime.project.Project;

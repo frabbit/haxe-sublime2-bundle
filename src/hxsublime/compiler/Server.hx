@@ -30,7 +30,6 @@ class Server
 		this._orig_server_port = port;
 	}
 
-
 	public function get_server_port ()
 	{
 		return this._server_port;
@@ -56,7 +55,8 @@ class Server
 
 			trace(cmd.join(" "));
 
-			function onError (e:Dynamic) {
+			function onError (e:Dynamic) 
+			{
 				var err = 'Error starting server ${cmd.join(" ")}: ${Std.string(e)}';
 				Sublime.error_message(err);
 				if (retries > 0)
@@ -71,8 +71,6 @@ class Server
 					var msg = "Cannot start haxe compilation server on ports {0}-{1}";
 					msg = msg.format([this._orig_server_port, this._server_port]);
 					trace("Server starting error");
-					// hxpanel.default_panel().writeln(msg)
-					// sublime.error_message(msg)
 				}
 			}
 			try {
@@ -88,16 +86,7 @@ class Server
 				{
 					for (k in env.keys().iter().toHaxeIterator())
 					{
-						var val = null;
-						try
-						{
-							val = env.get(k, null);
-						}
-						catch (e:Dynamic)
-						{
-							val = env.get(k, null);
-						}
-
+						var val = env.get(k, null);
 						full_env.set(k, Path.expandvars(val));
 					}
 				}

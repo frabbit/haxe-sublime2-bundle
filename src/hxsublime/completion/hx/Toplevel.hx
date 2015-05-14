@@ -167,16 +167,16 @@ class TopLevel
 
         var imported = getImportsAndUsings(ctx);
 
-        var build_bundle = ctx.build().getTypes();
+        var buildBundle = ctx.build().getTypes();
 
-        var std_bundle = ctx.build().stdBundle();
+        var stdBundle = ctx.build().stdBundle();
 
         function filterPrivates(t:HaxeType)
         {
             return !t.is_private || t.file() == ctx.orig_file();
         }
 
-        var merged_bundle = std_bundle.merge(build_bundle).filter(filterPrivates);
+        var merged_bundle = stdBundle.merge(buildBundle).filter(filterPrivates);
 
         var comps1 = getTypeComps(ctx, merged_bundle, imported);
 

@@ -3,7 +3,6 @@ package hxsublime.completion.hx;
 import hxsublime.build.Build;
 import hxsublime.completion.hx.CompletionOptions;
 import hxsublime.completion.hx.CompletionSettings;
-import hxsublime.completion.hx.Constants;
 import hxsublime.macros.LazyFunctionSupport;
 import hxsublime.project.CompletionState.CompletionCache;
 import hxsublime.project.Project;
@@ -26,7 +25,6 @@ class CompletionContext implements LazyFunctionSupport
     static var controlStructRegex = Re.compile( "\\s+(if|switch|for|while)\\s*\\($" );
 
     static function getCompletionId () {
-        // make the current time the id for this completion
         return Std.int(Time.time());
     }
 
@@ -65,8 +63,12 @@ class CompletionContext implements LazyFunctionSupport
         this.view_pos = ViewTools.getFirstCursorPos(view);
     }
 
-
-
+    @lazyFunction
+    public function isHint()
+    {
+        var whitespace_re = Re.compile("^\\s*$");
+        return "(,".indexOf(completeChar()) > -1 && Re.match(whitespace_re, prefix) != null;
+    }
 
     @lazyFunction
     public function complete_offset_in_bytes()
@@ -121,9 +123,6 @@ class CompletionContext implements LazyFunctionSupport
     }
 
     // src of current file
-
-
-
     @lazyFunction
     public function src () {
         return ViewTools.getContent(view);
@@ -135,23 +134,6 @@ class CompletionContext implements LazyFunctionSupport
         return src().charAt(complete_offset()-1);
     }
 
-    //@lazyFunction
-    //function src_from_complete_to_offset() {
-    //    return src().substring(complete_offset(), offset);
-    //}
-
-    //@lazyFunction
-    //function srcFromCompleteToPrefixEnd() {
-    //    var rest = src().substring(complete_offset()+1, offset+1 + prefix.length);
-    //
-    //    return rest;
-    //}
-
-    //@lazyFunction
-    //public function offsetChar () {
-    //    return src().charAt(offset);
-    //}
-
     @lazyFunction
     function completionInfo() {
 
@@ -162,11 +144,6 @@ class CompletionContext implements LazyFunctionSupport
     public function commas() {
         return completionInfo()._1;
     }
-
-    //@lazyFunction
-    //function prevSymbolIsComma() {
-    //    return completionInfo()._3;
-    //}
 
     // position in source where compiler completion gets triggered
     @lazyFunction
@@ -199,17 +176,14 @@ class CompletionContext implements LazyFunctionSupport
 
     public function eq (other:CompletionContext) {
 
-        function prefixCheck()
+        function prefixEq()
         {
-            var prefixSame = true;
-            if (options.types().hasHint())
-            {
-                prefixSame = this.prefix == other.prefix || (this.prefixIsWhitespace() && other.prefixIsWhitespace());
-            }
-
-            trace("same PREFIX:" + Std.string(prefixSame));
-            trace("PREFIXES:" + this.prefix + " - " + other.prefix);
-            return prefixSame;
+            return 
+                if (isHint())
+                {
+                    this.prefix == other.prefix || (this.prefixIsWhitespace() && other.prefixIsWhitespace());
+                }
+                else true;
         }
 
         return
@@ -222,7 +196,8 @@ class CompletionContext implements LazyFunctionSupport
             && this.options.eq(other.options)
             && this.completeChar() == other.completeChar()
             && this.lineAfterOffset() == other.lineAfterOffset()
-            && prefixCheck();
+            && this.isHint() == other.isHint()
+            && prefixEq();
     }
 
 
@@ -307,10 +282,6 @@ class CompletionContext implements LazyFunctionSupport
             var prev_brace = fragment.lastIndexOf("{");
             var prev_semi = fragment.lastIndexOf(";");
 
-
-
-
-
             var prev_symbol = Builtins.max(prev_dot,prev_par,prev_comma,prev_brace,prev_colon, prev_semi);
 
             if (prev_symbol == prev_comma)
@@ -318,7 +289,6 @@ class CompletionContext implements LazyFunctionSupport
                 var r = count_commas_and_complete_offset(src, prev_comma, complete_offset);
                 commas = r._1;
                 complete_offset = r._2;
-                //print("closedBrackets : " + str(closedBrackets))
                 prevSymbolIsComma = true;
             }
             else
@@ -326,8 +296,6 @@ class CompletionContext implements LazyFunctionSupport
                 complete_offset = Builtins.max( prev_dot + 1, prev_par + 1 , prev_colon + 1, prev_brace + 1, prev_semi + 1 );
             }
         }
-
-        //trace("COMPLETE_CHAR:" + src.charAt(complete_offset-1));
 
         return Tuple4.make(commas, complete_offset, prevSymbolIsComma, is_new);
     }

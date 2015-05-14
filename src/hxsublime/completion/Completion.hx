@@ -1,5 +1,6 @@
 package hxsublime.completion;
 
+import haxe.ds.Option.None;
 import hxsublime.completion.hxsl.HxslCompletion;
 import hxsublime.completion.hxml.HxmlCompletion;
 import hxsublime.Config;
@@ -47,7 +48,6 @@ class CompletionListener extends EventListener {
         view.run_command('hide_auto_complete');
 
         Sublime.set_timeout(run, 0);
-        return [];
     }
 
     function clear () {
@@ -111,9 +111,9 @@ class Completion
             else if (Lambda.has(scopes, Config.SOURCE_HAXE)) 
             {
                 if (ViewTools.isHxsl(view)) 
-                    HxslCompletion.autoComplete;
+                    HxslCompletion.autoComplete
                 else 
-                    hxsublime.completion.hx.HxCompletion.sublimeTriggeredAutoComplete; // hx completion
+                    hxsublime.completion.hx.HxCompletion.eventTriggeredAutoComplete; // hx completion
             } else emptyHandler;
         return handler;
     }
@@ -126,20 +126,14 @@ class Completion
 
         var scopes = getCompletionScopes(view, location);
 
-        var comps = null;
-
-        trace("pre handler");
-        if (canRunCompletion(offset, scopes)) {
-            trace("run handler");
-            var handler = getAutoCompleteHandler(view, scopes);
-            comps = handler(project, view, offset, prefix);
-
-        } else {
-            trace("no handler");
-            comps = [];
-        }
-
-        trace("do log info");
+        var comps = 
+            if (canRunCompletion(offset, scopes)) 
+            {
+                var handler = getAutoCompleteHandler(view, scopes);
+                handler(project, view, offset, prefix);
+            } 
+            else [];
+        
         logCompletionInfo(startTime, Time.time(), comps);
 
         return comps;

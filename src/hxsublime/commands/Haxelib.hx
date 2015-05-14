@@ -13,8 +13,6 @@ import python.KwArgs;
 
 @:keep class HaxeInstallLibCommand extends WindowCommand
 {
-
-
     override public function run(_:KwArgs<Dynamic>)
     {
         var view = Sublime.active_window().active_view();

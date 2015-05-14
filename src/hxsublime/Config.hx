@@ -2,28 +2,24 @@ package hxsublime;
 
 import haxe.ds.StringMap;
 
-
 class Config
 {
-
-    public static var target_packages = ["python", "flash","flash8","neko","js","php","cpp","cs","java", "sys"];
-    public static var targets = ["js","cpp","swf8","swf","neko","php","java","cs", "as3", "python"];
+    public static var target_packages = ["python", "flash", "neko","js","php","cpp","cs","java", "sys"];
+    public static var targets = ["js","cpp","swf","neko","php","java","cs", "as3", "python"];
 
     public static var target_std_packages:StringMap<Array<String>> = [
-        "js"   => ["js"],
-        "cpp"  => ["cpp", "sys"],
-        "neko" => ["neko", "sys"],
-        "php"  => ["php", "sys"],
-        "python"  => ["python", "sys"],
-        "java" => ["java", "sys"],
-        "cs"   => ["cs", "sys"],
-        "swf"  => ["flash"],
-        "as3"  => ["flash"],
-        "swf8" => ["flash8"]
+        "js"     => ["js"],
+        "cpp"    => ["cpp", "sys"],
+        "neko"   => ["neko", "sys"],
+        "php"    => ["php", "sys"],
+        "python" => ["python", "sys"],
+        "java"   => ["java", "sys"],
+        "cs"     => ["cs", "sys"],
+        "swf"    => ["flash"],
+        "as3"    => ["flash"],
     ];
+
     public static var ignored_folders_list =  [".git", ".svn"];
-
-
 
     public static function mk_ignored_folders () return {
         var x = new StringMap();
@@ -32,11 +28,10 @@ class Config
         }
         x;
     }
+
     public static var ignored_folders = mk_ignored_folders();
 
-    public static var ignored_packages_list = ["neko._std", "cpp._std", "php._std", "js._std", "flash._std", "python._std"];
-
-
+    public static var ignored_packages_list = ["neko._std", "cpp._std", "php._std", "js._std", "flash._std", "python._std", "java._std", "cs._std"];
 
     public static function mk_ignored_packages () return {
         var x = new StringMap();
@@ -129,9 +124,3 @@ class OpenFlTarget
         this.args = args;
     }
 }
-
-
-
-
-
-

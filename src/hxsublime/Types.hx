@@ -18,7 +18,6 @@ class Types
 {
 	public static function findTypes (classpaths, libs:Array<HaxeLibLibrary>, base_path, filtered_classes = null, filtered_packages = null, include_private_types = true)
 	{
-
 		var bundle = HxSrcTools.emptyTypeBundle();
 
 		var cp = [];

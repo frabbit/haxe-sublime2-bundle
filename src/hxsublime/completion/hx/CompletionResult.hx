@@ -1,7 +1,6 @@
 package hxsublime.completion.hx;
 
 import hxsublime.build.Build;
-import hxsublime.completion.hx.Constants;
 import hxsublime.macros.LazyFunctionSupport;
 import hxsublime.project.CompletionState.CompletionCache;
 import hxsublime.project.Project;
@@ -92,7 +91,7 @@ class CompletionResult implements LazyFunctionSupport {
     {
         var prefix_is_whitespace = hxsublime.tools.StringTools.isWhitespaceOrEmpty(ctx.prefix);
         
-        var r = !((prefix_is_whitespace && hasHints() && ctx.options.types().hasHint()) || hasCompilerResults());
+        var r = !((prefix_is_whitespace && hasHints() && ctx.isHint()) || hasCompilerResults());
         return r;
     }
 

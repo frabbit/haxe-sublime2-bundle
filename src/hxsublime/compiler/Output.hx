@@ -46,7 +46,8 @@ typedef CompilerError = {
     message:String,
 }
 
-class Output {
+class Output 
+{
 	public static var compiler_output = Re.compile("^([^:]+):([0-9]+): (?:character(?:s?)|line(?:s?))? ([0-9]+)-?([0-9]+)? : (.*)", Re.M);
 	public static var no_classes_found = Re.compile("^No classes found in .*", Re.M);
 	public static var no_classes_found_in_trace = Re.compile("^No classes found in trace$", Re.M);
@@ -73,7 +74,6 @@ class Output {
 
 	public static function get_function_type_params(name:String, signature_types:Array<String>)
 	{
-
 		var new_args = [];
 		var type_params = new StringMap();
 		var name_len = name.length;
@@ -111,19 +111,14 @@ class Output {
 
 	public static function completion_field_to_entry(name:String, sig:String, doc:String)
 	{
-
 		var insert = name;
 		var label = name;
 
 		var smart_snippets = Settings.smartSnippetsOnCompletion();
 		var not_smart = !smart_snippets;
 
-
-
 		if (sig != null) {
 			var types = HxSrcTools.splitFunctionSignature(sig);
-
-
 
 			var r = get_function_type_params(name, types);
 
@@ -154,11 +149,6 @@ class Output {
 					var params = "( " + types.join(", ") + " )";
 					label = name + params_sig + params + signature_separator + ret;
 
-					//hint_to_long = is_st2 and len(label) > 40
-					//if (hint_to_long) { // compact arguments
-					//	label = hxsrctools.compact_func.sub("(...)", label);
-					//}
-
 					var new_types = types.copy();
 					for (i in 0...new_types.length)
 					{
@@ -175,12 +165,6 @@ class Output {
 		else {
 			label = if (Re.match("^[A-Z]", name ) != null) name + "\tclass" else name + "\tpackage";
 		}
-
-
-		//if is_st2 and len(label) > 40: # compact return type
-		//	m = hxsrctools.compact_prop.search(label)
-		//	if m != null:
-		//		label = hxsrctools.compact_prop.sub(": " + m.group(1), label)
 
 		var res = new CompletionEntry( label, insert, doc );
 
@@ -201,62 +185,56 @@ class Output {
 
 				comps.push(entry);
 			});
-
 		}
-
 		return comps;
 	}
-
 
 	public static function extract_errors( str:String )
 	{
 		var errors = [];
 
-		//trace("error_str: |||" + str + "|||")
-		// swallow no classes found in * errors where * could be trace or an unknown variable etc.
 		if (no_classes_found.findallString(str).length > 0) {
-			//trace("just no classes found error")
 			errors = [];
 		}
 		else {
-			for (infos in compiler_output.findallArray(str))
-			{
-				//var infos = infos.copy();
-				var f = infos.shift();
-				var l = Std.parseInt( infos.shift() )-1;
-				var left = Std.parseInt( infos.shift() );
-				var right = infos.shift();
+			var entries = compiler_output.findallArray(str);
+			var invalidCompletionRequest = 
+				Lambda.exists(entries, function (x) {
+					return x[4] == "Unexpected |";
+				});
 
-				var rightInt = 0;
-				if (right != "") {
-					rightInt = Std.parseInt( right );
-				}
-				else {
-					rightInt = left+1;
-				}
-				var m = infos.shift();
-
-				if (m != "Unexpected |")
+			if (!invalidCompletionRequest) {
+				for (infos in compiler_output.findallArray(str))
 				{
-					errors.push({
-						"file" : f,
-						"line" : l,
-						"from" : left,
-						"to" : rightInt,
-						"message" : m
-					});
+					//var infos = infos.copy();
+					var f = infos[0];
+					var l = Std.parseInt( infos[1] )-1;
+					var left = Std.parseInt( infos[2] );
+					var right = infos[3];
+
+					var rightInt = 0;
+					if (right != "") {
+						rightInt = Std.parseInt( right );
+					}
+					else {
+						rightInt = left+1;
+					}
+					var m = infos[4];
+
+					if (m != "Unexpected |")
+					{
+						errors.push({
+							"file" : f,
+							"line" : l,
+							"from" : left,
+							"to" : rightInt,
+							"message" : m
+						});
+					}
 				}
 			}
-		}
-
-
-		//errors.append({ "file:" : "", "line" : 0, "from" : 0, "to" : 0, "message" : "".join(str.split("\n")) + " ( are you referencing a variable that doesn't exist?)"})
-		//print(errors)
-		if (errors.length > 0)
-		{
-
-			//Panels.slidePanel().writeln(errors[0].message);
-			//Sublime.status_message(errors[0].message);
+			
+			
 		}
 
 		return errors;
@@ -293,14 +271,12 @@ class Output {
 
 		var tree = null;
 		try {
-
 			var x = "<root>"+output+"</root>";
 
 			tree = ElementTree.XML(x);
 		}
 		catch (e:Exception) {
 			trace("invalid xml - error: " + Std.string(e));
-
 		}
 
 		var hints = null;
@@ -308,11 +284,8 @@ class Output {
 
 
 		if (tree != null) {
-
 			hints = get_type_hint(tree.iter("type"));
 			comps = collect_completion_fields(tree.find("list"));
-			//trace("hints:" + Std.string(hints));
-			//trace("comps:" + Std.string(comps));
 		}
 		else {
 			hints = [];
@@ -335,7 +308,6 @@ class Output {
 		return Tuple2.make(hints, comps);
 	}
 
-
 	public static function get_completion_status_and_errors(hints:Array<Array<String>>, comps:Array<CompletionEntry>, output, temp_file, orig_file)
 	{
 		var status = "";
@@ -344,13 +316,11 @@ class Output {
 
 		var res = null;
 		
-		return if (hints.length == 0 && comps.length == 0)
-		{
-			parse_completion_errors(output, temp_file, orig_file, status);
-			
-		} else {
-			Tuple2.make("", []);
-		}
+		return 
+			if (hints.length == 0 && comps.length == 0)
+				parse_completion_errors(output, temp_file, orig_file, status);
+			else
+				Tuple2.make("", []);
 	}
 
 	public static function parse_completion_errors(output:String, temp_file:String, orig_file:String, status:String)
@@ -398,7 +368,6 @@ class Output {
 		}
 
 		var errors = extract_errors( output );
-
 
 		return Tuple2.make(status,errors);
 	}

@@ -14,7 +14,8 @@ import sublime.Sublime;
 
 using hxsublime.support.StringTools;
 
-class Execute {
+class Execute 
+{
 	public static function runCmdAsync(args:Array<String>, callback:String->String->Void, input:String=null, cwd:String=null, env=null)
 	{
 		function inMainThread ()
@@ -23,10 +24,8 @@ class Execute {
 			var out = r._1, err = r._2;
 			Sublime.set_timeout(callback.bind(out, err), 1);
 		}
-
 		ThreadLowLevel.start_new_thread(inMainThread, new Tuple());
 	}
-
 
 	public static function runCmd( args:Array<String>, input:String=null, cwd:String=null, env:Dict<String,String>=null ):Tuple2<String, String>
 	{
@@ -34,7 +33,6 @@ class Execute {
 		{
 			cwd = ".";
 		}
-
 		try
 		{
 			var base_env = Os.environ.copy();

@@ -21,18 +21,27 @@ class AsyncEdit
 {
 	public static var dict : Dict<Int, View->Edit->Void> = new Dict();
 	public static var id:Int = 0;
-}
 
-@:keep class HaxeTextEditCommand extends TextCommand
-{
-	static var _async_edit_dict;
-
-	override public function run (edit:Edit, ?args:KwArgs<Dynamic>)
+	public static function asyncEdit(view:View, doEdit:View->Edit->Void)
 	{
-		var d:Dict<String, Dynamic> = args;
+	    function start()
+	    {
+	        var id = AsyncEdit.id;
+	        if (AsyncEdit.id > 1000000)
+	        	AsyncEdit.id = 0
+	        else
+	        	AsyncEdit.id += 1;
 
+	        AsyncEdit.dict.set(id, doEdit);
+	        view.run_command(HaxeTextEditCommand.COMMAND_ID, python.Lib.anonToDict({ "id" : id }));
+	    }
+
+	    Sublime.set_timeout(start, 10);
+	}
+
+	public static function run (view:View, edit:Edit, d:Dict<String, Dynamic>)
+	{
         var id:Int = d.get("id", null);
-
 
         if (AsyncEdit.dict.hasKey(id))
         {
@@ -40,6 +49,16 @@ class AsyncEdit
             AsyncEdit.dict.remove(id);
             fun(view, edit);
         }
+    }
+}
+
+@:keep class HaxeTextEditCommand extends TextCommand
+{
+	public static var COMMAND_ID = "hxsublime_tools__haxe_text_edit";
+
+	override public function run (edit:Edit, ?args:KwArgs<Dynamic>)
+	{
+		AsyncEdit.run(view, edit, args.toDict());
     }
 }
 
@@ -69,19 +88,7 @@ class ViewTools {
 
 	public static function asyncEdit(view:View, doEdit:View->Edit->Void)
 	{
-	    function start()
-	    {
-	        var id = AsyncEdit.id;
-	        if (AsyncEdit.id > 1000000)
-	        	AsyncEdit.id = 0
-	        else
-	        	AsyncEdit.id += 1;
-
-	        AsyncEdit.dict.set(id, doEdit);
-	        view.run_command("hxsublime_tools__haxe_text_edit", python.Lib.anonToDict({ "id" : id }));
-	    }
-
-	    Sublime.set_timeout(start, 10);
+	    AsyncEdit.asyncEdit(view, doEdit);
 	}
 
 

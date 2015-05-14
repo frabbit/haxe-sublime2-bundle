@@ -4,7 +4,6 @@ import haxe.Unserializer;
 import hxsublime.completion.Completion.CompletionInput;
 import hxsublime.completion.Completion.CompletionListener;
 import hxsublime.completion.hx.HxCompletion;
-import hxsublime.completion.hx.Constants;
 import hxsublime.completion.hx.CompletionOptions;
 import hxsublime.Settings;
 import hxsublime.tools.HxSrcTools;
@@ -29,44 +28,29 @@ import python.KwArgs;
                 "characters" : input_char
             }));
         }
-        
-        if (input_char == ":")
-        {
-            return;
-        }
 
-
-        
-        if (Helper.isValidCompletion(this.view, edit, input_char))
+        if (input_char != ":" && Helper.isValidCompletion(this.view, edit, input_char))
         {
-                
-            var options = new CompletionOptions(
-                Constants.COMPLETION_TYPE_REGULAR, input_char == null);
-            options.userActivated = input_char == null;
+            var userActivated = input_char == null;
+            var options = new CompletionOptions(userActivated);
+
             if (input_char == null || input_char == "." || !Settings.topLevelCompletionsOnDemand()) 
             {
                 trace("RUN - HaxeDisplayCompletionCommand");
-                trace(input_char);
-                
-        
                 trace("options.userActivated:" + options.userActivated);
 
                 function f (ctx:CompletionInput) {
-                	return HxCompletion.createNewCompletions(ctx.project, ctx.view, ctx.offset, options, ctx.prefix);
+                	return HxCompletion.commandTriggeredAutoComplete(ctx.project, ctx.view, ctx.offset, options, ctx.prefix);
                 }
 
                 CompletionListener.trigger(view, false, f);
-                //HxCompletion.triggerCompletion(this.view, options);
             }
         }
     }
 }
 
-
-
-class Helper {
-
-
+private class Helper 
+{
     public static function isValidCompletion (view:View, edit:Edit, inputChar:String)
     {
         var valid = true;
@@ -90,12 +74,10 @@ class Helper {
                 valid = false;
             }
         }
-
         return valid;
     }
 
     static var anonFunc = Re.compile("^function(\\s+[a-zA-Z0-9$_]*\\s+)?\\s*\\($");
-
 
     static function isOpenParensAfterFunctionDefinition (src:String)
     {
@@ -103,20 +85,18 @@ class Helper {
         var srcPart = src.substr(lastFunction);
         var match = Re.match(anonFunc, srcPart);
         return match != null;
-
     }
 
     static function isCommaAfterOpenParensInFunctionDefinition (src:String)
     {
         var found = HxSrcTools.reverse_search_next_char_on_same_nesting_level(src, ["("], src.length-1);
 
-        var res = false;
-        if (found != null)
-        {
-            var srcUntilComma = src.substring(0,found._1+1);
-            res = isOpenParensAfterFunctionDefinition(srcUntilComma);
-        }
-
-        return res;
+        return 
+            if (found != null)
+            {
+                var srcUntilComma = src.substring(0,found._1+1);
+                isOpenParensAfterFunctionDefinition(srcUntilComma);
+            } 
+            else false;
     }
 }

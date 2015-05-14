@@ -27,8 +27,6 @@ using StringTools;
 {
     override public function run ( edit:Edit, ?args:KwArgs<Dynamic> )
     {
-
-        var edit:Edit = args.get("edit", null);
         trace("run HaxeSaveAllAndCheckCommand");
         var view = this.view;
         view.window().run_command("save_all");
@@ -71,8 +69,7 @@ using StringTools;
 {
     override public function run ( edit:Edit, ?args:KwArgs<Dynamic> )
     {
-        var view = this.view;
-        Projects.currentProject(this.view).selectBuild( view );
+        Projects.currentProject(view).selectBuild( view );
     }
 }
 

@@ -44,9 +44,7 @@ class Temp {
 	{
 
 		var relative = build.getRelativePath(orig_file);
-		trace(relative);
-		trace(orig_file);
-		trace("relative:" + Std.string(relative));
+		
 		if (relative == null)
 		{
 			throw new GetRelativePathException(build, orig_file);
@@ -63,7 +61,7 @@ class Temp {
 		f.write( content );
 
 		(f:Dynamic).close();
-		trace(new_file);
+		
 		return new_file;
 	}
 
