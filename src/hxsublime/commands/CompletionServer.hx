@@ -11,6 +11,7 @@ import sublime.WindowCommand;
 
     public override function run(kwArgs:KwArgs<Dynamic>)
     {
+    	
         trace("run HaxeRestartServerCommand");
 
         var view = Sublime.active_window().active_view();

@@ -248,13 +248,15 @@ class Output
 		var new_hints = [];
 		for (h in hints)
 		{
+			/*
 			if (h.length > commas)
 			{
 				var x = h.slice(commas);
 				new_hints.push(x);
 			}
+			*/
 		}
-		hints = new_hints;
+		//hints = hints;
 
 		var r1 = get_completion_status_and_errors(hints, comps, output, temp_file, orig_file);
 		var status = null, errors = null;

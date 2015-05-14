@@ -1,5 +1,6 @@
 package sublime;
 
+import python.KwArgs;
 import python.lib.Re.Pattern;
 import python.Set;
 import python.Dict;
@@ -190,7 +191,7 @@ extern class View
 	// real	Returns the typical character width used in the layout
 	public function em_width():Float;
 
-	public function show_popup (msg:String):Void;
+	public function show_popup (msg:String, ?kwArgs:KwArgs<{ ?flags : Int, ?location : Int, ?max_width : Int, ?max_height:Int, ?on_navigate : Void->Void, ?on_hide : Void->Void }>):Void;
 
 
 	/*

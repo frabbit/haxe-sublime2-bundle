@@ -40,6 +40,9 @@ extern class Sublime
 
 	public static var MONOSPACE_FONT:Int;
 
+	public static var HTML:Int;
+	public static var COOPERATE_WITH_AUTO_COMPLETE:Int;
+
 
 	// None	Runs the callback in the main thread after the given delay (in milliseconds). Callbacks with an equal delay will be run in the order they were added.
 	public static function set_timeout(callback:Void->Void, delay:Int):Void;

@@ -18,6 +18,7 @@ class Settings
 		var prefix = if (plugin) "plugin_" else "";
 		var res = null;
 		var pf = Sublime.platform();
+		
 		if (settings.has(prefix + id + "_" + pf))
 		{
 			res = settings.get(prefix + id + "_" + pf);

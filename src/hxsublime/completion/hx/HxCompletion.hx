@@ -130,11 +130,7 @@ class HxCompletion
 		var project = ctx.project;
 		var build = compBuild.build;
 		var view = ctx.view;
-		trace("__________COMPLETION INFO________________");
-		trace(compBuild.display());
-		trace(compBuild.tempFile);
-		trace(File.getContent(compBuild.tempFile));
-		trace("_________________________________________");
+
 		function inMainThread (out, err)
 		{
 			function run ()
@@ -263,6 +259,8 @@ class HxCompletion
 
 		var all_comps = hintsToSublimeCompletions(hints);
 
+
+
 		if (!compResult.ctx.isHint() || hints.length == 0)
 		{
 			trace("TAKE TOP LEVEL COMPS");
@@ -384,21 +382,85 @@ class HxCompletion
 		
 	}    
 		
+	static function showHints (ctx:CompletionContext, res:CompletionResult) {
+		var hints = res.hints;
+		var view = ctx.view;
+
+		function formatEntry (e:String, isLast:Bool, current:Bool) {
+
+			var x = std.StringTools.htmlEscape(e);
+			var split = x.indexOf(":");
+			
+			var parts = if (split != -1) {
+				{ 
+					param : x.substr(0, split),
+					type : x.substr(split+1)
+				}
+			} else if (isLast) {
+				{ 
+					param : "returns",
+					type : x
+				}
+			} else {
+				{ 
+					param : x,
+					type : ""
+				}
+			}
+			
+			//parts.param = std.StringTools.rpad(parts.param, "&nbsp;", 30);
+			var marginBottom = isLast ? 0 : 5;
+			var div = '<div style="margin-bottom:${marginBottom}px; border-top:solid 1px #000000">';
+			var paramColor = isLast ? "#000000" : "#000099";
+			var retColor = isLast ? "#009900" : "#990000";
+
+			var param = '<span style="color:${paramColor}">'+parts.param+'</span>';
+
+			var type = '<span style="color:${retColor}">'+parts.type +'</span>';
+			var param = ' $param $type ';
+			var param = if (current) "<b>" + param + "</b>" else param;
+			return div + param + "</div>";
+
+		}
+		var base = "<style>body { padding : 5px; }</style>";
+		var separator = '';
+		var current = ctx.commas();
+		var hintData = [for (h in res.hints) [for (i in 0...h.length) formatEntry(h[i], i == h.length-1, i == current)].join(separator)].join("<br>");
+
+		var hintData = base + hintData;
+
+		trace("hintData: " + hintData);
+		trace(hints);
+		trace("flags :" +  (Sublime.COOPERATE_WITH_AUTO_COMPLETE));
+
+		var opts = { 
+			location : -1, 
+			flags : Sublime.COOPERATE_WITH_AUTO_COMPLETE | Sublime.HTML,
+			max_width : 600,
+			max_height : 500
+		}
+
+		view.show_popup( hintData, opts );
+	}
+
 	static function autoCompleteAsync (ctx:CompletionContext, res:CompletionResult ) 
 	{
+		
 		var view = ctx.view;
+
 		var ctx = res.ctx;
 		var use_async_results = res != null && res.hasResults();
 		return if (use_async_results)
 		{
-			var comps = combineHintsAndComps(res);
-			if (shouldOnlyInsertHint(ctx, res)) {
-				var onlyHint = comps[0];
-				ViewTools.insertSnippet(view, onlyHint._2);
-				None;
-			} else {
-				Some(comps);
+			//var comps = combineHintsAndComps(res);
+			if (res.hints.length > 0) {
+				showHints(ctx, res);	
 			}
+			
+
+			var comps = res.allComps();
+
+			Some(comps);
 		}
 		else None;
 	}

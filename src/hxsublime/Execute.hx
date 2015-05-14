@@ -33,7 +33,8 @@ class Execute
 		{
 			cwd = ".";
 		}
-		try
+		
+		return try
 		{
 			var base_env = Os.environ.copy();
 
@@ -61,14 +62,14 @@ class Execute
 			var out = r._1, err = r._2;
 
 
-			return Tuple2.make(out.decode("utf-8"), err.decode("utf-8"));
+			Tuple2.make(out.decode("utf-8"), err.decode("utf-8"));
 		}
 		catch (e:Dynamic)
 		{
 			trace(e);
 			var p = args[0];
 			var err = 'Error while running $p: in $cwd ($e)';
-			return Tuple2.make("", err);
+			Tuple2.make("", err);
 		}
 	}
 }

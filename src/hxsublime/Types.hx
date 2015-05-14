@@ -116,7 +116,7 @@ class Types
 		{
 			return fileTypeCache.get(file)._2;
 		}
-
+		
 		// use cache based on last file modification
 
 		if (module_name == null)
