@@ -12235,88 +12235,92 @@ class hxsublime_commands_HaxeGotoBaseCommand(sublime_TextCommand):
 
 
 	def __init__(self,v):
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:26
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:29
 		self.selecting_build = None
 		self.selecting_build = False
 		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:24
 		super().__init__(v)
 
 	def getEntries(self,types):
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:30
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:33
 		raise _HxException("abstract method")
 
 	def getData(self,types):
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:34
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:37
 		raise _HxException("abstract method")
 
 	def getFile(self,data_entry):
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:39
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:42
 		raise _HxException("abstract method")
 
 	def getSrcPos(self,data_entry):
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:44
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:47
 		raise _HxException("abstract method")
 
 	def run(self,edit,**kwArgs):
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:47
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:50
 		_g = self
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:51
-		haxe_Log.trace("run HaxeListBuildFieldsCommand",_hx_AnonObject({'fileName': "GotoBase.hx", 'lineNumber': 51, 'className': "hxsublime.commands.HaxeGotoBaseCommand", 'methodName': "run"}))
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:53
-		view = self.view
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:55
-		project = hxsublime_project_Projects.currentProject(view)
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:52
+		initText = kwArgs.get("initText",None)
 		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:58
+		haxe_Log.trace("run HaxeListBuildFieldsCommand",_hx_AnonObject({'fileName': "GotoBase.hx", 'lineNumber': 58, 'className': "hxsublime.commands.HaxeGotoBaseCommand", 'methodName': "run"}))
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:60
+		view = self.view
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:62
+		project = hxsublime_project_Projects.currentProject(view)
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:65
 		if (not project.hasBuild()):
 			project.extractBuildArgs(view,False)
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:63
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:70
 		if (not project.hasBuild()):
-			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:65
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:72
 			project.extractBuildArgs(view,True)
-			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:66
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:73
 			return
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:69
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:76
 		build = project.getBuild(view)
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:71
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:78
 		bundle = build.getTypes().merge(build.stdBundle())
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:75
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:82
 		bundle_types = bundle.allTypesAndEnumConstructorsWithInfo()
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:77
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:84
 		filtered_types = haxe_ds_StringMap()
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:79
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:86
 		_hx_local_0 = bundle_types.keys()
 		while _hx_local_0.hasNext():
 			k = _hx_local_0.next()
-			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:81
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:88
 			t = bundle_types.h.get(k,None)
-			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:82
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:89
 			if build.isTypeAvailable(t):
 				filtered_types.h[k] = t
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:89
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:96
 		function_list = self.getEntries(filtered_types)
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:90
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:97
 		function_list_data = self.getData(filtered_types)
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:93
-		haxe_Log.trace(Std.string(function_list),_hx_AnonObject({'fileName': "GotoBase.hx", 'lineNumber': 93, 'className': "hxsublime.commands.HaxeGotoBaseCommand", 'methodName': "run"}))
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:95
-		haxe_Log.trace(Std.string(len(function_list)),_hx_AnonObject({'fileName': "GotoBase.hx", 'lineNumber': 95, 'className': "hxsublime.commands.HaxeGotoBaseCommand", 'methodName': "run"}))
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:98
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:100
+		haxe_Log.trace(Std.string(function_list),_hx_AnonObject({'fileName': "GotoBase.hx", 'lineNumber': 100, 'className': "hxsublime.commands.HaxeGotoBaseCommand", 'methodName': "run"}))
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:102
+		haxe_Log.trace(Std.string(len(function_list)),_hx_AnonObject({'fileName': "GotoBase.hx", 'lineNumber': 102, 'className': "hxsublime.commands.HaxeGotoBaseCommand", 'methodName': "run"}))
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:105
 		self.selecting_build = True
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:99
-		sublime_Sublime.status_message("Please select a type")
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:101
-		win = view.window()
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:103
-		sel = view.sel()
 		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:106
-		if ((python_lib_Builtins.len(sel) == 1) and ((sel[0].begin() != sel[0].end()))):
-			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:108
+		sublime_Sublime.status_message("Please select a type")
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:108
+		win = view.window()
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:110
+		sel = view.sel()
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:112
+		if (initText is not None):
+			hxsublime_commands__GotoBase_State._init_text = initText
+		elif ((python_lib_Builtins.len(sel) == 1) and ((sel[0].begin() != sel[0].end()))):
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:117
 			init = None
 			_this = hxsublime_tools_ViewTools.getContent(view)
 			startIndex = sel[0].begin()
 			endIndex = sel[0].end()
 			init = HxString.substring(_this,startIndex,endIndex)
-			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:109
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:118
 			init1 = None
 			def _hx_local_1():
 				_this1 = EReg("^[A-Za-z_0-9]*$", "")
@@ -12326,18 +12330,18 @@ class hxsublime_commands_HaxeGotoBaseCommand(sublime_TextCommand):
 				init1 = init
 			else:
 				init1 = ""
-			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:110
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:119
 			hxsublime_commands__GotoBase_State._init_text = init1
 		elif (python_lib_Builtins.len(sel) == 1):
-			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:114
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:123
 			reg = view.word(sel[0].begin())
-			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:115
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:124
 			init2 = None
 			_this2 = hxsublime_tools_ViewTools.getContent(view)
 			startIndex1 = reg.begin()
 			endIndex1 = reg.end()
 			init2 = HxString.substring(_this2,startIndex1,endIndex1)
-			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:116
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:125
 			init3 = None
 			def _hx_local_2():
 				_this3 = EReg("^[A-Za-z_0-9]*$", "")
@@ -12347,52 +12351,79 @@ class hxsublime_commands_HaxeGotoBaseCommand(sublime_TextCommand):
 				init3 = init2
 			else:
 				init3 = ""
-			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:117
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:126
 			hxsublime_commands__GotoBase_State._init_text = init3
 		else:
 			hxsublime_commands__GotoBase_State._init_text = ""
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:124
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:133
 		def _hx_local_4(i):
-			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:126
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:135
 			hxsublime_commands__GotoBase_State._is_open = False
-			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:127
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:136
 			hxsublime_commands__GotoBase_State._init_text = ""
-			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:128
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:137
 			if (i >= 0):
-				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:130
-				selected_type = (function_list_data[i] if i >= 0 and i < len(function_list_data) else None)
-				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:131
-				haxe_Log.trace(("selected field: " + Std.string(selected_type[0])),_hx_AnonObject({'fileName': "GotoBase.hx", 'lineNumber': 131, 'className': "hxsublime.commands.HaxeGotoBaseCommand", 'methodName': "run"}))
-				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:133
-				src_pos = _g.getSrcPos(selected_type[1])
-				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:135
-				goto_file = _g.getFile(selected_type[1])
-				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:137
-				hxsublime_commands__GotoBase_State._find_decl_file = goto_file
 				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:139
-				haxe_Log.trace(("find_decl_file: " + Std.string(hxsublime_commands__GotoBase_State._find_decl_file)),_hx_AnonObject({'fileName': "GotoBase.hx", 'lineNumber': 139, 'className': "hxsublime.commands.HaxeGotoBaseCommand", 'methodName': "run"}))
+				selected_type = (function_list_data[i] if i >= 0 and i < len(function_list_data) else None)
 				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:140
+				haxe_Log.trace(("selected field: " + Std.string(selected_type[0])),_hx_AnonObject({'fileName': "GotoBase.hx", 'lineNumber': 140, 'className': "hxsublime.commands.HaxeGotoBaseCommand", 'methodName': "run"}))
+				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:142
+				src_pos = _g.getSrcPos(selected_type[1])
+				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:144
+				goto_file = _g.getFile(selected_type[1])
+				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:146
+				hxsublime_commands__GotoBase_State._find_decl_file = goto_file
+				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:148
+				haxe_Log.trace(("find_decl_file: " + Std.string(hxsublime_commands__GotoBase_State._find_decl_file)),_hx_AnonObject({'fileName': "GotoBase.hx", 'lineNumber': 148, 'className': "hxsublime.commands.HaxeGotoBaseCommand", 'methodName': "run"}))
+				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:149
 				if (src_pos is not None):
-					# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:142
+					# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:151
 					hxsublime_commands__GotoBase_State._find_decl_pos = src_pos
-					# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:143
-					haxe_Log.trace(("src_pos" + Std.string(src_pos)),_hx_AnonObject({'fileName': "GotoBase.hx", 'lineNumber': 143, 'className': "hxsublime.commands.HaxeGotoBaseCommand", 'methodName': "run"}))
+					# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:152
+					haxe_Log.trace(("src_pos" + Std.string(src_pos)),_hx_AnonObject({'fileName': "GotoBase.hx", 'lineNumber': 152, 'className': "hxsublime.commands.HaxeGotoBaseCommand", 'methodName': "run"}))
 				else:
 					hxsublime_commands__GotoBase_State._find_decl_pos = 0
-				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:153
+				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:162
 				def _hx_local_3():
-					# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:153
+					# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:162
 					win.open_file(goto_file)
-				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:151
+				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:160
 				show = _hx_local_3
-				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:156
+				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:165
 				sublime_Sublime.set_timeout(show,130)
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:123
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:132
 		onSelected = _hx_local_4
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:159
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:168
 		hxsublime_commands__GotoBase_State._is_open = True
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:160
-		win.show_quick_panel(function_list,onSelected,sublime_Sublime.MONOSPACE_FONT)
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:170
+		found = None
+		if (initText is not None):
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:171
+			found1 = None
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:172
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:172
+			_g1 = 0
+			_g2 = len(function_list_data)
+			while (_g1 < _g2):
+				i1 = _g1
+				_g1 = (_g1 + 1)
+				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:173
+				e = (function_list_data[i1] if i1 >= 0 and i1 < len(function_list_data) else None)
+				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:174
+				if (e[0] == initText):
+					# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:175
+					found1 = i1
+					# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:177
+					break
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:180
+			found = found1
+		else:
+			found = None
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:184
+		if (found is not None):
+			onSelected(found)
+		else:
+			win.show_quick_panel(function_list,onSelected,sublime_Sublime.MONOSPACE_FONT)
 
 	@staticmethod
 	def _hx_empty_init(_hx_o):
@@ -12514,42 +12545,42 @@ class hxsublime_commands_HaxeGotoBaseListener(sublime_EventListener):
 
 
 	def on_activated(self,view):
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:172
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:202
 		find_pos = hxsublime_commands__GotoBase_State._find_decl_pos
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:173
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:203
 		find_file = hxsublime_commands__GotoBase_State._find_decl_file
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:175
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:205
 		if ((view is not None) and hxsublime_commands__GotoBase_State._is_open):
-			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:177
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:207
 			hxsublime_commands__GotoBase_State._is_open = False
-			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:179
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:209
 			hxsublime_tools_ViewTools.insertAtCursor(view,hxsublime_commands__GotoBase_State._init_text)
-			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:180
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:210
 			hxsublime_commands__GotoBase_State._init_text = ""
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:184
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:214
 		if ((view is not None) and ((view.file_name() is not None))):
 			if (view.file_name() == find_file):
-				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:190
+				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:220
 				view.sel().clear()
-				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:192
+				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:222
 				_hx_min = find_pos
-				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:194
+				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:224
 				view.sel().add(sublime_Region(_hx_min))
-				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:196
-				haxe_Log.trace(("show at:" + Std.string(_hx_min)),_hx_AnonObject({'fileName': "GotoBase.hx", 'lineNumber': 196, 'className': "hxsublime.commands.HaxeGotoBaseListener", 'methodName': "on_activated"}))
-				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:200
+				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:226
+				haxe_Log.trace(("show at:" + Std.string(_hx_min)),_hx_AnonObject({'fileName': "GotoBase.hx", 'lineNumber': 226, 'className': "hxsublime.commands.HaxeGotoBaseListener", 'methodName': "on_activated"}))
+				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:230
 				def _hx_local_0():
-					# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:201
-					haxe_Log.trace(("show at:" + Std.string(_hx_min)),_hx_AnonObject({'fileName': "GotoBase.hx", 'lineNumber': 201, 'className': "hxsublime.commands.HaxeGotoBaseListener", 'methodName': "on_activated"}))
-					# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:202
+					# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:231
+					haxe_Log.trace(("show at:" + Std.string(_hx_min)),_hx_AnonObject({'fileName': "GotoBase.hx", 'lineNumber': 231, 'className': "hxsublime.commands.HaxeGotoBaseListener", 'methodName': "on_activated"}))
+					# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:232
 					view.show_at_center(sublime_Region(_hx_min))
-				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:199
+				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:229
 				show = _hx_local_0
-				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:204
+				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:234
 				sublime_Sublime.set_timeout(show,100)
-				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:205
+				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:235
 				hxsublime_commands__GotoBase_State._find_decl_file = None
-				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:206
+				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBase.hx:236
 				hxsublime_commands__GotoBase_State._find_decl_pos = None
 
 	@staticmethod
@@ -12619,7 +12650,7 @@ class hxsublime_commands_HaxeGotoBuildTypesCommand(hxsublime_commands_HaxeGotoBa
 	_hx_class_name = "hxsublime.commands.HaxeGotoBuildTypesCommand"
 	_hx_fields = []
 	_hx_methods = ["getEntries", "getData", "getFile", "getSrcPos"]
-	_hx_statics = []
+	_hx_statics = ["COMMAND_ID"]
 	_hx_interfaces = []
 	_hx_super = hxsublime_commands_HaxeGotoBaseCommand
 
@@ -12629,7 +12660,7 @@ class hxsublime_commands_HaxeGotoBuildTypesCommand(hxsublime_commands_HaxeGotoBa
 		super().__init__(v)
 
 	def getEntries(self,types):
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBuildTypes.hx:12
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBuildTypes.hx:15
 		_g = []
 		_hx_local_1 = types.keys()
 		while _hx_local_1.hasNext():
@@ -12642,7 +12673,7 @@ class hxsublime_commands_HaxeGotoBuildTypesCommand(hxsublime_commands_HaxeGotoBa
 		return _g
 
 	def getData(self,types):
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBuildTypes.hx:17
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBuildTypes.hx:20
 		_g = []
 		_hx_local_0 = types.keys()
 		while _hx_local_0.hasNext():
@@ -12654,11 +12685,11 @@ class hxsublime_commands_HaxeGotoBuildTypesCommand(hxsublime_commands_HaxeGotoBa
 		return _g
 
 	def getFile(self,dataEntry):
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBuildTypes.hx:22
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBuildTypes.hx:25
 		return dataEntry._file
 
 	def getSrcPos(self,dataEntry):
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBuildTypes.hx:27
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/commands/GotoBuildTypes.hx:30
 		return dataEntry.srcPos()
 
 	@staticmethod
@@ -14686,111 +14717,111 @@ class hxsublime_completion_hx_HxCompletion:
 
 	@staticmethod
 	def eventTriggeredAutoComplete(project,view,offset,prefix):
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:37
-		haxe_Log.trace("------- EVENT TRIGGERED COMPLETION -----------",_hx_AnonObject({'fileName': "HxCompletion.hx", 'lineNumber': 37, 'className': "hxsublime.completion.hx.HxCompletion", 'methodName': "eventTriggeredAutoComplete"}))
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:38
-		options = hxsublime_completion_hx_CompletionOptions(False)
 		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:39
-		ctx = hxsublime_completion_hx_HxCompletion.createCompletionContext(project,view,offset,options,prefix)
+		haxe_Log.trace("------- EVENT TRIGGERED COMPLETION -----------",_hx_AnonObject({'fileName': "HxCompletion.hx", 'lineNumber': 39, 'className': "hxsublime.completion.hx.HxCompletion", 'methodName': "eventTriggeredAutoComplete"}))
 		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:40
+		options = hxsublime_completion_hx_CompletionOptions(False)
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:41
+		ctx = hxsublime_completion_hx_HxCompletion.createCompletionContext(project,view,offset,options,prefix)
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:42
 		return hxsublime_completion_hx_HxCompletion.autoComplete(ctx)
 
 	@staticmethod
 	def commandTriggeredAutoComplete(project,view,offset,options,prefix):
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:45
-		haxe_Log.trace("------- COMMAND TRIGGERED COMPLETION -----------",_hx_AnonObject({'fileName': "HxCompletion.hx", 'lineNumber': 45, 'className': "hxsublime.completion.hx.HxCompletion", 'methodName': "commandTriggeredAutoComplete"}))
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:46
-		ctx = hxsublime_completion_hx_HxCompletion.createCompletionContext(project,view,offset,options,prefix)
 		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:47
+		haxe_Log.trace("------- COMMAND TRIGGERED COMPLETION -----------",_hx_AnonObject({'fileName': "HxCompletion.hx", 'lineNumber': 47, 'className': "hxsublime.completion.hx.HxCompletion", 'methodName': "commandTriggeredAutoComplete"}))
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:48
+		ctx = hxsublime_completion_hx_HxCompletion.createCompletionContext(project,view,offset,options,prefix)
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:49
 		return hxsublime_completion_hx_HxCompletion.autoComplete(ctx)
 
 	@staticmethod
 	def createCompletionContext(project,view,offset,options,prefix):
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:53
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:55
 		settings = hxsublime_completion_hx_CompletionSettings(hxsublime_Settings)
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:54
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:56
 		return hxsublime_completion_hx_CompletionContext(view, project, offset, options, settings, prefix)
 
 	@staticmethod
 	def autoComplete(ctx):
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:59
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:61
 		project = ctx.project
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:60
-		view = ctx.view
 		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:62
+		view = ctx.view
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:64
 		cache = project.completionContext.current
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:65
-		hxsublime_completion_hx_HxCompletion.cancelCompletion(view)
 		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:67
+		hxsublime_completion_hx_HxCompletion.cancelCompletion(view)
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:69
 		if hxsublime_completion_hx_HxCompletion.isEquivalentCompletionAlreadyRunning(ctx):
-			haxe_Log.trace("cancel completion, same is running",_hx_AnonObject({'fileName': "HxCompletion.hx", 'lineNumber': 69, 'className': "hxsublime.completion.hx.HxCompletion", 'methodName': "autoComplete"}))
+			haxe_Log.trace("cancel completion, same is running",_hx_AnonObject({'fileName': "HxCompletion.hx", 'lineNumber': 71, 'className': "hxsublime.completion.hx.HxCompletion", 'methodName': "autoComplete"}))
 		elif hxsublime_completion_hx_HxCompletion.useCompletionCache(ctx,cache.input):
-			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:73
-			haxe_Log.trace("use completion cache",_hx_AnonObject({'fileName': "HxCompletion.hx", 'lineNumber': 73, 'className': "hxsublime.completion.hx.HxCompletion", 'methodName': "autoComplete"}))
-			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:74
-			out = cache.output
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:75
+			haxe_Log.trace("use completion cache",_hx_AnonObject({'fileName': "HxCompletion.hx", 'lineNumber': 75, 'className': "hxsublime.completion.hx.HxCompletion", 'methodName': "autoComplete"}))
 			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:76
+			out = cache.output
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:78
 			hxsublime_completion_hx_HxCompletion.updateCompletionCache(cache,out)
-			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:77
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:79
 			hxsublime_completion_hx_HxCompletion.triggerAsyncCompletion(ctx,out,out.showTopLevelSnippets())
 		elif hxsublime_completion_hx_HxCompletion.supportedCompilerCompletionChar(ctx.completeChar()):
-			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:81
-			haxe_Log.trace("call compiler for completion",_hx_AnonObject({'fileName': "HxCompletion.hx", 'lineNumber': 81, 'className': "hxsublime.completion.hx.HxCompletion", 'methodName': "autoComplete"}))
-			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:82
-			compBuild = hxsublime_completion_hx_HxCompletion.createCompletionBuild(ctx)
 			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:83
+			haxe_Log.trace("call compiler for completion",_hx_AnonObject({'fileName': "HxCompletion.hx", 'lineNumber': 83, 'className': "hxsublime.completion.hx.HxCompletion", 'methodName': "autoComplete"}))
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:84
+			compBuild = hxsublime_completion_hx_HxCompletion.createCompletionBuild(ctx)
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:85
 			if (compBuild is not None):
-				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:84
+				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:86
 				def _hx_local_0(out1,err):
-					# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:84
+					# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:86
 					hxsublime_completion_hx_HxCompletion.completionFinished(ctx,compBuild,out1,err)
 				cb = _hx_local_0
-				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:85
+				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:87
 				hxsublime_completion_hx_HxCompletion.runCompilerCompletion(compBuild,cb)
 		else:
-			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:90
-			haxe_Log.trace("only toplevel + snippets",_hx_AnonObject({'fileName': "HxCompletion.hx", 'lineNumber': 90, 'className': "hxsublime.completion.hx.HxCompletion", 'methodName': "autoComplete"}))
-			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:91
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:92
+			haxe_Log.trace("only toplevel + snippets",_hx_AnonObject({'fileName': "HxCompletion.hx", 'lineNumber': 92, 'className': "hxsublime.completion.hx.HxCompletion", 'methodName': "autoComplete"}))
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:93
 			def _hx_local_1():
-				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:91
+				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:93
 				return hxsublime_completion_hx_HxCompletion.getToplevelCompletions(ctx)
 			compResult = hxsublime_completion_hx_CompletionResult.emptyResult(ctx,_hx_local_1)
-			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:92
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:94
 			hxsublime_completion_hx_HxCompletion.updateCompletionCache(cache,compResult)
-			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:93
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:95
 			hxsublime_completion_hx_HxCompletion.triggerAsyncCompletion(ctx,compResult,compResult.showTopLevelSnippets())
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:95
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:97
 		return []
 
 	@staticmethod
 	def createCompletionBuild(ctx):
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:100
-		tmp_src = ctx.tempCompletionSrc()
 		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:102
+		tmp_src = ctx.tempCompletionSrc()
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:104
 		r = hxsublime_Temp.createTempPathAndFile(ctx.build(),ctx.orig_file(),tmp_src)
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:103
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:105
 		tempPath = r[0]
 		tempFile = r[1]
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:105
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:107
 		temp_creation_success = ((tempPath is not None) and ((tempFile is not None)))
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:108
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:110
 		def _hx_local_0():
-			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:109
-			compBuild = hxsublime_completion_hx_CompletionBuild(ctx, tempPath, tempFile)
-			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:110
-			build = compBuild.build
 			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:111
+			compBuild = hxsublime_completion_hx_CompletionBuild(ctx, tempPath, tempFile)
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:112
+			build = compBuild.build
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:113
 			display = compBuild.display()
-			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:114
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:116
 			build.setAutoCompletion(display,False)
-			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:115
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:117
 			if ctx.settings.showCompletionTimes(compBuild.ctx.view):
 				build.setTimes()
-			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:119
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:121
 			return compBuild
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:107
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:109
 		mkBuild = _hx_local_0
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:121
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:123
 		if temp_creation_success:
 			return mkBuild()
 		else:
@@ -14798,39 +14829,39 @@ class hxsublime_completion_hx_HxCompletion:
 
 	@staticmethod
 	def runCompilerCompletion(compBuild,callback):
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:128
-		startTime = python_lib_Time.time()
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:129
-		ctx = compBuild.ctx
 		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:130
-		project = ctx.project
+		startTime = python_lib_Time.time()
 		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:131
-		build = compBuild.build
+		ctx = compBuild.ctx
 		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:132
-		view = ctx.view
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:135
-		def _hx_local_1(out,err):
-			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:137
-			def _hx_local_0():
-				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:138
-				runTime = (python_lib_Time.time() - startTime)
-				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:139
-				haxe_Log.trace(("completion time: " + Std.string(runTime)),_hx_AnonObject({'fileName': "HxCompletion.hx", 'lineNumber': 139, 'className': "hxsublime.completion.hx.HxCompletion", 'methodName': "runCompilerCompletion"}))
-				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:140
-				hxsublime_Temp.removePath(compBuild.tempPath)
-				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:141
-				callback(out,err)
-			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:136
-			run = _hx_local_0
-			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:147
-			project.completionContext.runIfStillUpToDate(ctx.id,run)
+		project = ctx.project
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:133
+		build = compBuild.build
 		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:134
+		view = ctx.view
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:137
+		def _hx_local_1(out,err):
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:139
+			def _hx_local_0():
+				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:140
+				runTime = (python_lib_Time.time() - startTime)
+				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:141
+				haxe_Log.trace(("completion time: " + Std.string(runTime)),_hx_AnonObject({'fileName': "HxCompletion.hx", 'lineNumber': 141, 'className': "hxsublime.completion.hx.HxCompletion", 'methodName': "runCompilerCompletion"}))
+				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:142
+				hxsublime_Temp.removePath(compBuild.tempPath)
+				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:143
+				callback(out,err)
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:138
+			run = _hx_local_0
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:149
+			project.completionContext.runIfStillUpToDate(ctx.id,run)
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:136
 		inMainThread = _hx_local_1
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:151
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:153
 		def _hx_local_4(out1,err1):
-			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:151
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:153
 			def _hx_local_2():
-				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:151
+				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:153
 				f = inMainThread
 				a1 = out1
 				a2 = err1
@@ -14838,104 +14869,104 @@ class hxsublime_completion_hx_HxCompletion:
 					f(a1,a2)
 				return _hx_local_3
 			sublime_Sublime.set_timeout(_hx_local_2(),2)
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:149
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:151
 		onResult = _hx_local_4
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:155
-		project.completionContext.setNewCompletion(ctx)
 		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:157
+		project.completionContext.setNewCompletion(ctx)
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:159
 		build.run(project,view,True,onResult)
 
 	@staticmethod
 	def completionFinished(ctx,compBuild,out,err):
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:162
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:164
 		ctx1 = compBuild.ctx
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:163
-		tempFile = compBuild.tempFile
 		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:165
-		cache = compBuild.cache
+		tempFile = compBuild.tempFile
 		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:167
+		cache = compBuild.cache
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:169
 		project = ctx1.project
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:168
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:170
 		view = ctx1.view
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:171
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:173
 		def _hx_local_0():
-			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:171
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:173
 			return hxsublime_completion_hx_HxCompletion.getToplevelCompletions(ctx1)
 		compResult = hxsublime_completion_hx_HxCompletion.outputToResult(ctx1,tempFile,err,out,_hx_local_0)
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:173
-		hasResults = compResult.hasResults()
 		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:175
+		hasResults = compResult.hasResults()
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:177
 		if hasResults:
-			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:177
-			hxsublime_completion_hx_HxCompletion.updateCompletionCache(cache,compResult)
-			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:178
-			showTopLevelSnippets = compResult.showTopLevelSnippets()
 			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:179
+			hxsublime_completion_hx_HxCompletion.updateCompletionCache(cache,compResult)
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:180
+			showTopLevelSnippets = compResult.showTopLevelSnippets()
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:181
 			hxsublime_completion_hx_HxCompletion.triggerAsyncCompletion(ctx1,compResult,showTopLevelSnippets)
 		else:
-			haxe_Log.trace("ignore background completion on finished",_hx_AnonObject({'fileName': "HxCompletion.hx", 'lineNumber': 183, 'className': "hxsublime.completion.hx.HxCompletion", 'methodName': "completionFinished"}))
+			haxe_Log.trace("ignore background completion on finished",_hx_AnonObject({'fileName': "HxCompletion.hx", 'lineNumber': 185, 'className': "hxsublime.completion.hx.HxCompletion", 'methodName': "completionFinished"}))
 
 	@staticmethod
 	def hintsToSublimeCompletions(hints):
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:191
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:193
 		def _hx_local_3(h):
-			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:192
-			hintIsJustAType = (len(h) == 1)
 			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:194
-			res = None
+			hintIsJustAType = (len(h) == 1)
 			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:196
+			res = None
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:198
 			if hintIsJustAType:
 				res = ((HxOverrides.stringOrNull((h[0] if 0 < len(h) else None)) + " - No Completion"), "${}")
 			else:
-				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:200
-				isFunctionWithoutParams = ((len(h) == 2) and (((h[0] if 0 < len(h) else None) == "Void")))
 				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:202
+				isFunctionWithoutParams = ((len(h) == 2) and (((h[0] if 0 < len(h) else None) == "Void")))
+				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:204
 				insert = None
-				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:203
-				show = None
 				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:205
+				show = None
+				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:207
 				if isFunctionWithoutParams:
-					# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:207
+					# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:209
 					insert = ")"
-					# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:208
+					# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:210
 					show = "Void"
 				else:
-					# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:213
+					# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:215
 					def _hx_local_0(p):
-						# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:213
+						# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:215
 						_this = p.split("}")
 						return "\\}".join([python_Boot.toString1(x1,'') for x1 in _this])
-					# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:212
+					# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:214
 					escapeParam = _hx_local_0
-					# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:215
+					# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:217
 					last_index = (len(h) - 1)
-					# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:216
-					params = h[0:last_index]
 					# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:218
-					show = ", ".join([python_Boot.toString1(x1,'') for x1 in params])
+					params = h[0:last_index]
 					# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:220
+					show = ", ".join([python_Boot.toString1(x1,'') for x1 in params])
+					# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:222
 					if hxsublime_Settings.smartSnippetsJustCurrent():
-						# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:223
+						# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:225
 						first = escapeParam((params[0] if 0 < len(params) else None))
-						# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:226
+						# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:228
 						if (len(params) == 1):
 							insert = (("${1:" + ("null" if first is None else first)) + "})${0}")
 						else:
 							insert = (("${0:" + ("null" if first is None else first)) + "}")
 					else:
-						# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:235
+						# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:237
 						def _hx_local_1(listIndex):
-							# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:235
+							# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:237
 							return Std.string((listIndex + 1))
-						# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:233
+						# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:235
 						getSnippetIndex = _hx_local_1
-						# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:240
+						# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:242
 						def _hx_local_2(param,index):
-							# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:240
+							# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:242
 							return (((("${" + HxOverrides.stringOrNull(getSnippetIndex(index))) + ":") + HxOverrides.stringOrNull(escapeParam(param))) + "}")
-						# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:238
+						# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:240
 						paramSnippet = _hx_local_2
-						# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:243
+						# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:245
 						snippetList = None
 						_g = []
 						_g2 = 0
@@ -14946,16 +14977,16 @@ class hxsublime_completion_hx_HxCompletion:
 							x = paramSnippet((params[index1] if index1 >= 0 and index1 < len(params) else None),index1)
 							_g.append(x)
 						snippetList = _g
-						# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:245
+						# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:247
 						insert = (HxOverrides.stringOrNull(",".join([python_Boot.toString1(x1,'') for x1 in snippetList])) + ")${0}")
-				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:249
+				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:251
 				res = (show, insert)
-			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:251
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:253
 			return res
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:190
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:192
 		makeHintComp = _hx_local_3
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:253
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:253
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:255
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:255
 		_g3 = []
 		_g11 = 0
 		while (_g11 < len(hints)):
@@ -14967,81 +14998,81 @@ class hxsublime_completion_hx_HxCompletion:
 
 	@staticmethod
 	def combineHintsAndComps(compResult):
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:258
-		hints = compResult.hints
 		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:260
+		hints = compResult.hints
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:262
 		all_comps = hxsublime_completion_hx_HxCompletion.hintsToSublimeCompletions(hints)
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:264
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:266
 		if ((not compResult.ctx.isHint()) or ((len(hints) == 0))):
-			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:266
-			haxe_Log.trace("TAKE TOP LEVEL COMPS",_hx_AnonObject({'fileName': "HxCompletion.hx", 'lineNumber': 266, 'className': "hxsublime.completion.hx.HxCompletion", 'methodName': "combineHintsAndComps"}))
-			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:267
-			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:267
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:268
+			haxe_Log.trace("TAKE TOP LEVEL COMPS",_hx_AnonObject({'fileName': "HxCompletion.hx", 'lineNumber': 268, 'className': "hxsublime.completion.hx.HxCompletion", 'methodName': "combineHintsAndComps"}))
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:269
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:269
 			x = compResult.allComps()
 			all_comps.extend(x)
 		elif (len(hints) == 1):
 			sublime_Sublime.status_message(("signature: " + HxOverrides.stringOrNull("->".join([python_Boot.toString1(x1,'') for x1 in (hints[0] if 0 < len(hints) else None)]))))
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:274
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:276
 		return all_comps
 
 	@staticmethod
 	def isEquivalentCompletionAlreadyRunning(ctx):
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:279
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:281
 		return ctx.project.completionContext.isEquivalentCompletionAlreadyRunning(ctx)
 
 	@staticmethod
 	def shouldIncludeTopLevelCompletion(ctx):
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:284
-		haxe_Log.trace((("complete Char: '" + HxOverrides.stringOrNull(ctx.completeChar())) + "'"),_hx_AnonObject({'fileName': "HxCompletion.hx", 'lineNumber': 284, 'className': "hxsublime.completion.hx.HxCompletion", 'methodName': "shouldIncludeTopLevelCompletion"}))
 		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:286
+		haxe_Log.trace((("complete Char: '" + HxOverrides.stringOrNull(ctx.completeChar())) + "'"),_hx_AnonObject({'fileName': "HxCompletion.hx", 'lineNumber': 286, 'className': "hxsublime.completion.hx.HxCompletion", 'methodName': "shouldIncludeTopLevelCompletion"}))
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:288
 		validChar = None
 		def _hx_local_0():
 			_hx_str = ctx.completeChar()
 			return ":(,{;})".find(_hx_str)
 		validChar = (_hx_local_0() > -1)
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:288
-		toplevel_complete = ((validChar or ctx.inControlStruct()) or ctx.is_new())
 		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:290
+		toplevel_complete = ((validChar or ctx.inControlStruct()) or ctx.is_new())
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:292
 		return toplevel_complete
 
 	@staticmethod
 	def getToplevelCompletions(ctx):
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:295
-		user = ctx.options.userActivated
 		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:297
+		user = ctx.options.userActivated
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:299
 		settingsValid = (not hxsublime_Settings.topLevelCompletionsOnDemand())
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:298
-		prefixValid = (ctx.prefix != "")
 		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:300
-		userOrValid = (user or ((prefixValid and settingsValid)))
+		prefixValid = (ctx.prefix != "")
 		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:302
+		userOrValid = (user or ((prefixValid and settingsValid)))
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:304
 		toplevelInclude = (userOrValid and hxsublime_completion_hx_HxCompletion.shouldIncludeTopLevelCompletion(ctx))
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:305
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:307
 		comps = None
 		if toplevelInclude:
 			comps = hxsublime_completion_hx_TopLevel.getToplevelCompletionFiltered(ctx)
 		else:
 			comps = []
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:309
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:311
 		return comps
 
 	@staticmethod
 	def updateCompletionCache(cache,compResult):
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:314
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:316
 		cache.output = compResult
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:315
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:317
 		cache.input = compResult.ctx
 
 	@staticmethod
 	def outputToResult(ctx,temp_file,err,ret,retrieve_tl_comps):
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:320
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:322
 		r = hxsublime_compiler_Output.getCompletionOutput(temp_file,ctx.orig_file(),err,ctx.commas())
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:321
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:323
 		hints = r[0]
 		comps1 = r[1]
 		status = r[2]
 		errors = r[3]
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:324
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:326
 		comps2 = None
 		_g = []
 		_g1 = 0
@@ -15051,78 +15082,80 @@ class hxsublime_completion_hx_HxCompletion:
 			x = (t.hint, t.insert)
 			_g.append(x)
 		comps2 = _g
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:325
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:327
 		ctx.project.completionContext.setErrors(errors)
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:326
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:328
 		if ctx.options.userActivated:
-			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:327
-			haxe_Log.trace("do highlight",_hx_AnonObject({'fileName': "HxCompletion.hx", 'lineNumber': 327, 'className': "hxsublime.completion.hx.HxCompletion", 'methodName': "outputToResult"}))
-			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:328
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:329
+			haxe_Log.trace("do highlight",_hx_AnonObject({'fileName': "HxCompletion.hx", 'lineNumber': 329, 'className': "hxsublime.completion.hx.HxCompletion", 'methodName': "outputToResult"}))
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:330
 			hxsublime_completion_hx_HxCompletion.highlightErrors(errors,ctx.view)
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:331
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:333
 		return hxsublime_completion_hx_CompletionResult(ret, comps2, status, hints, ctx, retrieve_tl_comps)
 
 	@staticmethod
 	def useCompletionCache(lastInput,current_input):
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:336
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:338
 		return lastInput.eq(current_input)
 
 	@staticmethod
 	def supportedCompilerCompletionChar(char):
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:341
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:343
 		return ("(.,".find(char) > -1)
 
 	@staticmethod
 	def highlightErrors(errors,view):
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:346
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:348
 		regions = []
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:348
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:348
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:350
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:350
 		_g = 0
 		while (_g < len(errors)):
 			e = (errors[_g] if _g >= 0 and _g < len(errors) else None)
 			_g = (_g + 1)
-			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:350
-			l = e.line
-			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:351
-			left = e._hx_from
 			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:352
-			right = e.to
+			l = e.line
 			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:353
-			a = view.text_point(l,left)
+			left = e._hx_from
 			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:354
+			right = e.to
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:355
+			a = view.text_point(l,left)
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:356
 			b = view.text_point(l,right)
-			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:355
-			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:355
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:357
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:357
 			x = sublime_Region(a, b)
 			regions.append(x)
-			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:357
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:359
 			hxsublime_panel_Panels.defaultPanel().status("Error",((((((((HxOverrides.stringOrNull(e.file) + ":") + Std.string(l)) + ": characters ") + Std.string(left)) + "-") + Std.string(right)) + ": ") + HxOverrides.stringOrNull(e.message)))
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:360
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:362
 		view.add_regions("haxe-error",regions,"invalid","dot")
 
 	@staticmethod
 	def cancelCompletion(view):
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:365
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:367
 		view.run_command("hide_auto_complete")
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:368
+		view.hide_popup()
 
 	@staticmethod
 	def shouldOnlyInsertHint(ctx,result):
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:370
-		view = ctx.view
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:371
-		use_snippets = hxsublime_Settings.smartSnippets(view)
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:372
-		prefix_is_whitespace = hxsublime_tools_StringTools.isWhitespaceOrEmpty(result.ctx.prefix)
 		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:373
-		has_one_hint = (ctx.isHint() and ((len(result.hints) == 1)))
+		view = ctx.view
 		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:374
+		use_snippets = hxsublime_Settings.smartSnippets(view)
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:375
+		prefix_is_whitespace = hxsublime_tools_StringTools.isWhitespaceOrEmpty(result.ctx.prefix)
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:376
+		has_one_hint = (ctx.isHint() and ((len(result.hints) == 1)))
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:377
 		same_cursor_pos = (hxsublime_tools_ViewTools.getFirstCursorPos(view) == result.ctx.view_pos)
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:378
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:381
 		lineAfterOffset = None
 		s = result.ctx.lineAfterOffset()
 		lineAfterOffset = s.strip(None)
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:379
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:382
 		really_insert = None
 		def _hx_local_0():
 			_hx_str = None
@@ -15132,22 +15165,22 @@ class hxsublime_completion_hx_HxCompletion:
 				_hx_str = lineAfterOffset[0]
 			return "),".find(_hx_str)
 		really_insert = ((len(lineAfterOffset) == 0) or ((_hx_local_0() > -1)))
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:381
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:384
 		return ((((really_insert and prefix_is_whitespace) and use_snippets) and has_one_hint) and same_cursor_pos)
 
 	@staticmethod
 	def showHints(ctx,res):
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:386
-		hints = res.hints
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:387
-		view = ctx.view
 		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:389
-		def _hx_local_0(e,isLast,current):
-			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:391
-			x = StringTools.htmlEscape(e)
-			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:392
-			split = x.find(":")
+		hints = res.hints
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:390
+		view = ctx.view
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:392
+		def _hx_local_2(e,isLast,current):
 			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:394
+			x = StringTools.htmlEscape(e)
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:395
+			split = x.find(":")
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:397
 			parts = None
 			if (split != -1):
 				parts = _hx_AnonObject({'param': HxString.substr(x,0,split), 'type': HxString.substr(x,(split + 1),None)})
@@ -15155,129 +15188,200 @@ class hxsublime_completion_hx_HxCompletion:
 				parts = _hx_AnonObject({'param': "returns", 'type': x})
 			else:
 				parts = _hx_AnonObject({'param': x, 'type': ""})
-			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:412
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:415
 			marginBottom = None
 			if isLast:
 				marginBottom = 0
 			else:
 				marginBottom = 5
-			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:413
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:416
 			div = (("<div style=\"margin-bottom:" + Std.string(marginBottom)) + "px; border-top:solid 1px #000000\">")
-			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:414
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:417
 			paramColor = None
 			if isLast:
 				paramColor = "#000000"
 			else:
 				paramColor = "#000099"
-			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:415
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:418
 			retColor = None
 			if isLast:
 				retColor = "#009900"
 			else:
 				retColor = "#990000"
-			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:417
-			param = (((("<span style=\"color:" + ("null" if paramColor is None else paramColor)) + "\">") + HxOverrides.stringOrNull(parts.param)) + "</span>")
-			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:419
-			_hx_type = (((("<span style=\"color:" + ("null" if retColor is None else retColor)) + "\">") + HxOverrides.stringOrNull(parts.type)) + "</span>")
 			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:420
+			param = (((("<span style=\"color:" + ("null" if paramColor is None else paramColor)) + "\">") + HxOverrides.stringOrNull(parts.param)) + "</span>")
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:423
+			chunks = None
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:424
+			chunks1 = []
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:425
+			chunk = []
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:426
+			t = StringTools.htmlUnescape(parts.type)
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:428
+			def _hx_local_0(x1):
+				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:428
+				x2 = StringTools.htmlEscape(x1)
+				chunks1.append(x2)
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:427
+			push = _hx_local_0
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:431
+			def _hx_local_1(x3):
+				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:431
+				x4 = (((("<a href=\"" + ("null" if x3 is None else x3)) + "\">") + HxOverrides.stringOrNull(StringTools.htmlEscape(x3))) + "</a>")
+				chunks1.append(x4)
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:430
+			pushA = _hx_local_1
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:433
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:433
+			_g1 = 0
+			_g = len(t)
+			while (_g1 < _g):
+				i = _g1
+				_g1 = (_g1 + 1)
+				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:434
+				c = None
+				if ((i < 0) or ((i >= len(t)))):
+					c = ""
+				else:
+					c = t[i]
+				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:435
+				if c in "<>,":
+					# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:436
+					if (len(chunk) > 0):
+						# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:437
+						s = "".join([python_Boot.toString1(x1,'') for x1 in chunk])
+						# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:438
+						pushA(s)
+						# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:439
+						chunk = []
+					# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:441
+					push(c)
+				else:
+					# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:443
+					# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:443
+					chunk.append(c)
+					# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:444
+					if ((i == ((len(t) - 1))) and ((len(chunk) > 0))):
+						# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:445
+						s1 = "".join([python_Boot.toString1(x1,'') for x1 in chunk])
+						# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:446
+						pushA(s1)
+						# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:447
+						chunk = []
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:451
+			chunks = chunks1
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:457
+			_hx_type = (((("<span style=\"color:" + ("null" if retColor is None else retColor)) + "\">") + HxOverrides.stringOrNull("".join([python_Boot.toString1(x1,'') for x1 in chunks]))) + "</span>")
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:458
 			param1 = ((((" " + ("null" if param is None else param)) + " ") + ("null" if _hx_type is None else _hx_type)) + " ")
-			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:421
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:459
 			param2 = None
 			if current:
 				param2 = (("<b>" + ("null" if param1 is None else param1)) + "</b>")
 			else:
 				param2 = param1
-			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:422
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:460
 			return ((("null" if div is None else div) + ("null" if param2 is None else param2)) + "</div>")
-		formatEntry = _hx_local_0
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:425
+		formatEntry = _hx_local_2
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:463
 		base = "<style>body { padding : 5px; }</style>"
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:426
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:464
 		separator = ""
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:427
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:465
 		current1 = ctx.commas()
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:428
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:466
 		hintData = None
 		_this = None
-		_g = []
-		_g1 = 0
-		_g2 = res.hints
-		while (_g1 < len(_g2)):
-			h = (_g2[_g1] if _g1 >= 0 and _g1 < len(_g2) else None)
-			_g1 = (_g1 + 1)
-			x1 = None
+		_g2 = []
+		_g11 = 0
+		_g21 = res.hints
+		while (_g11 < len(_g21)):
+			h = (_g21[_g11] if _g11 >= 0 and _g11 < len(_g21) else None)
+			_g11 = (_g11 + 1)
+			x5 = None
 			_this1 = None
 			_g3 = []
 			_g5 = 0
 			_g4 = len(h)
 			while (_g5 < _g4):
-				i = _g5
+				i1 = _g5
 				_g5 = (_g5 + 1)
-				x2 = formatEntry((h[i] if i >= 0 and i < len(h) else None),(i == ((len(h) - 1))),(i == current1))
-				_g3.append(x2)
+				x6 = formatEntry((h[i1] if i1 >= 0 and i1 < len(h) else None),(i1 == ((len(h) - 1))),(i1 == current1))
+				_g3.append(x6)
 			_this1 = _g3
-			x1 = separator.join([python_Boot.toString1(x1,'') for x1 in _this1])
-			_g.append(x1)
-		_this = _g
+			x5 = separator.join([python_Boot.toString1(x1,'') for x1 in _this1])
+			_g2.append(x5)
+		_this = _g2
 		hintData = "<br>".join([python_Boot.toString1(x1,'') for x1 in _this])
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:430
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:468
 		hintData1 = (("null" if base is None else base) + ("null" if hintData is None else hintData))
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:432
-		haxe_Log.trace(("hintData: " + ("null" if hintData1 is None else hintData1)),_hx_AnonObject({'fileName': "HxCompletion.hx", 'lineNumber': 432, 'className': "hxsublime.completion.hx.HxCompletion", 'methodName': "showHints"}))
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:433
-		haxe_Log.trace(hints,_hx_AnonObject({'fileName': "HxCompletion.hx", 'lineNumber': 433, 'className': "hxsublime.completion.hx.HxCompletion", 'methodName': "showHints"}))
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:434
-		haxe_Log.trace(("flags :" + Std.string(sublime_Sublime.COOPERATE_WITH_AUTO_COMPLETE)),_hx_AnonObject({'fileName': "HxCompletion.hx", 'lineNumber': 434, 'className': "hxsublime.completion.hx.HxCompletion", 'methodName': "showHints"}))
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:436
-		opts = _hx_AnonObject({'location': -1, 'flags': (sublime_Sublime.COOPERATE_WITH_AUTO_COMPLETE | sublime_Sublime.HTML), 'max_width': 600, 'max_height': 500})
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:443
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:479
+		def _hx_local_4(x7):
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:480
+			view.hide_popup()
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:481
+			x8 = StringTools.htmlUnescape(x7)
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:482
+			if StringTools.startsWith(x8,"Null<"):
+				x8 = HxString.substr(x8,5,(len(x8) - 6))
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:486
+			view.run_command(hxsublime_commands_HaxeGotoBuildTypesCommand.COMMAND_ID,python_Lib.anonToDict(_hx_AnonObject({'initText': x8})))
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:474
+		opts = _hx_AnonObject({'location': -1, 'flags': (sublime_Sublime.COOPERATE_WITH_AUTO_COMPLETE | sublime_Sublime.HTML), 'max_width': 600, 'max_height': 500, 'on_navigate': _hx_local_4})
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:490
 		view.show_popup(hintData1,**python__KwArgs_KwArgs_Impl_.fromT(opts))
 
 	@staticmethod
 	def autoCompleteAsync(ctx,res):
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:449
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:496
 		view = ctx.view
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:451
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:498
 		ctx1 = res.ctx
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:452
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:499
 		use_async_results = ((res is not None) and res.hasResults())
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:453
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:500
 		if use_async_results:
-			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:456
-			if (len(res.hints) > 0):
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:503
+			if ((len(res.hints) > 0) and ((ctx1.commas() < ((len((res.hints[0] if 0 < len(res.hints) else None)) - 1))))):
 				hxsublime_completion_hx_HxCompletion.showHints(ctx1,res)
-			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:461
+			else:
+				view.hide_popup()
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:510
 			comps = res.allComps()
-			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:453
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:500
 			return haxe_ds_Option.Some(comps)
 		else:
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:514
+			view.hide_popup()
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:500
 			return haxe_ds_Option._hx_None
 
 	@staticmethod
 	def triggerAsyncCompletion(ctx,res,showTopLevelSnippets = False):
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:469
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:520
 		if (showTopLevelSnippets is None):
 			showTopLevelSnippets = False
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:470
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:521
 		def _hx_local_0(_):
-			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:470
-			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:470
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:521
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:521
 			_g = hxsublime_completion_hx_HxCompletion.autoCompleteAsync(ctx,res)
-			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:471
+			# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:522
 			if ((_g.index) == 0):
 				x = _g.params[0]
 				return x
 			elif ((_g.index) == 1):
-				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:472
+				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:523
 				hxsublime_completion_hx_HxCompletion.cancelCompletion(ctx.view)
-				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:470
+				# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:521
 				return []
 			else:
 				pass
 		cb = _hx_local_0
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:474
-		haxe_Log.trace(("trigger with " + Std.string(showTopLevelSnippets)),_hx_AnonObject({'fileName': "HxCompletion.hx", 'lineNumber': 474, 'className': "hxsublime.completion.hx.HxCompletion", 'methodName': "triggerAsyncCompletion"}))
-		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:475
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:525
+		haxe_Log.trace(("trigger with " + Std.string(showTopLevelSnippets)),_hx_AnonObject({'fileName': "HxCompletion.hx", 'lineNumber': 525, 'className': "hxsublime.completion.hx.HxCompletion", 'methodName': "triggerAsyncCompletion"}))
+		# /home/frabbit/github/haxe-sublime-plugin-hx/src/hxsublime/completion/hx/HxCompletion.hx:526
 		hxsublime_completion_CompletionListener.trigger(ctx.view,showTopLevelSnippets,cb)
 hxsublime_completion_hx_HxCompletion._hx_class = hxsublime_completion_hx_HxCompletion
 _hx_classes["hxsublime.completion.hx.HxCompletion"] = hxsublime_completion_hx_HxCompletion
@@ -21185,6 +21289,7 @@ hxsublime_commands__GotoBase_State._find_decl_file = None
 hxsublime_commands__GotoBase_State._find_decl_pos = None
 hxsublime_commands__GotoBase_State._init_text = ""
 hxsublime_commands__GotoBase_State._is_open = False
+hxsublime_commands_HaxeGotoBuildTypesCommand.COMMAND_ID = "hxsublime_commands__haxe_goto_build_types"
 hxsublime_compiler_Output.compiler_output = python_lib_Re.compile("^([^:]+):([0-9]+): (?:character(?:s?)|line(?:s?))? ([0-9]+)-?([0-9]+)? : (.*)",python_lib_Re.M)
 hxsublime_compiler_Output.no_classes_found = python_lib_Re.compile("^No classes found in .*",python_lib_Re.M)
 hxsublime_compiler_Output.no_classes_found_in_trace = python_lib_Re.compile("^No classes found in trace$",python_lib_Re.M)
