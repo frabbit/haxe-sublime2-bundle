@@ -2,6 +2,8 @@ package hxsublime.completion.hx;
 
 import haxe.ds.Option;
 import hxsublime.build.Build;
+import hxsublime.commands.GotoBase.HaxeGotoBaseCommand;
+import hxsublime.commands.GotoBuildTypes.HaxeGotoBuildTypesCommand;
 import hxsublime.compiler.Output;
 import hxsublime.completion.Completion.CompletionListener;
 import hxsublime.completion.hx.Toplevel.TopLevel;
@@ -363,6 +365,7 @@ class HxCompletion
 	static function cancelCompletion(view:View)
 	{
 		view.run_command('hide_auto_complete');
+		view.hide_popup();
 	}
 
 	static function shouldOnlyInsertHint (ctx:CompletionContext, result:CompletionResult)
@@ -416,7 +419,42 @@ class HxCompletion
 
 			var param = '<span style="color:${paramColor}">'+parts.param+'</span>';
 
-			var type = '<span style="color:${retColor}">'+parts.type +'</span>';
+			// split type into chunks for separate linking of composed types like Array<Int>
+			var chunks = {
+				var chunks = [];
+				var chunk = [];
+				var t = std.StringTools.htmlUnescape(parts.type);
+				function push (x) {
+					chunks.push(std.StringTools.htmlEscape(x));
+				}
+				function pushA (x) {
+					chunks.push('<a href="${x}">'+std.StringTools.htmlEscape(x)+'</a>');
+				}
+				for (i in 0...t.length) {
+					var c = t.charAt(i);
+					if ("<>,".contains(c)) {
+						if (chunk.length > 0) {
+							var s = chunk.join("");
+							pushA(s);
+							chunk = [];
+						}
+						push(c);
+					} else {
+						chunk.push(c);
+						if (i == t.length -1 && chunk.length > 0) {
+							var s = chunk.join("");
+							pushA(s);
+							chunk = [];
+						}
+					}
+				}
+				chunks;
+			}
+
+			
+			//trace(chunks);
+
+			var type = '<span style="color:${retColor}">${chunks.join("")}</span>';
 			var param = ' $param $type ';
 			var param = if (current) "<b>" + param + "</b>" else param;
 			return div + param + "</div>";
@@ -429,15 +467,24 @@ class HxCompletion
 
 		var hintData = base + hintData;
 
-		trace("hintData: " + hintData);
+		/*trace("hintData: " + hintData);
 		trace(hints);
-		trace("flags :" +  (Sublime.COOPERATE_WITH_AUTO_COMPLETE));
+		trace("flags :" +  (Sublime.COOPERATE_WITH_AUTO_COMPLETE));*/
 
 		var opts = { 
 			location : -1, 
 			flags : Sublime.COOPERATE_WITH_AUTO_COMPLETE | Sublime.HTML,
 			max_width : 600,
-			max_height : 500
+			max_height : 500,
+			on_navigate : function (x) {
+				view.hide_popup();
+				var x = std.StringTools.htmlUnescape(x);
+				if (std.StringTools.startsWith(x, "Null<")) {
+					x = x.substr(5, x.length-6);
+				}
+
+				view.run_command(HaxeGotoBuildTypesCommand.COMMAND_ID, python.Lib.anonToDict({ "initText" : x }));
+			}
 		}
 
 		view.show_popup( hintData, opts );
@@ -453,16 +500,20 @@ class HxCompletion
 		return if (use_async_results)
 		{
 			//var comps = combineHintsAndComps(res);
-			if (res.hints.length > 0) {
+			if (res.hints.length > 0 && ctx.commas() < res.hints[0].length-1) {
+				
 				showHints(ctx, res);	
+			} else {
+				view.hide_popup();	
 			}
-			
-
+					
 			var comps = res.allComps();
-
 			Some(comps);
 		}
-		else None;
+		else {
+			view.hide_popup();
+			None;
+		}
 	}
 
 	static function triggerAsyncCompletion(ctx:CompletionContext, res:CompletionResult, showTopLevelSnippets = false)

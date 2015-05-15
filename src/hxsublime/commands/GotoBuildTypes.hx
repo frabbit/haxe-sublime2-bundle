@@ -7,6 +7,9 @@ import python.Tuple;
 
 @:keep class HaxeGotoBuildTypesCommand extends HaxeGotoBaseCommand<HaxeType>
 {
+
+    public static var COMMAND_ID = "hxsublime_commands__haxe_goto_build_types";
+
 	override function getEntries (types:StringMap<HaxeType>):Array<Array<String>>
     {
         return [for (k in types.keys()) [k, types.get(k).file()]];

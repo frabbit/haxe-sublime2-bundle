@@ -23,6 +23,9 @@ private class State
 
 @:keep class HaxeGotoBaseCommand<T> extends TextCommand
 {
+
+    
+
     var selecting_build:Bool = false;
 
     function getEntries (types:StringMap<HaxeType>):Array<Array<String>>
@@ -46,6 +49,10 @@ private class State
 
     override public function run( edit:Edit, ?kwArgs:KwArgs<Dynamic> )
     {
+        var initText:String = kwArgs.get("initText", null);
+
+
+
 
 
         trace("run HaxeListBuildFieldsCommand");
@@ -102,8 +109,10 @@ private class State
 
         var sel = view.sel();
 
-
-        if (sel.length == 1 && sel[0].begin() != sel[0].end())
+        if (initText != null) {
+            State._init_text = initText;
+        }
+        else if (sel.length == 1 && sel[0].begin() != sel[0].end())
         {
             var init = ViewTools.getContent(view).substring(sel[0].begin(), sel[0].end());
             var init = ~/^[A-Za-z_0-9]*$/.match(init) ? init : "";
@@ -157,7 +166,28 @@ private class State
             }
         }
         State._is_open = true;
-        win.show_quick_panel( function_list , onSelected  , Sublime.MONOSPACE_FONT );
+        
+        var found = if (initText != null) {
+            var found = null;
+            for (i in 0...function_list_data.length) {
+                var e = function_list_data[i];
+                if (e._1 == initText) {
+                    found = i;
+                    
+                    break;
+                }
+            }
+            found;
+        } else {
+            null;
+        }
+        if (found != null) {
+            onSelected(found);
+        } else {
+            win.show_quick_panel( function_list , onSelected  , Sublime.MONOSPACE_FONT );
+        }
+
+        
     }
 }
 
